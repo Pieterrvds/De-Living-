@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De Living - Cozy Pub</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <div class="logo">De Living</div>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#menu">Menu</a></li>
+                <li><a href="#events">Extra</a></li>
+                <li><a onclick="window.location.href='webshop.html'">Webshop</a></li>
+                <li><a href="#calendar">Calendar</a></li>
+                <li><a href="#gallery">Gallery</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Welcome to De Living</h1>
+            <p>Your Home Away from Home</p>
+            <a href="#menu" class="btn">Explore Our Menu</a>
+        </div>
+    </section>
+
+    <section id="about">
+        <div class="about-content">
+            <h2>About Us</h2>
+            <p>
+                Welcome to <strong>De Living</strong>, a cozy pub where great food, good company, and unforgettable memories come together. 
+                Established in the heart of our community, we pride ourselves on offering a warm and inviting atmosphere for all who walk through our doors.
+            </p>
+            <p>
+                Whether you're here to enjoy our carefully crafted menu, partake in our lively events, or simply relax with your favorite drink, 
+                <strong>De Living</strong> is your home away from home. Join us and become a part of the family!
+            </p>
+            <img src="img/famvds.jpg" alt="Interior of De Living Pub">
+        </div>
+    </section>
+    
+    <section id="menu">
+        <h2>Our Menu: simple but good</h2>
+        <p>Explore our freshly made offerings.</p>
+        <div class="menu-container">
+            <div class="menu-item" data-image="images/food1.jpg">Croque Monsieur</div>
+            <div class="menu-item" data-image="images/food2.jpg">Pancake</div>
+            <div class="menu-item" data-image="images/food3.jpg">Soup of the week</div>
+            <div class="menu-item" data-image="images/food4.jpg">Cheese plate</div>
+        </div>
+        <div class="menu-preview">
+            <img id="menu-preview-image" src="" alt="Preview" />
+        </div>
+    </section>
+    
+    <section id="events">
+        <h2>Links</h2>
+        <div class="events-list">
+            <div class="event" id="event1" onclick="window.location.href='webshop.html'">
+                <h3>WEBSHOP</h3>
+                <p>Checkout our personal webshop!</p>
+            </div>
+            <div class="event" id="event2">
+                <h3>MASSAGE</h3>
+                <p>Contact our massage service!</p>
+            </div>
+            <div class="event" id="event3" onclick="window.location.href='https://level-upcrossfit.netlify.app'">
+                <h3>LEVEL-UP</h3>
+                <p>Contact our personal training service!</p>
+            </div>
+        </div>
+    </section>
+        
+    <section id="calendar">
+        <h2>CALENDAR</h2>
+        <p>Check out our upcoming events and specials directly on our Google Calendar!</p>
+        <div id="calendar-container">
+            <iframe 
+                src="https://calendar.google.com/calendar/embed?src=81e94de2ab76486fdc38e7ef0e48e16e121371d4a68b7d988e1293328dc22e77%40group.calendar.google.com&ctz=Europe%2FBrussels"
+                style="border: 0" 
+                width="100%" 
+                height="600" 
+                frameborder="0" 
+                scrolling="no">
+            </iframe>
+        </div>
+    </section>
+
+    <section id="gallery">
+        <h2>Gallery</h2>
+        <p>Take a glimpse into the warm ambiance of De Living!</p>
+        <div class="gallery-container">
+            <div class="gallery-wrapper">
+                <div class="gallery-arrows">
+                    <button id="scroll-left">←</button>
+                    <button id="scroll-right">→</button>
+                </div>                
+                <img src="img/papmam.jpg" alt="Gallery Image 1" class="gallerywrapperimage">
+                <img src="images/gallery2.jpg" alt="Gallery Image 2" class="gallerywrapperimage">
+                <img src="images/gallery3.jpg" alt="Gallery Image 3" class="gallerywrapperimage">
+                <img src="images/gallery4.jpg" alt="Gallery Image 4" class="gallerywrapperimage">
+                <img src="images/gallery5.jpg" alt="Gallery Image 5" class="gallerywrapperimage">
+                <img src="images/gallery6.jpg" alt="Gallery Image 6" class="gallerywrapperimage">
+                <img src="images/gallery7.jpg" alt="Gallery Image 7" class="gallerywrapperimage">
+                <img src="images/gallery8.jpg" alt="Gallery Image 8" class="gallerywrapperimage">
+            </div>
+        </div>
+        <div id="image-popup">
+            <img id="popup-image" src="" alt="Popup">
+        </div>
+    </section>
+    <section id="contact">
+        <div class="contact-content">
+            <h2>Contact Us</h2>
+            <p>
+                Got a question or want to make a reservation? We'd love to hear from you!
+            </p>
+            <div class="contact-grid">
+                <!-- Contact Details -->
+                <div class="contact-details">
+                    <h3>Reach Out</h3>
+                    <p><strong>Address:</strong> Hoogstraat 40, Hofstade</p>
+                    <p><strong>Phone:</strong> <a href="tel:+31234567890">+32471955489</a></p>
+                    <p><strong>Email:</strong> <a href="mailto:DeLiving@outlook.be">DeLiving@outlook.be</a></p>
+                    <p><strong>Follow Us:</strong></p>
+                    <div class="social-icons">
+                        <a href="#"><img src="img/facebook.png" alt="Facebook"></a>
+                        <a href="#"><img src="img/Instagram.png" alt="Instagram"></a>
+                    </div>
+                </div>
+                <!-- Contact Form -->
+                <div class="contact-form">
+                    <h3>Send Us a Message</h3>
+                    <form action="https://formsubmit.co/DeLiving@outlook.be" method="POST">
+                        <input type="text" name="name" placeholder="Your Name" required>
+                        <input type="email" name="email" placeholder="Your Email" required>
+                        <textarea name="message" rows="5" placeholder="Your Message" required></textarea>
+                        <button type="submit" class="btn">Send Message</button>
+                    </form>                                                        
+                </div>
+            </div>
+            <!-- Google Maps Embed -->
+            <div class="map">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2512.943262341181!2d4.031857476129792!3d50.961753250418376!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c397f3100f8e29%3A0x2fe9a450dc9bbe17!2sHoogstraat%2040%2C%209308%20Aalst!5e0!3m2!1snl!2sbe!4v1733333219843!5m2!1snl!2sbe"
+                    width="50%" 
+                    height="400" 
+                    style="border:0;" 
+                    allowfullscreen="" 
+                    loading="lazy">
+                </iframe>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <p>&copy; 2024 De Living. All Rights Reserved.</p>
+    </footer>
+    <button id="back-to-top" title="Back to Top">↑</button>
+</body>
+</html>
