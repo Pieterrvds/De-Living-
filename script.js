@@ -1,3 +1,27 @@
+function toggleMenu() {
+    const navLinks = document.querySelector(".nav-links");
+    navLinks.classList.toggle("active");
+}
+
+// Close menu when clicking outside of it
+document.addEventListener("click", function (event) {
+    const navLinks = document.querySelector(".nav-links");
+    const hamburger = document.querySelector(".hamburger");
+
+    if (!navLinks.contains(event.target) && !hamburger.contains(event.target)) {
+        navLinks.classList.remove("active");
+    }
+});
+
+// Close menu when clicking a link inside it
+document.querySelectorAll(".nav-links a").forEach(link => {
+    link.addEventListener("click", () => {
+        document.querySelector(".nav-links").classList.remove("active");
+    });
+});
+
+
+
 // Menu item hover to display image
 const menuItems = document.querySelectorAll('.menu-item');
 const previewImage = document.getElementById('menu-preview-image');
