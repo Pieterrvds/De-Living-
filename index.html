@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>De Living - Cozy Pub</title>
@@ -12,7 +13,7 @@
     <header>
         <div class="logo">De Living</div>
         <nav>
-            <ul>
+            <ul class="nav-links">
                 <li><a href="#home">Home</a></li>
                 <li><a href="#menu">Menu</a></li>
                 <li><a href="#events">Extra</a></li>
@@ -21,39 +22,40 @@
                 <li><a href="#gallery">Gallery</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
+            <div class="hamburger" onclick="toggleMenu()">  ☰  </div>
         </nav>
     </header>
     <section id="home" class="hero">
         <div class="hero-content">
-            <h1>Welcome to De Living</h1>
-            <p>Your Home Away from Home</p>
-            <a href="#menu" class="btn">Explore Our Menu</a>
+            <h1>Welkom In De Living</h1>
+            <p>Jouw tweede thuis, waar warmte en gezelligheid samenkomen.</p>
+            <a href="#menu" class="btn">Ontdek ons menu</a>
         </div>
     </section>
 
     <section id="about">
         <div class="about-content">
-            <h2>About Us</h2>
+            <h2>Over ons</h2>
             <p>
-                Welcome to <strong>De Living</strong>, a cozy pub where great food, good company, and unforgettable memories come together. 
-                Established in the heart of our community, we pride ourselves on offering a warm and inviting atmosphere for all who walk through our doors.
+                Stap binnen bij <strong>De Living</strong>, een warme en knusse kroeg waar lekker eten, fijne mensen en mooie momenten centraal staan.
+                Gelegen in het hart van onze gemeenschap, verwelkomen we iedereen met open armen.
             </p>
             <p>
-                Whether you're here to enjoy our carefully crafted menu, partake in our lively events, or simply relax with your favorite drink, 
-                <strong>De Living</strong> is your home away from home. Join us and become a part of the family!
+                Kom langs voor een heerlijk drankje, een smakelijke hap of een gezellige babbel.
+                <strong>De Living</strong>is niet zomaar een kroeg, het is een plek waar je je thuis voelt.
             </p>
             <img src="img/famvds.jpg" alt="Interior of De Living Pub">
         </div>
     </section>
     
     <section id="menu">
-        <h2>Our Menu: simple but good</h2>
-        <p>Explore our freshly made offerings.</p>
+        <h2>Ons Menu: Simpel, maar heerlijk</h2>
+        <p>Dagelijks vers bereid met liefde en passie.</p>
         <div class="menu-container">
             <div class="menu-item" data-image="images/food1.jpg">Croque Monsieur</div>
-            <div class="menu-item" data-image="images/food2.jpg">Pancake</div>
-            <div class="menu-item" data-image="images/food3.jpg">Soup of the week</div>
-            <div class="menu-item" data-image="images/food4.jpg">Cheese plate</div>
+            <div class="menu-item" data-image="images/food2.jpg">Pannenkoek</div>
+            <div class="menu-item" data-image="images/food3.jpg">Soep van de week</div>
+            <div class="menu-item" data-image="images/food4.jpg">Kaasplankje</div>
         </div>
         <div class="menu-preview">
             <img id="menu-preview-image" src="" alt="Preview" />
@@ -63,24 +65,18 @@
     <section id="events">
         <h2>Links</h2>
         <div class="events-list">
-            <div class="event" id="event1" onclick="window.location.href='webshop.html'">
-                <h3>WEBSHOP</h3>
-                <p>Checkout our personal webshop!</p>
+            <div class="event" id="event2" onclick="window.location.href='https:zenmetgwen.com'">
+                <h3>ZEN MET GWEN</h3>
             </div>
-            <div class="event" id="event2">
-                <h3>MASSAGE</h3>
-                <p>Contact our massage service!</p>
-            </div>
-            <div class="event" id="event3" onclick="window.location.href='https://level-upcrossfit.netlify.app'">
+            <div class="event" id="event3" onclick="window.location.href='https:level-upcrossfit.com'">
                 <h3>LEVEL-UP</h3>
-                <p>Contact our personal training service!</p>
             </div>
         </div>
     </section>
         
     <section id="calendar">
-        <h2>CALENDAR</h2>
-        <p>Check out our upcoming events and specials directly on our Google Calendar!</p>
+        <h2>Kalender</h2>
+        <p>Bekijk onze aankomende evenementen en speciale acties!</p>
         <div id="calendar-container">
             <iframe 
                 src="https://calendar.google.com/calendar/embed?src=81e94de2ab76486fdc38e7ef0e48e16e121371d4a68b7d988e1293328dc22e77%40group.calendar.google.com&ctz=Europe%2FBrussels"
@@ -94,8 +90,8 @@
     </section>
 
     <section id="gallery">
-        <h2>Gallery</h2>
-        <p>Take a glimpse into the warm ambiance of De Living!</p>
+        <h2>Galerij</h2>
+        <p>Een sfeerimpressie van De Living!</p>
         <div class="gallery-container">
             <div class="gallery-wrapper">
                 <div class="gallery-arrows">
@@ -118,18 +114,16 @@
     </section>
     <section id="contact">
         <div class="contact-content">
-            <h2>Contact Us</h2>
-            <p>
-                Got a question or want to make a reservation? We'd love to hear from you!
-            </p>
+            <h2>Contacteer ons</h2>
+            <p> Vragen of reserveren? We horen graag van je!</p>
             <div class="contact-grid">
                 <!-- Contact Details -->
                 <div class="contact-details">
-                    <h3>Reach Out</h3>
-                    <p><strong>Address:</strong> Hoogstraat 40, Hofstade</p>
-                    <p><strong>Phone:</strong> <a href="tel:+31234567890">+32471955489</a></p>
-                    <p><strong>Email:</strong> <a href="mailto:DeLiving@outlook.be">DeLiving@outlook.be</a></p>
-                    <p><strong>Follow Us:</strong></p>
+                    <h3>Je vindt ons hier!</h3>
+                    <p><strong>Adres:</strong> Hoogstraat 40, Hofstade</p>
+                    <p><strong>Telefoon:</strong> <a href="tel:+31234567890">+32471955489</a></p>
+                    <p><strong>E-mail:</strong> <a href="mailto:DeLiving@outlook.be">DeLiving@outlook.be</a></p>
+                    <p><strong>Volg ons op:</strong></p>
                     <div class="social-icons">
                         <a href="#"><img src="img/facebook.png" alt="Facebook"></a>
                         <a href="#"><img src="img/Instagram.png" alt="Instagram"></a>
@@ -137,12 +131,12 @@
                 </div>
                 <!-- Contact Form -->
                 <div class="contact-form">
-                    <h3>Send Us a Message</h3>
+                    <h3>Stuur ons een berichtje</h3>
                     <form action="https://formsubmit.co/DeLiving@outlook.be" method="POST">
                         <input type="text" name="name" placeholder="Your Name" required>
                         <input type="email" name="email" placeholder="Your Email" required>
                         <textarea name="message" rows="5" placeholder="Your Message" required></textarea>
-                        <button type="submit" class="btn">Send Message</button>
+                        <button type="submit" class="btn">Verstuur</button>
                     </form>                                                        
                 </div>
             </div>
