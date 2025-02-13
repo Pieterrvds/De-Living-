@@ -15,21 +15,76 @@ p {
 }
 
 
-
+/* Adjusted Fixed Top Bar */
 header {
-    background-color: #c54f4f;
-    color: rgb(255, 255, 255);
-    padding: 15px;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background: #8B4513; /* Warm brown color */
+    color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 15px 20px;
+    z-index: 1000;
 }
 
-header .logo {
-    font-size: 1.8rem;
-    font-weight: bold;
+/* Adjusted Navigation */
+nav {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
 }
 
+/* Desktop Navigation */
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links li a {
+    text-decoration: none;
+    color: white;
+    font-size: 18px;
+}
+
+/* Hamburger Menu Styling */
+.hamburger {
+    display: none;
+    font-size: 30px;
+    cursor: pointer;
+    margin-left: 20px;  /* Moves the hamburger menu more to the left */
+}
+
+/* Mobile Responsive Styles */
+@media screen and (max-width: 768px) {
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 60px;
+        left: 50%;  /* Center the menu */
+        transform: translateX(-50%); /* Ensures the menu is properly centered */
+        background: #8B4513;
+        width: 250px;
+        text-align: center;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .nav-links.active {
+        display: flex;
+    }
+
+    .hamburger {
+        display: block;
+    }
+}
+
+/* Navigation List */
 nav ul {
     list-style: none;
     margin: 0;
@@ -46,6 +101,7 @@ nav ul li a {
     color: white;
     font-weight: bold;
 }
+
 
 .hero {
     background:  no-repeat center center/cover;
@@ -218,13 +274,27 @@ section {
 }
 
 .event {
-    background-color: #D35400;
     padding: 20px;
     border-radius: 5px;
-    color: white;
     width: 200px;
-    text-align: left;
+    text-align: center;
 }
+
+#event2{
+    background: #EAD1DC;
+    color: #556B2F; 
+    font-family: 'Curlz MT';
+    text-align: center;
+    }
+    
+
+#event3{
+    background: black;
+    color: white; 
+    font-family: 'Press Start 2P', sans-serif;
+    text-align: center;
+    }
+
 
 @keyframes bounce {
     0%, 100% {
