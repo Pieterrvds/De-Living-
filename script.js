@@ -38,6 +38,28 @@ menuItems.forEach(item => {
     });
 });
 
+// Popup functionality
+const openPopupBtn = document.getElementById("open-menu-btn");
+const popup = document.getElementById("menu-popup");
+const closePopupBtn = document.querySelector(".close-btn");
+
+openPopupBtn.addEventListener("click", () => {
+    popup.style.display = "flex";
+});
+
+// Close popup when clicking on "X"
+closePopupBtn.addEventListener("click", () => {
+    popup.style.display = "none";
+});
+
+// Close popup when clicking outside the content
+popup.addEventListener("click", (e) => {
+    if (e.target === popup) {
+        popup.style.display = "none";
+    }
+});
+
+
 // Contact Form Validation
 const contactForm = document.querySelector('.contact-form form');
 if (contactForm) {
