@@ -47,6 +47,10 @@
             <img src="img/famvds.jpg" alt="Interior of De Living Pub">
         </div>
     </section>
+
+    <div class="whatsapp-icon" id="whatsapp-button">
+        <img src="whatsapp-icon.svg" alt="WhatsApp">
+    </div>
     
     <section id="menu">
         <h2>Ons Menu: Simpel, maar heerlijk</h2>
@@ -57,11 +61,25 @@
             <div class="menu-item" data-image="images/food3.jpg">Soep van de week</div>
             <div class="menu-item" data-image="images/food4.jpg">Kaasplankje</div>
         </div>
+        <!-- Button to open the menu popup -->
+        <button id="open-menu-btn" class="btn">Bekijk Volledig Menu</button>
+    
+        <!-- Image menu preview -->
         <div class="menu-preview">
             <img id="menu-preview-image" src="" alt="Preview" />
         </div>
+       
+        <!-- Menu Popup -->
+        <div id="menu-popup" class="popup">
+            <div class="popup-content">
+                <span class="close-btn">&times;</span>
+                <embed src="menu.pdf" type="application/pdf" width="100%" height="500px" />
+                <a href="menu.pdf" download class="download-btn">Download Menu</a>
+            </div>
+        </div>
     </section>
     
+
     <section id="events">
         <h2>Massage & Fitness</h2>
         <div class="events-list">
