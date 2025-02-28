@@ -30,6 +30,16 @@
             <h1>Welkom In De Living</h1>
             <p>Jouw tweede thuis, waar warmte en gezelligheid samenkomen.</p>
             <a href="#calendar" class="btn">Openingsuren</a>
+            <!-- Newsletter Subscription -->
+        <div id="newsletter">
+        <h3>Schrijf je in voor onze nieuwsbrief!</h3>
+        <p>Blijf op de hoogte van onze evenementen en promoties.</p>
+        <form id="newsletter-form">
+            <input type="email" id="email" placeholder="Voer je e-mail in" required>
+            <button type="submit">Abonneren</button>
+        </form>
+        <p id="success-message" style="display: none; color: green;">Bedankt voor je inschrijving!</p>
+    </div>
         </div>
     </section>
 
@@ -115,21 +125,25 @@
                 <div class="gallery-arrows">
                     <button id="scroll-left">←</button>
                     <button id="scroll-right">→</button>
-                </div>                
-                <img src="img/papmam.jpg" alt="Gallery Image 1" class="gallerywrapperimage">
-                <img src="images/gallery2.jpg" alt="Gallery Image 2" class="gallerywrapperimage">
-                <img src="images/gallery3.jpg" alt="Gallery Image 3" class="gallerywrapperimage">
-                <img src="images/gallery4.jpg" alt="Gallery Image 4" class="gallerywrapperimage">
-                <img src="images/gallery5.jpg" alt="Gallery Image 5" class="gallerywrapperimage">
-                <img src="images/gallery6.jpg" alt="Gallery Image 6" class="gallerywrapperimage">
-                <img src="images/gallery7.jpg" alt="Gallery Image 7" class="gallerywrapperimage">
-                <img src="images/gallery8.jpg" alt="Gallery Image 8" class="gallerywrapperimage">
+                </div>
+                <div class="gallery-images">
+                    <img src="img/papmam.jpg" alt="Gallery Image 1" class="gallerywrapperimage">
+                    <img src="images/gallery2.jpg" alt="Gallery Image 2" class="gallerywrapperimage">
+                    <img src="images/gallery3.jpg" alt="Gallery Image 3" class="gallerywrapperimage">
+                    <img src="images/gallery4.jpg" alt="Gallery Image 4" class="gallerywrapperimage">
+                    <img src="images/gallery5.jpg" alt="Gallery Image 5" class="gallerywrapperimage">
+                    <img src="images/gallery6.jpg" alt="Gallery Image 6" class="gallerywrapperimage">
+                    <img src="images/gallery7.jpg" alt="Gallery Image 7" class="gallerywrapperimage">
+                    <img src="images/gallery8.jpg" alt="Gallery Image 8" class="gallerywrapperimage">
+                </div>
             </div>
         </div>
         <div id="image-popup">
+            <button id="close-popup">&times;</button>
             <img id="popup-image" src="" alt="Popup">
         </div>
     </section>
+    
     <section id="contact">
         <div class="contact-content">
             <h2>Contacteer ons</h2>
