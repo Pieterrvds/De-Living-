@@ -20,8 +20,6 @@ document.querySelectorAll(".nav-links a").forEach(link => {
     });
 });
 
-
-
 // Menu item hover to display image
 const menuItems = document.querySelectorAll('.menu-item');
 const previewImage = document.getElementById('menu-preview-image');
@@ -57,6 +55,97 @@ popup.addEventListener("click", (e) => {
     if (e.target === popup) {
         popup.style.display = "none";
     }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('newsletter-form');
+    const emailInput = document.getElementById('email');
+    const successMessage = document.getElementById('success-message');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Prevent page reload
+
+        const email = emailInput.value.trim();
+        if (!validateEmail(email)) {
+            alert('Voer een geldig e-mailadres in.');
+            return;
+        }
+
+        const data = {
+            email_address: email,
+            status: "subscribed"
+        };
+
+        try {
+            const response = await fetch("https://usX.api.mailchimp.com/3.0/lists/YOUR_AUDIENCE_ID/members/", {
+                method: "POST",
+                headers: {
+                    "Authorization": "apikey YOUR_MAILCHIMP_API_KEY",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                successMessage.style.display = 'block';
+                emailInput.value = ''; // Clear input field
+            } else {
+                alert("Er is iets misgegaan. Probeer het opnieuw.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    });
+
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const galleryImages = document.querySelectorAll('.gallerywrapperimage');
+    const imagePopup = document.getElementById('image-popup');
+    const popupImage = document.getElementById('popup-image');
+    const closePopup = document.getElementById('close-popup');
+    const scrollLeft = document.getElementById('scroll-left');
+    const scrollRight = document.getElementById('scroll-right');
+    const galleryWrapper = document.querySelector('.gallery-container');
+
+    // Ensure the popup is hidden by default
+    imagePopup.style.display = 'none';
+
+    // Open image in popup
+    galleryImages.forEach(image => {
+        image.addEventListener('click', () => {
+            popupImage.src = image.src;
+            imagePopup.style.display = 'flex';
+        });
+    });
+
+    // Close popup
+    closePopup.addEventListener('click', () => {
+        imagePopup.style.display = 'none';
+        popupImage.src = ''; // Clear the image source
+    });
+
+    // Close popup when clicking outside the image
+    imagePopup.addEventListener('click', (e) => {
+        if (e.target === imagePopup) {
+            imagePopup.style.display = 'none';
+            popupImage.src = '';
+        }
+    });
+
+    // Scroll Gallery Left
+    scrollLeft.addEventListener('click', () => {
+        galleryWrapper.scrollBy({ left: -300, behavior: 'smooth' });
+    });
+
+    // Scroll Gallery Right
+    scrollRight.addEventListener('click', () => {
+        galleryWrapper.scrollBy({ left: 300, behavior: 'smooth' });
+    });
 });
 
 
