@@ -11,6 +11,32 @@ body {
     background-color: #FFF8E1;
 }
 
+#maintenance-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #5D4037;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .maintenance-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .maintenance-content p {
+    font-size: 1.2rem;
+  }
+
 h1, h2 {
     font-family: 'Pacifico', cursive;
 }
