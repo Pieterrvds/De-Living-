@@ -1,203 +1,787 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>In De Living</title>
-    <link rel="stylesheet" href="styles.css">
-    <script defer src="script.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>In de Living – Sports Café</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FAF6EF;--warm-white:#FDF9F3;--amber:#E8883A;--amber-light:#F5C97A;--amber-dark:#B55C1A;--terracotta:#C5513D;--sage:#6B8A5E;--sage-light:#9BB88E;--brown:#4A2F1A;--brown-mid:#7A4E30;--text:#2E1A0E;--text-mid:#5C3D22;--text-muted:#8B6247;--border:rgba(122,78,48,0.18);--radius:16px;--radius-sm:10px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(250,246,239,0.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;color:var(--brown);letter-spacing:-0.02em;text-decoration:none;}
+.nav-logo span{color:var(--amber);}
+.nav-links{display:flex;gap:2rem;list-style:none;}
+.nav-links a{font-size:0.9rem;font-weight:500;color:var(--text-mid);text-decoration:none;transition:color 0.2s;}
+.nav-links a:hover{color:var(--amber);}
+.nav-right{display:flex;align-items:center;gap:1rem;}
+.nav-cta{background:var(--amber);color:white;border:none;padding:0.55rem 1.25rem;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;transition:background 0.2s;text-decoration:none;}
+.nav-cta:hover{background:var(--amber-dark);}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--brown);border-radius:2px;transition:all 0.3s;}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;z-index:190;background:rgba(250,246,239,0.98);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:1.5rem 2rem 2rem;flex-direction:column;}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{display:block;padding:0.9rem 0;font-size:1.05rem;font-weight:500;color:var(--text-mid);text-decoration:none;border-bottom:1px solid var(--border);transition:color 0.2s;}
+.mobile-menu a:last-child{border-bottom:none;}
+.mobile-menu a:hover{color:var(--amber);}
+.mob-cta{margin-top:1.2rem;text-align:center;background:var(--amber);color:white !important;border-radius:50px;padding:0.85rem;font-size:1rem;font-weight:500;border-bottom:none !important;}
+
+/* HERO */
+.hero{min-height:100vh;padding:120px 2rem 80px;display:flex;align-items:center;position:relative;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;z-index:0;background-image:url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80');background-size:cover;background-position:center;filter:brightness(0.32) saturate(0.75);}
+.hero-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(135deg,rgba(74,47,26,0.7) 0%,rgba(232,136,58,0.15) 60%,rgba(107,138,94,0.1) 100%);}
+.hero-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;position:relative;z-index:2;}
+.hero-eyebrow{font-size:0.8rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber-light);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;}
+.hero-eyebrow::before{content:'';width:28px;height:1.5px;background:var(--amber-light);}
+.hero h1{font-family:'Fraunces',serif;font-size:clamp(2.8rem,5vw,4.2rem);font-weight:600;line-height:1.1;letter-spacing:-0.03em;color:#FDF9F3;margin-bottom:1.5rem;}
+.hero h1 em{font-style:italic;color:var(--amber-light);font-weight:300;}
+.hero-desc{font-size:1.05rem;line-height:1.8;color:rgba(253,249,243,0.82);margin-bottom:2.5rem;max-width:440px;}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;}
+
+/* ── BIG HERO BUTTONS ── */
+.btn-hero-primary{
+  background:var(--amber);
+  color:white;border:none;
+  padding:1.1rem 2.6rem;
+  border-radius:50px;
+  font-family:'DM Sans',sans-serif;
+  font-size:1.05rem;font-weight:500;
+  cursor:pointer;
+  text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+  letter-spacing:0.01em;
+  box-shadow:0 6px 28px rgba(232,136,58,0.45);
+  transition:background 0.2s,transform 0.15s,box-shadow 0.2s;
+}
+.btn-hero-primary:hover{background:var(--amber-dark);transform:translateY(-3px);box-shadow:0 10px 36px rgba(232,136,58,0.5);}
+.btn-hero-secondary{
+  background:rgba(253,249,243,0.1);
+  color:#FDF9F3;
+  border:2px solid rgba(253,249,243,0.55);
+  padding:1.1rem 2.6rem;
+  border-radius:50px;
+  font-family:'DM Sans',sans-serif;
+  font-size:1.05rem;font-weight:500;
+  cursor:pointer;
+  text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+  letter-spacing:0.01em;
+  backdrop-filter:blur(4px);
+  transition:all 0.2s;
+}
+.btn-hero-secondary:hover{background:rgba(253,249,243,0.2);border-color:rgba(253,249,243,0.85);transform:translateY(-3px);}
+
+.hero-visual{position:relative;display:flex;justify-content:center;align-items:center;}
+.hero-card-stack{position:relative;width:340px;height:380px;}
+.hero-card{position:absolute;background:rgba(253,249,243,0.96);border-radius:var(--radius);border:1px solid rgba(122,78,48,0.15);padding:1.5rem;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
+.hero-card-main{width:280px;top:30px;left:30px;z-index:2;}
+.hero-card-back{width:260px;top:0;left:60px;background:rgba(245,201,122,0.9);transform:rotate(4deg);z-index:1;}
+.hero-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(107,138,94,0.15);color:var(--sage);padding:4px 12px;border-radius:50px;font-size:0.75rem;font-weight:500;margin-bottom:1rem;}
+.hero-pill-dot{width:6px;height:6px;border-radius:50%;background:var(--sage);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.hero-card-title{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:600;color:var(--brown);margin-bottom:0.25rem;}
+.hero-card-sub{font-size:0.8rem;color:var(--text-muted);margin-bottom:1.2rem;}
+.capacity-row{margin-bottom:0.8rem;}
+.cap-label{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-mid);margin-bottom:4px;}
+.cap-bar{height:6px;border-radius:50px;background:rgba(122,78,48,0.12);overflow:hidden;}
+.cap-fill{height:100%;border-radius:50px;}
+
+/* STATS */
+.stats-row{background:var(--brown);padding:2.5rem 2rem;}
+.stats-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;text-align:center;}
+.stat-num{font-family:'Fraunces',serif;font-size:2.5rem;font-weight:600;color:var(--amber-light);display:block;}
+.stat-label{font-size:0.85rem;color:rgba(250,201,122,0.6);margin-top:0.25rem;}
+
+/* SHARED */
+section{padding:5rem 2rem;}
+.section-inner{max-width:1100px;margin:0 auto;}
+.section-tag{font-size:0.75rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);margin-bottom:0.75rem;}
+.section-title{font-family:'Fraunces',serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:600;color:var(--brown);line-height:1.15;letter-spacing:-0.025em;margin-bottom:1.5rem;}
+
+/* KALENDER */
+#kalender{background:var(--cream);}
+.kalender-wrap{margin-top:2.5rem;background:white;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;}
+.kalender-top{padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--warm-white);}
+.kalender-nav-btns{display:flex;gap:0.5rem;}
+.kal-btn{width:34px;height:34px;border-radius:8px;background:white;border:1px solid var(--border);cursor:pointer;font-size:1rem;color:var(--text-mid);display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+.kal-btn:hover{background:var(--cream);}
+.kal-month{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:600;color:var(--brown);}
+.kal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
+.kal-header-day{text-align:center;padding:0.65rem 0;font-size:0.72rem;font-weight:500;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.kal-day{min-height:76px;padding:7px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
+.kal-day:hover{background:var(--cream);}
+.kal-day:nth-child(7n){border-right:none;}
+.kal-day.other-month{background:rgba(250,246,239,0.5);}
+.kal-day.other-month .kal-day-num{color:var(--text-muted);opacity:0.35;}
+.kal-day-num{font-size:0.82rem;font-weight:500;color:var(--text-mid);margin-bottom:3px;}
+.kal-event{font-size:0.65rem;padding:2px 4px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
+.kal-event.yoga{background:rgba(107,138,94,0.2);color:#3D6632;}
+.kal-event.boxing{background:rgba(197,81,61,0.15);color:var(--terracotta);}
+.kal-event.pilates{background:rgba(232,136,58,0.2);color:var(--amber-dark);}
+.kal-event.spinning{background:rgba(122,78,48,0.15);color:var(--brown-mid);}
+.kal-event.hiit{background:rgba(196,77,88,0.15);color:#A03040;}
+.kal-event.stretching{background:rgba(155,184,142,0.25);color:#3E6B36;}
+.kal-legend{padding:0.9rem 1.5rem;display:flex;flex-wrap:wrap;gap:0.75rem;border-top:1px solid var(--border);}
+.legend-dot{display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text-mid);}
+.legend-pip{width:8px;height:8px;border-radius:50%;}
+
+/* LESSEN */
+#lessen{background:var(--warm-white);}
+.lessen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;margin-top:2.5rem;}
+.les-card{background:white;border-radius:var(--radius);border:1px solid var(--border);padding:1.75rem;transition:transform 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;}
+.les-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(74,47,26,0.1);}
+.les-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.les-card.yoga::before{background:var(--sage);}
+.les-card.boxing::before{background:var(--terracotta);}
+.les-card.pilates::before{background:var(--amber);}
+.les-card.spinning::before{background:var(--brown-mid);}
+.les-card.hiit::before{background:#C44D58;}
+.les-card.stretching::before{background:var(--sage-light);}
+.les-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1rem;}
+.les-name{font-family:'Fraunces',serif;font-size:1.25rem;font-weight:600;color:var(--brown);margin-bottom:0.3rem;}
+.les-meta{font-size:0.8rem;color:var(--text-muted);margin-bottom:1.2rem;}
+.les-meta span{margin-right:0.8rem;}
+.cap-section{margin-bottom:1.2rem;}
+.cap-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.cap-head-label{font-size:0.78rem;color:var(--text-mid);font-weight:500;}
+.cap-badge{font-size:0.72rem;font-weight:500;padding:2px 8px;border-radius:50px;}
+.cap-badge.vol{background:rgba(107,138,94,0.15);color:var(--sage);}
+.cap-badge.half{background:rgba(232,136,58,0.15);color:var(--amber-dark);}
+.cap-badge.full{background:rgba(197,81,61,0.12);color:var(--terracotta);}
+.cap-bar-large{height:10px;border-radius:50px;background:rgba(122,78,48,0.1);overflow:hidden;margin-bottom:4px;}
+.cap-bar-large .cap-fill{height:100%;border-radius:50px;}
+.cap-spots{font-size:0.72rem;color:var(--text-muted);}
+.subscribe-btn{width:100%;padding:0.7rem;border-radius:50px;border:1.5px solid var(--border);background:transparent;color:var(--brown);font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.subscribe-btn:hover:not(:disabled){background:var(--amber);border-color:var(--amber);color:white;}
+.subscribe-btn:disabled{opacity:0.45;cursor:not-allowed;}
+.subscribe-btn.subscribed{background:var(--sage);border-color:var(--sage);color:white;}
+
+/* Mobile: hidden cards + toon meer btn */
+.les-card.mobile-hidden{display:none;}
+.show-more-wrap{display:none;text-align:center;margin-top:1.5rem;}
+.show-more-btn{padding:0.85rem 2.5rem;border-radius:50px;border:2px solid var(--amber);background:transparent;color:var(--amber);font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.show-more-btn:hover{background:var(--amber);color:white;}
+
+/* BAR – overhauled as menu */
+#bar{background:var(--cream);}
+.bar-hero-img{
+  width:100%;height:380px;
+  border-radius:var(--radius);
+  overflow:hidden;
+  position:relative;
+  margin-bottom:3rem;
+}
+.bar-hero-img img{width:100%;height:100%;object-fit:cover;object-position:center;}
+.bar-hero-img::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(74,47,26,0.6) 0%,transparent 50%);
+  border-radius:var(--radius);
+}
+.bar-hero-caption{
+  position:absolute;bottom:1.5rem;left:1.75rem;z-index:1;
+  color:white;font-family:'Fraunces',serif;font-size:1.4rem;font-weight:600;
+}
+.bar-hero-sub{font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:400;opacity:0.8;margin-top:2px;}
+
+/* Menu tabs */
+.menu-tabs{display:flex;gap:0.5rem;margin-bottom:2rem;flex-wrap:wrap;}
+.menu-tab{padding:0.5rem 1.2rem;border-radius:50px;border:1.5px solid var(--border);background:white;color:var(--text-mid);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.menu-tab:hover{border-color:var(--amber);color:var(--amber-dark);}
+.menu-tab.active{background:var(--amber);border-color:var(--amber);color:white;}
+
+/* Menu grid */
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.25rem;}
+.menu-card{
+  background:white;border-radius:var(--radius);border:1px solid var(--border);
+  overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;
+}
+.menu-card:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(74,47,26,0.1);}
+.menu-card-img{width:100%;height:160px;object-fit:cover;display:block;}
+.menu-card-body{padding:1rem 1.25rem;}
+.menu-card-name{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;color:var(--brown);margin-bottom:0.25rem;}
+.menu-card-desc{font-size:0.78rem;color:var(--text-muted);line-height:1.6;margin-bottom:0.75rem;}
+.menu-card-footer{display:flex;align-items:center;justify-content:space-between;}
+.menu-card-price{font-size:1.1rem;font-weight:600;color:var(--amber-dark);font-family:'Fraunces',serif;}
+.menu-card-tag{font-size:0.68rem;font-weight:500;padding:3px 8px;border-radius:50px;background:rgba(107,138,94,0.12);color:var(--sage);}
+.menu-section{display:none;}
+.menu-section.active{display:block;}
+
+/* CONTACT */
+#contact{background:var(--warm-white);}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-top:2.5rem;}
+.contact-item{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.4rem;}
+.contact-icon{width:40px;height:40px;background:rgba(232,136,58,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.contact-label{font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;}
+.contact-val{font-size:0.95rem;color:var(--text-mid);font-weight:500;}
+.contact-val a{color:var(--text-mid);text-decoration:none;}
+.contact-val a:hover{color:var(--amber);}
+.hours-link{display:inline-flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--amber);text-decoration:none;margin-top:4px;font-weight:500;}
+.hours-link:hover{color:var(--amber-dark);}
+.social-row{margin-top:1.5rem;}
+.social-row-label{font-size:0.75rem;color:var(--text-muted);margin-bottom:0.75rem;}
+.social-links{display:flex;gap:0.6rem;flex-wrap:wrap;}
+.social-btn{display:inline-flex;align-items:center;gap:6px;padding:0.5rem 0.9rem;border-radius:50px;font-size:0.8rem;font-weight:500;text-decoration:none;border:1.5px solid var(--border);color:var(--text-mid);transition:all 0.2s;}
+.social-btn:hover{border-color:var(--amber);color:var(--amber-dark);background:rgba(232,136,58,0.07);}
+.social-btn svg{width:15px;height:15px;flex-shrink:0;}
+.contact-form{background:white;border-radius:var(--radius);border:1px solid var(--border);padding:2rem;}
+.form-group{margin-bottom:1.2rem;}
+.form-group label{display:block;font-size:0.8rem;font-weight:500;color:var(--text-mid);margin-bottom:5px;}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:0.7rem 1rem;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--text);background:var(--cream);outline:none;transition:border-color 0.2s;}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--amber);}
+.form-group textarea{resize:vertical;min-height:100px;}
+.form-submit{width:100%;padding:0.85rem;background:var(--amber);color:white;border:none;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:500;cursor:pointer;transition:background 0.2s;}
+.form-submit:hover{background:var(--amber-dark);}
+
+/* WHATSAPP FLOAT */
+.wa-float{position:fixed;bottom:1.8rem;right:1.8rem;z-index:300;width:58px;height:58px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,0.45);text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;}
+.wa-float:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(37,211,102,0.55);}
+.wa-float svg{width:30px;height:30px;fill:white;}
+.wa-tooltip{position:absolute;right:68px;top:50%;transform:translateY(-50%);background:var(--brown);color:white;font-size:0.75rem;font-weight:500;padding:5px 10px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.wa-float:hover .wa-tooltip{opacity:1;}
+
+/* FOOTER */
+footer{background:var(--brown);padding:3rem 2rem;text-align:center;color:rgba(250,201,122,0.6);font-size:0.85rem;}
+.foot-logo{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:600;color:var(--amber-light);margin-bottom:0.5rem;display:block;}
+.foot-tagline{color:rgba(250,201,122,0.5);margin-bottom:1.5rem;font-size:0.9rem;}
+.foot-links{display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;margin-bottom:2rem;}
+.foot-links a{color:rgba(250,201,122,0.7);text-decoration:none;font-size:0.85rem;}
+.foot-links a:hover{color:var(--amber-light);}
+
+/* TOAST */
+.toast{position:fixed;bottom:6rem;right:2rem;z-index:999;background:var(--brown);color:white;padding:1rem 1.5rem;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:500;transform:translateY(80px);opacity:0;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;max-width:280px;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* RESPONSIVE */
+@media(max-width:860px){
+  .nav-links,.nav-cta{display:none;}
+  .hamburger{display:flex;}
+  .hero-inner{grid-template-columns:1fr;}
+  .hero-visual{display:none;}
+  .stats-inner{grid-template-columns:1fr 1fr;}
+  .bar-grid{grid-template-columns:1fr;}
+  .contact-grid{grid-template-columns:1fr;}
+  .kal-event{display:none;}
+  .kal-day{min-height:55px;}
+
+  /* Mobile lessen: show only 2, rest hidden */
+  .lessen-grid{grid-template-columns:1fr;}
+  .les-card.mobile-hidden{display:none;}
+  .les-card.mobile-hidden.shown{display:block;}
+  .show-more-wrap{display:block;}
+  .hero-actions{flex-direction:column;}
+  .btn-hero-primary,.btn-hero-secondary{justify-content:center;text-align:center;}
+}
+@media(max-width:480px){
+  .stats-inner{grid-template-columns:1fr 1fr;gap:1rem;}
+  section{padding:3.5rem 1.25rem;}
+  .menu-grid{grid-template-columns:1fr;}
+}
+</style>
 </head>
 <body>
 
-    <div id="maintenance-overlay">
-        <div class="maintenance-content">
-          <h1>Website Onderhoud</h1>
-          <p>Onze website is tijdelijk niet beschikbaar.</p>
+<!-- WHATSAPP -->
+<a class="wa-float" href="https://wa.me/32471955489" target="_blank" rel="noopener" aria-label="WhatsApp">
+  <div class="wa-tooltip">Stuur ons een berichtje!</div>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">In de <span>Living</span></a>
+  <ul class="nav-links">
+    <li><a href="#kalender">Rooster</a></li>
+    <li><a href="#lessen">Lessen</a></li>
+    <li><a href="#bar">Bar & Menu</a></li>
+    <li><a href="gallery.html">Foto's</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="#lessen" class="nav-cta">Inschrijven</a>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#kalender" onclick="closeMenu()">📅 Rooster</a>
+  <a href="#lessen" onclick="closeMenu()">🏋️ Lessen</a>
+  <a href="#bar" onclick="closeMenu()">☕ Bar & Menu</a>
+  <a href="gallery.html" onclick="closeMenu()">📸 Foto's</a>
+  <a href="#contact" onclick="closeMenu()">📍 Contact</a>
+  <a href="#lessen" class="mob-cta" onclick="closeMenu()">Inschrijven voor een les</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-eyebrow">Sports Café · Gent</div>
+      <h1>Zweet, <em>kracht</em> &amp; een goeie koffie</h1>
+      <p class="hero-desc">In de Living is meer dan een sportplek — het is jouw thuisbasis. Train hard, daarna verwennen we je aan de bar met verse smoothies, koffie en gezonde snacks.</p>
+      <div class="hero-actions">
+        <a href="#lessen" class="btn-hero-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Bekijk de lessen
+        </a>
+        <a href="#kalender" class="btn-hero-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Kalender bekijken
+        </a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card-stack">
+        <div class="hero-card hero-card-back"></div>
+        <div class="hero-card hero-card-main">
+          <div class="hero-pill"><div class="hero-pill-dot"></div>Nu beschikbaar</div>
+          <div class="hero-card-title">Plaatsen vandaag</div>
+          <div class="hero-card-sub">Capaciteit per les</div>
+          <div class="capacity-row">
+            <div class="cap-label"><span>🧘 Yoga</span><span>8/16</span></div>
+            <div class="cap-bar"><div class="cap-fill" style="width:50%;background:#6B8A5E;"></div></div>
+          </div>
+          <div class="capacity-row">
+            <div class="cap-label"><span>🥊 Boksen</span><span>14/16</span></div>
+            <div class="cap-bar"><div class="cap-fill" style="width:87%;background:#C5513D;"></div></div>
+          </div>
+          <div class="capacity-row">
+            <div class="cap-label"><span>🚴 Spinning</span><span>6/20</span></div>
+            <div class="cap-bar"><div class="cap-fill" style="width:30%;background:#E8883A;"></div></div>
+          </div>
         </div>
       </div>
-
-    
-    <header>
-        <div class="logo">De Living</div>
-        <nav>
-            <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#menu">Menu</a></li>
-                <li><a href="#events">Massage & Fitness</a></li>
-                <li><a onclick="window.location.href='webshop.html'">Webshop</a></li>
-                <li><a href="#calendar">Kalender</a></li>
-                <li><a href="#gallery">Gallerij</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-            <div class="hamburger" onclick="toggleMenu()">  ☰  </div>
-        </nav>
-    </header>
-    <section id="home" class="hero">
-        <div class="hero-content">
-            <h1>Welkom In De Living</h1>
-            <p>Jouw tweede thuis, waar warmte en gezelligheid samenkomen.</p>
-            <a href="#calendar" class="btn">Openingsuren</a>
-            <!-- Newsletter Subscription -->
-        <div id="newsletter">
-        <h3>Schrijf je in voor onze nieuwsbrief!</h3>
-        <p>Blijf op de hoogte van onze evenementen en promoties.</p>
-        <form id="newsletter-form">
-            <input type="email" id="email" placeholder="Voer je e-mail in" required>
-            <button type="submit">Abonneren</button>
-        </form>
-        <p id="success-message" style="display: none; color: green;">Bedankt voor je inschrijving!</p>
     </div>
-        </div>
-    </section>
+  </div>
+</section>
 
-    <section id="about">
-        <div class="about-content">
-            <h2>Over ons</h2>
-            <p>
-                Stap binnen bij <strong>De Living</strong>, een warme en knusse kroeg waar lekkere snacks, gezonde drankjes en mooie momenten centraal staan.
-                Gelegen in het hart van Hofstade, verwelkomen we iedereen met open armen.
-            </p>
-            <p>
-                Kom langs voor een heerlijk drankje, een smakelijke hap of een gezellige babbel in onze living.
-                <strong>De Living</strong>is niet zomaar een kroeg, het is een plek waar je je thuis voelt.
-            </p>
-            <img src="img/famvds.jpg" alt="Interior of De Living Pub">
-        </div>
-    </section>
+<!-- STATS -->
+<div class="stats-row">
+  <div class="stats-inner">
+    <div><span class="stat-num">12+</span><div class="stat-label">Groepslessen per week</div></div>
+    <div><span class="stat-num">300+</span><div class="stat-label">Actieve leden</div></div>
+    <div><span class="stat-num">6</span><div class="stat-label">Lessoorten</div></div>
+    <div><span class="stat-num">100%</span><div class="stat-label">Goed gevoel gegarandeerd</div></div>
+  </div>
+</div>
 
-    <div class="whatsapp-icon" id="whatsapp-button">
-        <img src="whatsapp-icon.svg" alt="WhatsApp">
+<!-- KALENDER -->
+<section id="kalender">
+  <div class="section-inner">
+    <div class="section-tag">Rooster</div>
+    <h2 class="section-title">Wekelijks lesrooster</h2>
+    <p style="color:var(--text-mid);max-width:540px;line-height:1.8;font-size:0.95rem;">Plan je week vooruit. Zie in één oogopslag welke lessen er zijn en wanneer. Koppel ook je Google Calendar.</p>
+    <div class="kalender-wrap">
+      <div class="kalender-top">
+        <div class="kal-month" id="kalTitle"></div>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <a href="https://calendar.google.com/calendar/r" target="_blank" style="font-size:0.8rem;color:var(--amber);text-decoration:none;font-weight:500;">+ Google Calendar</a>
+          <div class="kalender-nav-btns">
+            <button class="kal-btn" onclick="changeMonth(-1)">&#8249;</button>
+            <button class="kal-btn" onclick="changeMonth(1)">&#8250;</button>
+          </div>
+        </div>
+      </div>
+      <div class="kal-grid" id="kalGrid"></div>
+      <div class="kal-legend">
+        <div class="legend-dot"><div class="legend-pip" style="background:#6B8A5E"></div>Yoga</div>
+        <div class="legend-dot"><div class="legend-pip" style="background:#C5513D"></div>Boksen</div>
+        <div class="legend-dot"><div class="legend-pip" style="background:#E8883A"></div>Pilates</div>
+        <div class="legend-dot"><div class="legend-pip" style="background:#7A4E30"></div>Spinning</div>
+        <div class="legend-dot"><div class="legend-pip" style="background:#C44D58"></div>HIIT</div>
+        <div class="legend-dot"><div class="legend-pip" style="background:#9BB88E"></div>Stretching</div>
+      </div>
     </div>
-    
-    <section id="menu">
-        <h2>Ons Menu: Simpel, maar heerlijk</h2>
-        <p>Dagelijks vers bereid met liefde en passie.</p>
-        <div class="menu-container">
-            <div class="menu-item" data-image="images/food1.jpg">Croque Monsieur</div>
-            <div class="menu-item" data-image="images/food2.jpg">Pannenkoek</div>
-            <div class="menu-item" data-image="images/food3.jpg">Soep van de week</div>
-            <div class="menu-item" data-image="images/food4.jpg">Kaasplankje</div>
-        </div>
-        <!-- Button to open the menu popup -->
-        <button id="open-menu-btn" class="btn">Bekijk Volledig Menu</button>
-    
-        <!-- Image menu preview -->
-        <div class="menu-preview">
-            <img id="menu-preview-image" src="" alt="Preview" />
-        </div>
-       
-        <!-- Menu Popup -->
-        <div id="menu-popup" class="popup">
-            <div class="popup-content">
-                <span class="close-btn">&times;</span>
-                <embed src="menu.pdf" type="application/pdf" width="100%" height="500px" />
-                <a href="menu.pdf" download class="download-btn">Download Menu</a>
-            </div>
-        </div>
-    </section>
-    
+  </div>
+</section>
 
-    <section id="events">
-        <h2>Massage & Fitness</h2>
-        <div class="events-list">
-            <div class="event" id="event2" onclick="window.location.href='https://zenmetgwen.com'">
-                <h3>ZEN MET GWEN</h3>
-            </div>
-            <div class="event" id="event3" onclick="window.location.href='https://level-upcrossfit.com'">
-                <h3>LEVEL-UP</h3>
-            </div>
-        </div>
-    </section>
-        
-    <section id="calendar">
-        <h2>Kalender</h2>
-        <p>Bekijk onze aankomende evenementen en speciale acties!</p>
-        <div id="calendar-container">
-            <iframe 
-                src="https://calendar.google.com/calendar/embed?src=81e94de2ab76486fdc38e7ef0e48e16e121371d4a68b7d988e1293328dc22e77%40group.calendar.google.com&ctz=Europe%2FBrussels"
-                style="border: 0" 
-                width="100%" 
-                height="600" 
-                frameborder="0" 
-                scrolling="no">
-            </iframe>
-        </div>
-    </section>
+<!-- LESSEN -->
+<section id="lessen">
+  <div class="section-inner">
+    <div class="section-tag">Groepslessen</div>
+    <h2 class="section-title">Kies jouw les &amp; schrijf je in</h2>
+    <p style="color:var(--text-mid);max-width:540px;line-height:1.8;font-size:0.95rem;">Elke les staat voor maximaal 20 deelnemers. De capaciteitsbalk toont je in één oogopslag hoeveel plaatsen er nog vrij zijn.</p>
+    <div class="lessen-grid" id="lessenGrid"></div>
+    <div class="show-more-wrap" id="showMoreWrap">
+      <button class="show-more-btn" id="showMoreBtn" onclick="toggleMoreLessen()">Toon alle lessen ↓</button>
+    </div>
+  </div>
+</section>
 
-    <section id="gallery">
-        <h2>Galerij</h2>
-        <p>Een sfeerimpressie van De Living!</p>
-        <div class="gallery-container">
-            <div class="gallery-wrapper">
-                <div class="gallery-arrows">
-                    <button id="scroll-left">←</button>
-                    <button id="scroll-right">→</button>
-                </div>
-                <div class="gallery-images">
-                    <img src="img/papmam.jpg" alt="Gallery Image 1" class="gallerywrapperimage">
-                    <img src="images/gallery2.jpg" alt="Gallery Image 2" class="gallerywrapperimage">
-                    <img src="images/gallery3.jpg" alt="Gallery Image 3" class="gallerywrapperimage">
-                    <img src="images/gallery4.jpg" alt="Gallery Image 4" class="gallerywrapperimage">
-                    <img src="images/gallery5.jpg" alt="Gallery Image 5" class="gallerywrapperimage">
-                    <img src="images/gallery6.jpg" alt="Gallery Image 6" class="gallerywrapperimage">
-                    <img src="images/gallery7.jpg" alt="Gallery Image 7" class="gallerywrapperimage">
-                    <img src="images/gallery8.jpg" alt="Gallery Image 8" class="gallerywrapperimage">
-                </div>
+<!-- BAR & MENU -->
+<section id="bar">
+  <div class="section-inner">
+    <div class="section-tag">Bar &amp; Menu</div>
+    <h2 class="section-title">Onze bar &amp; verse drankkaart</h2>
+    <p style="color:var(--text-mid);max-width:540px;line-height:1.8;font-size:0.95rem;margin-bottom:2rem;">Na een goede training verdien je het beste. Scan de QR-code aan de bar of tafel om direct hier te komen. Vers gemaakt, elke dag.</p>
+
+    <!-- Bar hero image -->
+    <div class="bar-hero-img">
+      <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1200&q=80" alt="Gezellige bar met couches bij In de Living">
+      <div class="bar-hero-caption">
+        In de Living Bar
+        <div class="bar-hero-sub">Gezellig, warm &amp; gezond — voor en na je training</div>
+      </div>
+    </div>
+
+    <!-- Menu tabs -->
+    <div class="menu-tabs">
+      <button class="menu-tab active" onclick="setMenuTab('shakes',this)">🥤 Shakes</button>
+      <button class="menu-tab" onclick="setMenuTab('koffie',this)">☕ Koffie</button>
+      <button class="menu-tab" onclick="setMenuTab('snacks',this)">🍌 Snacks</button>
+    </div>
+
+    <!-- SHAKES -->
+    <div class="menu-section active" id="menu-shakes">
+      <div class="menu-grid">
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=600&q=80" alt="Proteïne Shake">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Proteïne Shake</div>
+            <div class="menu-card-desc">Chocolade of vanille whey, havermilk &amp; banaan. 28g proteïne per portie. Perfect na je training.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 5,50</span>
+              <span class="menu-card-tag">Post-workout</span>
             </div>
+          </div>
         </div>
-        <div id="image-popup">
-            <button id="close-popup">&times;</button>
-            <img id="popup-image" src="" alt="Popup">
-        </div>
-    </section>
-    
-    <section id="contact">
-        <div class="contact-content">
-            <h2>Contacteer ons</h2>
-            <p> Vragen of reserveren? We horen graag van je!</p>
-            <div class="contact-grid">
-                <!-- Contact Details -->
-                <div class="contact-details">
-                    <h3>Je vindt ons hier!</h3>
-                    <p><strong>Adres:</strong> Hoogstraat 40, Hofstade</p>
-                    <p><strong>Telefoon:</strong> <a href="tel:+31234567890">+32471955489</a></p>
-                    <p><strong>E-mail:</strong> <a href="mailto:DeLiving@outlook.be">DeLiving@outlook.be</a></p>
-                    <p><strong>Volg ons op:</strong></p>
-                    <div class="social-icons">
-                        <a href="#"><img src="img/facebook.png" alt="Facebook"></a>
-                        <a href="#"><img src="img/Instagram.png" alt="Instagram"></a>
-                    </div>
-                </div>
-                <!-- Contact Form -->
-                <div class="contact-form">
-                    <h3>Stuur ons een berichtje</h3>
-                    <form action="https://formsubmit.co/DeLiving@outlook.be" method="POST">
-                        <input type="text" name="name" placeholder="Your Name" required>
-                        <input type="email" name="email" placeholder="Your Email" required>
-                        <textarea name="message" rows="5" placeholder="Your Message" required></textarea>
-                        <button type="submit" class="btn">Verstuur</button>
-                    </form>                                                        
-                </div>
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=600&q=80" alt="Groene Boost">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Groene Boost</div>
+            <div class="menu-card-desc">Spinazie, komkommer, groene appel, gember &amp; citroen. Fris, licht en boordevol vitamines.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 5,00</span>
+              <span class="menu-card-tag">Vitamines</span>
             </div>
-            <!-- Google Maps Embed -->
-            <div class="map">
-                <iframe 
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2512.943262341181!2d4.031857476129792!3d50.961753250418376!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c397f3100f8e29%3A0x2fe9a450dc9bbe17!2sHoogstraat%2040%2C%209308%20Aalst!5e0!3m2!1snl!2sbe!4v1733333219843!5m2!1snl!2sbe"
-                    width="50%" 
-                    height="400" 
-                    style="border:0;" 
-                    allowfullscreen="" 
-                    loading="lazy">
-                </iframe>
-            </div>
+          </div>
         </div>
-    </section>
-    
-    <footer>
-        <p>&copy; 2024 De Living. All Rights Reserved.</p>
-    </footer>
-    <button id="back-to-top" title="Back to Top">↑</button>
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=600&q=80" alt="Recovery Smoothie">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Recovery Smoothie</div>
+            <div class="menu-card-desc">Aardbei, bosvruchten, havermout &amp; Griekse yoghurt. Rijk aan antioxidanten en herstelvoedingsstoffen.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 5,50</span>
+              <span class="menu-card-tag">Herstel</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?w=600&q=80" alt="Tropical Boost">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Tropical Boost</div>
+            <div class="menu-card-desc">Mango, ananas, kokosmelk &amp; chiazaad. Zoet, exotisch en vol energie voor voor je les.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 5,00</span>
+              <span class="menu-card-tag">Pre-workout</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KOFFIE -->
+    <div class="menu-section" id="menu-koffie">
+      <div class="menu-grid">
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600&q=80" alt="Cold Brew">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Cold Brew</div>
+            <div class="menu-card-desc">18 uur koud gebrouwen, rijke koffiesmaak zonder bitterheid. Geserveerd over ijs met oatmilk.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 3,50</span>
+              <span class="menu-card-tag">Cafeïne boost</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1485808191679-5f86510bd9d4?w=600&q=80" alt="Gouden Latte">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Gouden Latte</div>
+            <div class="menu-card-desc">Kurkuma, kaneel, gember &amp; havermilk. Anti-inflammatoir en heerlijk warm of koud te drinken.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 4,00</span>
+              <span class="menu-card-tag">Anti-inflammatoir</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=600&q=80" alt="Espresso">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Espresso / Lungo</div>
+            <div class="menu-card-desc">Vers gemalen specialty koffie, dagelijks vers gezet. Kort, krachtig en vol karakter.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 2,50</span>
+              <span class="menu-card-tag">Klassiek</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=600&q=80" alt="Protein Iced Coffee">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Protein Iced Coffee</div>
+            <div class="menu-card-desc">Cold brew, vanille proteïne &amp; oatmilk over ijs. 20g proteïne én cafeïne in één glas.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 5,50</span>
+              <span class="menu-card-tag">Post-workout</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SNACKS -->
+    <div class="menu-section" id="menu-snacks">
+      <div class="menu-grid">
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&q=80" alt="Havermoutpap">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Overnight Oats</div>
+            <div class="menu-card-desc">Havermout, chiazaad, vers fruit &amp; een scheut honing. Koud geserveerd, klaar om te genieten.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 4,50</span>
+              <span class="menu-card-tag">Langzame koolh.</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1561043433-aaf687c4cf04?w=600&q=80" alt="Proteïnebar">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Huisgemaakte Proteïnebar</div>
+            <div class="menu-card-desc">Dadelbase, cashewnoten, cacao &amp; proteïnepoeder. Geen suiker toegevoegd, 15g proteïne.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 3,00</span>
+              <span class="menu-card-tag">Suikervrij</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=600&q=80" alt="Avocado Toast">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Avocado Toast</div>
+            <div class="menu-card-desc">Zuurdesembrood, avocado, limoen, chilivlokken &amp; een gepocheerd ei. Gezond &amp; voedzaam.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 6,50</span>
+              <span class="menu-card-tag">Gezonde vetten</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <img class="menu-card-img" src="https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&q=80" alt="Fruit en noten mix">
+          <div class="menu-card-body">
+            <div class="menu-card-name">Noten &amp; Fruit Mix</div>
+            <div class="menu-card-desc">Handgemengd: amandelen, cashewnoten, walnoten, gedroogd fruit &amp; zonnebloempitjes.</div>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">€ 3,50</span>
+              <span class="menu-card-tag">Gezonde vetten</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:1.5rem;">Prijzen inclusief BTW · Seizoensgebonden aanbod kan variëren · Vraag naar dagverse opties</p>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-inner">
+    <div class="section-tag">Contact &amp; Locatie</div>
+    <h2 class="section-title">Kom langs of stuur<br>een berichtje</h2>
+    <div class="contact-grid">
+      <div>
+        <div class="contact-item">
+          <div class="contact-icon">📍</div>
+          <div><div class="contact-label">Adres</div><div class="contact-val">Sportstraat 14, 9000 Gent</div></div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">🕐</div>
+          <div>
+            <div class="contact-label">Openingsuren</div>
+            <div class="contact-val">Ma–Vr: 07:00 – 22:00<br>Za–Zo: 09:00 – 18:00</div>
+            <a href="https://calendar.google.com/calendar/r" target="_blank" class="hours-link">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Bekijk actuele uren in Google Calendar
+            </a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">📞</div>
+          <div><div class="contact-label">Telefoon</div><div class="contact-val"><a href="tel:+32471955489">+32 471 95 54 89</a></div></div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">✉️</div>
+          <div><div class="contact-label">E-mail</div><div class="contact-val"><a href="mailto:hallo@indeliving.be">hallo@indeliving.be</a></div></div>
+        </div>
+        <div class="social-row">
+          <div class="social-row-label">Volg ons op social media</div>
+          <div class="social-links">
+            <a href="https://instagram.com/indeliving" target="_blank" class="social-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>Instagram
+            </a>
+            <a href="https://facebook.com/indeliving" target="_blank" class="social-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>Facebook
+            </a>
+            <a href="https://tiktok.com/@indeliving" target="_blank" class="social-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.74a4.85 4.85 0 01-1.01-.05z"/></svg>TikTok
+            </a>
+            <a href="https://wa.me/32471955489" target="_blank" class="social-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.471-.149-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12 12 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.999-3.648-.236-.374a9.86 9.86 0 01-1.51-5.26c.002-5.45 4.437-9.884 9.889-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.438 9.884-9.886 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>WhatsApp
+            </a>
+          </div>
+        </div>
+        <div style="margin-top:1.5rem;padding:1.5rem;background:var(--cream);border-radius:var(--radius);border:1px solid var(--border);">
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.5rem;">Nieuw? Geen stress.</p>
+          <p style="font-size:1rem;color:var(--brown);font-weight:500;line-height:1.6;">Je eerste les is altijd gratis.<br>Kom gewoon langs of schrijf in via het formulier.</p>
+        </div>
+      </div>
+      <div class="contact-form">
+        <h3 style="font-family:'Fraunces',serif;font-size:1.2rem;color:var(--brown);margin-bottom:1.5rem;">Stuur ons een bericht</h3>
+        <div class="form-group"><label>Naam</label><input type="text" placeholder="Jouw naam" id="c-naam"></div>
+        <div class="form-group"><label>E-mail</label><input type="email" placeholder="jouw@email.be" id="c-email"></div>
+        <div class="form-group">
+          <label>Interesse</label>
+          <select id="c-les">
+            <option value="">Kies een les...</option>
+            <option>Yoga</option><option>Boksen</option><option>Pilates</option>
+            <option>Spinning</option><option>HIIT</option><option>Stretching &amp; Mobiliteit</option>
+            <option>Algemene info</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Bericht</label><textarea placeholder="Stel gerust een vraag..." id="c-bericht"></textarea></div>
+        <button class="form-submit" onclick="submitForm()">Verstuur bericht 🌿</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="foot-logo">In de Living</span>
+  <div class="foot-tagline">Sports Café · Gent</div>
+  <div class="foot-links">
+    <a href="#home">Home</a><a href="#kalender">Rooster</a><a href="#lessen">Lessen</a>
+    <a href="#bar">Bar &amp; Menu</a><a href="gallery.html">Foto's</a><a href="#contact">Contact</a>
+  </div>
+  <div>© 2025 In de Living · Sportstraat 14, 9000 Gent · Gemaakt met ❤️</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function toggleMenu(){document.getElementById('hamburger').classList.toggle('open');document.getElementById('mobileMenu').classList.toggle('open');}
+function closeMenu(){document.getElementById('hamburger').classList.remove('open');document.getElementById('mobileMenu').classList.remove('open');}
+
+/* MENU TABS */
+function setMenuTab(tab, btn){
+  document.querySelectorAll('.menu-tab').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.menu-section').forEach(function(s){s.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('menu-'+tab).classList.add('active');
+}
+
+/* LESSEN */
+var lessen=[
+  {id:'yoga',naam:'Yoga',icon:'🧘',kleur:'yoga',color:'#6B8A5E',duur:'60 min',niveau:'Alle niveaus',trainer:'Sara V.',max:16,ingeschreven:8,desc:'Rust, ademhaling en flexibiliteit in een warme gezellige sfeer.'},
+  {id:'boxing',naam:'Boksen',icon:'🥊',kleur:'boxing',color:'#C5513D',duur:'45 min',niveau:'Beginners & gevorderden',trainer:'Koen D.',max:16,ingeschreven:14,desc:'Leer de basis van boksen en geef al je stress een eerlijke kans.'},
+  {id:'pilates',naam:'Pilates',icon:'🤸',kleur:'pilates',color:'#E8883A',duur:'50 min',niveau:'Beginners',trainer:'Elien B.',max:14,ingeschreven:7,desc:'Kernkracht en houding verbeteren op een zachte, doordachte manier.'},
+  {id:'spinning',naam:'Spinning',icon:'🚴',kleur:'spinning',color:'#7A4E30',duur:'45 min',niveau:'Alle niveaus',trainer:'Tim R.',max:20,ingeschreven:6,desc:'Fiets jezelf warm op het ritme van energieke muziek.'},
+  {id:'hiit',naam:'HIIT',icon:'🔥',kleur:'hiit',color:'#C44D58',duur:'30 min',niveau:'Gevorderd',trainer:'Nathalie M.',max:12,ingeschreven:11,desc:'Maximale resultaten in minimale tijd. Intensief, effectief en leuk.'},
+  {id:'stretching',naam:'Stretching & Mobiliteit',icon:'🌿',kleur:'stretching',color:'#9BB88E',duur:'40 min',niveau:'Alle niveaus',trainer:'Lies T.',max:18,ingeschreven:4,desc:'Herstel en beweeglijkheid — de perfecte les na een lange dag.'}
+];
+var subscribed=new Set();
+var moreShown=false;
+
+function renderLessen(){
+  var g=document.getElementById('lessenGrid');
+  var isMobile=window.innerWidth<=860;
+  g.innerHTML=lessen.map(function(l,i){
+    var pct=Math.round((l.ingeschreven/l.max)*100);
+    var vrij=l.max-l.ingeschreven;
+    var isVol=vrij<=0;
+    var isSub=subscribed.has(l.id);
+    var badge=pct>=90?'<span class="cap-badge full">Bijna vol</span>':pct>=55?'<span class="cap-badge half">Halfvol</span>':'<span class="cap-badge vol">Plaatsen vrij</span>';
+    // On mobile, hide cards beyond index 1 unless moreShown
+    var extraClass='';
+    if(isMobile&&i>1){
+      extraClass=moreShown?' mobile-hidden shown':' mobile-hidden';
+    }
+    return '<div class="les-card '+l.kleur+extraClass+'"><div class="les-icon" style="background:'+l.color+'22;">'+l.icon+'</div><div class="les-name">'+l.naam+'</div><div class="les-meta"><span>⏱ '+l.duur+'</span><span>👤 '+l.trainer+'</span><span>📊 '+l.niveau+'</span></div><p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.2rem;line-height:1.6;">'+l.desc+'</p><div class="cap-section"><div class="cap-head"><span class="cap-head-label">Bezetting</span>'+badge+'</div><div class="cap-bar-large"><div class="cap-fill" style="width:'+pct+'%;background:'+l.color+';"></div></div><div class="cap-spots">'+l.ingeschreven+' / '+l.max+' plaatsen bezet'+(isVol?' · Vol!':' · nog '+vrij+' vrij')+'</div></div><button class="subscribe-btn'+(isSub?' subscribed':'')+'" '+(isVol&&!isSub?'disabled':'')+' onclick="toggleSubscribe(\''+l.id+'\')">'+(isSub?'✓ Ingeschreven':isVol?'Volzet':'Inschrijven')+'</button></div>';
+  }).join('');
+  // Show/hide the "show more" button
+  var wrap=document.getElementById('showMoreWrap');
+  if(isMobile){
+    wrap.style.display='block';
+    document.getElementById('showMoreBtn').textContent=moreShown?'Verberg lessen ↑':'Toon alle lessen ↓';
+  } else {
+    wrap.style.display='none';
+  }
+}
+
+function toggleMoreLessen(){
+  moreShown=!moreShown;
+  renderLessen();
+  if(!moreShown){document.getElementById('lessen').scrollIntoView({behavior:'smooth'});}
+}
+
+function toggleSubscribe(id){
+  var l=lessen.find(function(x){return x.id===id;});
+  if(!l)return;
+  if(subscribed.has(id)){subscribed.delete(id);l.ingeschreven=Math.max(0,l.ingeschreven-1);showToast('Uitgeschreven voor '+l.naam);}
+  else{subscribed.add(id);l.ingeschreven=Math.min(l.max,l.ingeschreven+1);showToast('🎉 Ingeschreven voor '+l.naam+'! Tot dan.');}
+  renderLessen();
+}
+window.addEventListener('resize',function(){moreShown=false;renderLessen();});
+
+/* CALENDAR */
+var calDate=new Date();
+var dagN=['Ma','Di','Wo','Do','Vr','Za','Zo'];
+var maandN=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+var rooster={1:[{t:'yoga',l:'Yoga 09:00'},{t:'spinning',l:'Spinning 18:30'}],2:[{t:'boxing',l:'Boksen 07:30'},{t:'pilates',l:'Pilates 19:00'}],3:[{t:'hiit',l:'HIIT 12:00'},{t:'yoga',l:'Yoga 19:30'}],4:[{t:'stretching',l:'Stretching 08:00'},{t:'boxing',l:'Boksen 18:00'}],5:[{t:'spinning',l:'Spinning 07:00'},{t:'pilates',l:'Pilates 12:00'},{t:'hiit',l:'HIIT 20:00'}],6:[{t:'yoga',l:'Yoga 10:00'},{t:'boxing',l:'Boksen 11:30'}],0:[{t:'stretching',l:'Stretching 10:00'},{t:'spinning',l:'Spinning 11:30'}]};
+function renderKalender(){
+  var y=calDate.getFullYear(),m=calDate.getMonth();
+  document.getElementById('kalTitle').textContent=maandN[m]+' '+y;
+  var today=new Date();
+  var dim=new Date(y,m+1,0).getDate();
+  var sd=new Date(y,m,1).getDay();sd=sd===0?6:sd-1;
+  var pd=new Date(y,m,0).getDate();
+  var html=dagN.map(function(d){return'<div class="kal-header-day">'+d+'</div>';}).join('');
+  var cells=[];
+  for(var i=sd-1;i>=0;i--)cells.push({day:pd-i,cur:false});
+  for(var d=1;d<=dim;d++)cells.push({day:d,cur:true});
+  while(cells.length%7!==0)cells.push({day:cells.filter(function(c){return!c.cur;}).length-sd+1,cur:false});
+  cells.forEach(function(c){
+    var isToday=c.cur&&today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===c.day;
+    var dow=c.cur?new Date(y,m,c.day).getDay():-1;
+    var ev=c.cur?(rooster[dow]||[]):[];
+    var evH=ev.slice(0,2).map(function(e){return'<div class="kal-event '+e.t+'">'+e.l+'</div>';}).join('');
+    var nH=isToday?'<div class="kal-day-num"><span style="background:#E8883A;color:white;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-weight:500;font-size:0.8rem;">'+c.day+'</span></div>':'<div class="kal-day-num">'+c.day+'</div>';
+    html+='<div class="kal-day'+(!c.cur?' other-month':'')+'">'+nH+evH+'</div>';
+  });
+  document.getElementById('kalGrid').innerHTML=html;
+}
+function changeMonth(d){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+d,1);renderKalender();}
+
+function submitForm(){
+  var naam=document.getElementById('c-naam').value.trim();
+  var email=document.getElementById('c-email').value.trim();
+  if(!naam||!email){showToast('⚠️ Vul naam en e-mail in');return;}
+  showToast('✉️ Bedankt '+naam+'! We nemen snel contact op.');
+  document.getElementById('c-naam').value='';document.getElementById('c-email').value='';document.getElementById('c-bericht').value='';
+}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3200);}
+
+renderLessen();
+renderKalender();
+</script>
 </body>
 </html>
