@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foto's – In de Living Sports Café</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FAF6EF;--warm-white:#FDF9F3;--amber:#E8883A;--amber-light:#F5C97A;--amber-dark:#B55C1A;--terracotta:#C5513D;--sage:#6B8A5E;--sage-light:#9BB88E;--brown:#4A2F1A;--brown-mid:#7A4E30;--text:#2E1A0E;--text-mid:#5C3D22;--text-muted:#8B6247;--border:rgba(122,78,48,0.18);--radius:16px;--radius-sm:10px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(250,246,239,0.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;color:var(--brown);letter-spacing:-0.02em;text-decoration:none;}
+.nav-logo span{color:var(--amber);}
+.nav-links{display:flex;gap:2rem;list-style:none;}
+.nav-links a{font-size:0.9rem;font-weight:500;color:var(--text-mid);text-decoration:none;transition:color 0.2s;}
+.nav-links a:hover,.nav-links a.active{color:var(--amber);}
+.nav-right{display:flex;align-items:center;gap:1rem;}
+.nav-cta{background:var(--amber);color:white;border:none;padding:0.55rem 1.25rem;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;transition:background 0.2s;text-decoration:none;}
+.nav-cta:hover{background:var(--amber-dark);}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--brown);border-radius:2px;transition:all 0.3s;}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;z-index:190;background:rgba(250,246,239,0.98);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:1.5rem 2rem 2rem;flex-direction:column;}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{display:block;padding:0.9rem 0;font-size:1.05rem;font-weight:500;color:var(--text-mid);text-decoration:none;border-bottom:1px solid var(--border);transition:color 0.2s;}
+.mobile-menu a:last-child{border-bottom:none;}
+.mobile-menu a:hover{color:var(--amber);}
+.mob-cta{margin-top:1.2rem;text-align:center;background:var(--amber);color:white !important;border-radius:50px;padding:0.85rem;font-size:1rem;font-weight:500;border-bottom:none !important;}
+
+/* PAGE HERO */
+.page-hero{padding:120px 2rem 60px;background:var(--warm-white);position:relative;overflow:hidden;}
+.page-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 50%,rgba(232,136,58,0.1) 0%,transparent 70%);}
+.page-hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1;}
+.page-eyebrow{font-size:0.8rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;}
+.page-eyebrow::before{content:'';width:28px;height:1.5px;background:var(--amber);}
+.page-title{font-family:'Fraunces',serif;font-size:clamp(2.5rem,5vw,4rem);font-weight:600;line-height:1.1;letter-spacing:-0.03em;color:var(--brown);margin-bottom:1rem;}
+.page-title em{font-style:italic;color:var(--amber);font-weight:300;}
+.page-desc{font-size:1rem;color:var(--text-mid);line-height:1.8;max-width:520px;}
+
+/* FILTER TABS */
+.filter-bar{background:var(--cream);padding:1.5rem 2rem;border-bottom:1px solid var(--border);position:sticky;top:64px;z-index:100;}
+.filter-inner{max-width:1100px;margin:0 auto;display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;}
+.filter-btn{padding:0.45rem 1rem;border-radius:50px;border:1.5px solid var(--border);background:white;color:var(--text-mid);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.filter-btn:hover{border-color:var(--amber);color:var(--amber-dark);}
+.filter-btn.active{background:var(--amber);border-color:var(--amber);color:white;}
+
+/* GALLERY GRID */
+.gallery-section{padding:3rem 2rem 6rem;}
+.gallery-inner{max-width:1100px;margin:0 auto;}
+.gallery-grid{columns:3;column-gap:1rem;margin-top:0;}
+.gallery-item{break-inside:avoid;margin-bottom:1rem;border-radius:var(--radius);overflow:hidden;position:relative;cursor:pointer;group:true;}
+.gallery-item img{width:100%;display:block;border-radius:var(--radius);transition:transform 0.35s ease;aspect-ratio:auto;}
+.gallery-item:hover img{transform:scale(1.03);}
+.gallery-item-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(74,47,26,0.7) 0%,transparent 50%);border-radius:var(--radius);opacity:0;transition:opacity 0.3s;display:flex;align-items:flex-end;padding:1.25rem;}
+.gallery-item:hover .gallery-item-overlay{opacity:1;}
+.gallery-item-caption{color:white;font-size:0.82rem;font-weight:500;}
+.gallery-item-tag{display:inline-block;background:rgba(232,136,58,0.9);color:white;font-size:0.7rem;font-weight:500;padding:3px 8px;border-radius:50px;margin-bottom:4px;}
+
+/* PLACEHOLDER CARDS (for empty slots) */
+.gallery-placeholder{break-inside:avoid;margin-bottom:1rem;border-radius:var(--radius);border:2px dashed rgba(122,78,48,0.2);background:rgba(253,249,243,0.6);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:all 0.2s;}
+.gallery-placeholder:hover{border-color:var(--amber);background:rgba(232,136,58,0.05);}
+.gallery-placeholder-icon{font-size:2rem;margin-bottom:0.75rem;opacity:0.5;}
+.gallery-placeholder-text{font-size:0.82rem;color:var(--text-muted);line-height:1.6;}
+.gallery-placeholder-text strong{color:var(--text-mid);display:block;margin-bottom:0.25rem;}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;z-index:500;background:rgba(30,16,6,0.93);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.lightbox.open{opacity:1;pointer-events:all;}
+.lightbox-img{max-width:90vw;max-height:85vh;border-radius:var(--radius);box-shadow:0 32px 80px rgba(0,0,0,0.5);object-fit:contain;}
+.lightbox-close{position:absolute;top:1.5rem;right:1.5rem;width:44px;height:44px;border-radius:50%;background:rgba(253,249,243,0.15);border:1px solid rgba(253,249,243,0.3);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
+.lightbox-close:hover{background:rgba(253,249,243,0.25);}
+.lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;background:rgba(253,249,243,0.15);border:1px solid rgba(253,249,243,0.3);color:white;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
+.lightbox-nav:hover{background:rgba(253,249,243,0.25);}
+.lightbox-prev{left:1.5rem;}
+.lightbox-next{right:1.5rem;}
+.lightbox-caption{position:absolute;bottom:1.5rem;left:50%;transform:translateX(-50%);color:rgba(253,249,243,0.8);font-size:0.85rem;font-weight:500;background:rgba(74,47,26,0.6);padding:0.5rem 1rem;border-radius:50px;white-space:nowrap;}
+
+/* UPLOAD BANNER */
+.upload-banner{background:var(--brown);padding:3rem 2rem;text-align:center;}
+.upload-banner h3{font-family:'Fraunces',serif;font-size:1.6rem;color:var(--amber-light);margin-bottom:0.75rem;}
+.upload-banner p{color:rgba(250,201,122,0.6);margin-bottom:1.5rem;font-size:0.95rem;}
+.upload-btn{display:inline-flex;align-items:center;gap:8px;background:var(--amber);color:white;border:none;padding:0.85rem 2rem;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:500;cursor:pointer;transition:background 0.2s;text-decoration:none;}
+.upload-btn:hover{background:var(--amber-dark);}
+
+/* WHATSAPP */
+.wa-float{position:fixed;bottom:1.8rem;right:1.8rem;z-index:300;width:58px;height:58px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,0.45);text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;}
+.wa-float:hover{transform:scale(1.1);}
+.wa-float svg{width:30px;height:30px;fill:white;}
+.wa-tooltip{position:absolute;right:68px;top:50%;transform:translateY(-50%);background:var(--brown);color:white;font-size:0.75rem;font-weight:500;padding:5px 10px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.wa-float:hover .wa-tooltip{opacity:1;}
+
+/* FOOTER */
+footer{background:var(--brown);padding:2.5rem 2rem;text-align:center;color:rgba(250,201,122,0.6);font-size:0.85rem;}
+.foot-logo{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:600;color:var(--amber-light);margin-bottom:0.4rem;display:block;}
+.foot-links{display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;margin:1rem 0;}
+.foot-links a{color:rgba(250,201,122,0.7);text-decoration:none;font-size:0.85rem;}
+.foot-links a:hover{color:var(--amber-light);}
+
+@media(max-width:860px){
+  .nav-links,.nav-cta{display:none;}
+  .hamburger{display:flex;}
+  .gallery-grid{columns:2;}
+}
+@media(max-width:520px){
+  .gallery-grid{columns:1;}
+  section{padding:2.5rem 1.25rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- WHATSAPP -->
+<a class="wa-float" href="https://wa.me/32471955489" target="_blank" rel="noopener" aria-label="WhatsApp">
+  <div class="wa-tooltip">Stuur ons een berichtje!</div>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">In de <span>Living</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html#kalender">Rooster</a></li>
+    <li><a href="index.html#lessen">Lessen</a></li>
+    <li><a href="index.html#bar">Bar</a></li>
+    <li><a href="gallery.html" class="active">Foto's</a></li>
+    <li><a href="index.html#contact">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="index.html#lessen" class="nav-cta">Inschrijven</a>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html#kalender" onclick="closeMenu()">📅 Rooster</a>
+  <a href="index.html#lessen" onclick="closeMenu()">🏋️ Lessen</a>
+  <a href="index.html#bar" onclick="closeMenu()">☕ Bar</a>
+  <a href="gallery.html" onclick="closeMenu()">📸 Foto's</a>
+  <a href="index.html#contact" onclick="closeMenu()">📍 Contact</a>
+  <a href="index.html#lessen" class="mob-cta" onclick="closeMenu()">Inschrijven voor een les</a>
+</div>
+
+<!-- PAGE HEADER -->
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <div class="page-eyebrow">Sfeer & Beleving</div>
+    <h1 class="page-title">Onze <em>mooiste</em> momenten</h1>
+    <p class="page-desc">Van zweetende boksers tot glimlachende yogabeoefenaars — hier zie je hoe het er echt aan toe gaat bij In de Living. Upload je eigen foto's en deel je ervaring!</p>
+  </div>
+</div>
+
+<!-- FILTER -->
+<div class="filter-bar">
+  <div class="filter-inner">
+    <span style="font-size:0.8rem;color:var(--text-muted);margin-right:0.4rem;">Filter:</span>
+    <button class="filter-btn active" onclick="setFilter('all',this)">Alles</button>
+    <button class="filter-btn" onclick="setFilter('sportruimte',this)">Sportruimte</button>
+    <button class="filter-btn" onclick="setFilter('bar',this)">Bar</button>
+    <button class="filter-btn" onclick="setFilter('lessen',this)">Lessen</button>
+    <button class="filter-btn" onclick="setFilter('sfeer',this)">Sfeer</button>
+  </div>
+</div>
+
+<!-- GALLERY -->
+<div class="gallery-section">
+  <div class="gallery-inner">
+    <div class="gallery-grid" id="galleryGrid"></div>
+  </div>
+</div>
+
+<!-- UPLOAD BANNER -->
+<div class="upload-banner">
+  <h3>Deel jouw moment 📸</h3>
+  <p>Ben je bij ons geweest? We plaatsen jouw foto's graag in de galerij!<br>Stuur ze via WhatsApp of Instagram.</p>
+  <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+    <a href="https://wa.me/32471955489" target="_blank" class="upload-btn">📲 Stuur via WhatsApp</a>
+    <a href="https://instagram.com/indeliving" target="_blank" class="upload-btn" style="background:rgba(253,249,243,0.15);border:1.5px solid rgba(253,249,243,0.3);">📷 Tag ons op Instagram</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span class="foot-logo">In de Living</span>
+  <div class="foot-links">
+    <a href="index.html">Home</a><a href="index.html#kalender">Rooster</a>
+    <a href="index.html#lessen">Lessen</a><a href="index.html#bar">Bar</a>
+    <a href="gallery.html">Foto's</a><a href="index.html#contact">Contact</a>
+  </div>
+  <div>© 2025 In de Living · Sportstraat 14, 9000 Gent</div>
+</footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="closeLightboxBtn()">✕</button>
+  <button class="lightbox-nav lightbox-prev" onclick="navLightbox(-1,event)">&#8249;</button>
+  <img class="lightbox-img" id="lightboxImg" src="" alt="">
+  <button class="lightbox-nav lightbox-next" onclick="navLightbox(1,event)">&#8250;</button>
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<script>
+function toggleMenu(){document.getElementById('hamburger').classList.toggle('open');document.getElementById('mobileMenu').classList.toggle('open');}
+function closeMenu(){document.getElementById('hamburger').classList.remove('open');document.getElementById('mobileMenu').classList.remove('open');}
+
+// Photo data — replace src with real photos when you have them
+// Using Unsplash for demo purposes (fitness & café themed)
+var photos = [
+  {src:'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80',caption:'Onze sportruimte',tag:'sportruimte',tall:true},
+  {src:'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80',caption:'Yoga les',tag:'lessen',tall:false},
+  {src:'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80',caption:'Sfeer in de zaal',tag:'sportruimte',tall:false},
+  {src:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80',caption:'Onze verse smoothies',tag:'bar',tall:true},
+  {src:'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80',caption:'HIIT sessie',tag:'lessen',tall:false},
+  {src:'https://images.unsplash.com/photo-1554284126-aa88f22d8b74?w=800&q=80',caption:'Boksles met Koen',tag:'lessen',tall:false},
+  {src:'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800&q=80',caption:'Na het sporten aan de bar',tag:'bar',tall:false},
+  {src:'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',caption:'Gezellige sfeer',tag:'sfeer',tall:true},
+  {src:'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=800&q=80',caption:'Spinning zaal',tag:'sportruimte',tall:false},
+  {src:'https://images.unsplash.com/photo-1559234935-7c2d2e7c1c0e?w=800&q=80',caption:'Cold brew klaarmaken',tag:'bar',tall:false},
+  {src:'https://images.unsplash.com/photo-1588286840104-8957b019727f?w=800&q=80',caption:'Pilates groep',tag:'lessen',tall:false},
+  {src:'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80',caption:'Onze trainers',tag:'sfeer',tall:true},
+  // Placeholder slots for your own photos
+  {placeholder:true,tag:'sportruimte',label:'Sportruimte foto',desc:'Upload jouw foto van de sportruimte'},
+  {placeholder:true,tag:'bar',label:'Bar foto',desc:'Deel een foto van onze bar'},
+  {placeholder:true,tag:'sfeer',label:'Sfeer foto',desc:'Jouw favourite moment'},
+];
+
+var currentFilter = 'all';
+var lightboxIndex = 0;
+
+function getVisible(){
+  return photos.filter(function(p){
+    if(p.placeholder) return false; // don't include placeholders in lightbox
+    return currentFilter==='all'||p.tag===currentFilter;
+  });
+}
+
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderGallery();
+}
+
+function renderGallery(){
+  var grid = document.getElementById('galleryGrid');
+  var filtered = photos.filter(function(p){return currentFilter==='all'||p.tag===currentFilter;});
+  grid.innerHTML = filtered.map(function(p, i){
+    if(p.placeholder){
+      return '<div class="gallery-placeholder" onclick="showToast(\'Stuur je foto via WhatsApp of Instagram!\')">' +
+        '<div class="gallery-placeholder-icon">📷</div>' +
+        '<div class="gallery-placeholder-text"><strong>'+p.label+'</strong>'+p.desc+'</div></div>';
+    }
+    return '<div class="gallery-item" onclick="openLightbox('+i+',\''+p.tag+'\')">' +
+      '<img src="'+p.src+'" alt="'+p.caption+'" loading="lazy">' +
+      '<div class="gallery-item-overlay">' +
+        '<div><div class="gallery-item-tag">'+p.tag+'</div><div class="gallery-item-caption">'+p.caption+'</div></div>' +
+      '</div></div>';
+  }).join('');
+}
+
+function openLightbox(idx, tag){
+  var realPhotos = photos.filter(function(p){return !p.placeholder&&(currentFilter==='all'||p.tag===currentFilter);});
+  // find actual index within realPhotos
+  var realIdx = 0;
+  var counter = 0;
+  var filtered = photos.filter(function(p){return currentFilter==='all'||p.tag===currentFilter;});
+  for(var i=0;i<idx;i++){if(!filtered[i].placeholder)counter++;}
+  lightboxIndex = counter;
+  showLightboxPhoto(realPhotos);
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function showLightboxPhoto(realPhotos){
+  if(!realPhotos) realPhotos = photos.filter(function(p){return !p.placeholder&&(currentFilter==='all'||p.tag===currentFilter);});
+  var p = realPhotos[lightboxIndex];
+  if(!p) return;
+  document.getElementById('lightboxImg').src = p.src;
+  document.getElementById('lightboxCaption').textContent = p.caption + ' · ' + p.tag;
+}
+
+function navLightbox(dir, e){
+  e.stopPropagation();
+  var realPhotos = photos.filter(function(p){return !p.placeholder&&(currentFilter==='all'||p.tag===currentFilter);});
+  lightboxIndex = (lightboxIndex + dir + realPhotos.length) % realPhotos.length;
+  showLightboxPhoto(realPhotos);
+}
+
+function closeLightbox(e){if(e.target===document.getElementById('lightbox'))closeLightboxBtn();}
+function closeLightboxBtn(){document.getElementById('lightbox').classList.remove('open');document.body.style.overflow='';}
+
+document.addEventListener('keydown',function(e){
+  var lb=document.getElementById('lightbox');
+  if(!lb.classList.contains('open'))return;
+  if(e.key==='Escape')closeLightboxBtn();
+  if(e.key==='ArrowLeft')navLightbox(-1,{stopPropagation:function(){}});
+  if(e.key==='ArrowRight')navLightbox(1,{stopPropagation:function(){}});
+});
+
+var toastT;
+function showToast(msg){
+  var t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:6rem;right:2rem;z-index:999;background:#4A2F1A;color:white;padding:1rem 1.5rem;border-radius:10px;font-size:0.9rem;font-weight:500;transform:translateY(80px);opacity:0;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;max-width:280px;';document.body.appendChild(t);}
+  t.textContent=msg;
+  t.style.transform='translateY(0)';t.style.opacity='1';
+  clearTimeout(toastT);
+  toastT=setTimeout(function(){t.style.transform='translateY(80px)';t.style.opacity='0';},3000);
+}
+
+renderGallery();
+</script>
+</body>
+</html>
