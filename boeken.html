@@ -50,6 +50,11 @@
 .r-cel:hover .slot.zaal-vrij,.slot.zaal-vrij:focus-visible{opacity:1;}
 .slot.zaal-vrij:hover{background:var(--bg);border-style:solid;opacity:1;}
 .dag-lijst .slot.zaal-vrij{opacity:.85;}
+.r-cel.gesloten{background:repeating-linear-gradient(135deg,rgba(61,32,7,.035) 0 8px,rgba(61,32,7,.075) 8px 16px);}
+.r-cel.gesloten:hover{background:repeating-linear-gradient(135deg,rgba(61,32,7,.035) 0 8px,rgba(61,32,7,.075) 8px 16px);}
+.gesloten-lbl{font-size:.7rem;font-weight:800;letter-spacing:.06em;color:var(--muted);padding:6px 4px;}
+.dag-gesloten{padding:.85rem 1.1rem;margin-bottom:.65rem;border-radius:14px;font-weight:800;font-size:.9rem;color:var(--muted);background:repeating-linear-gradient(135deg,rgba(61,32,7,.035) 0 8px,rgba(61,32,7,.075) 8px 16px);}
+.legend-dot.gesloten .legend-pip{background:repeating-linear-gradient(135deg,rgba(61,32,7,.15) 0 3px,rgba(61,32,7,.35) 3px 6px);opacity:1;}
 .zaal-hint{margin-bottom:1.5rem;display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;}
 .zaal-hint b{font-style:normal;}
 .leeg{padding:2rem 1rem;text-align:center;color:var(--muted);font-family:'Playfair Display',serif;font-style:italic;}
@@ -197,6 +202,8 @@ function render(){
   for(var u=UUR_START;u<=UUR_EINDE;u++){
     h+='<div class="r-uur">'+pad(u)+':00</div>';
     perDag.forEach(function(slots,di){
+      var dicht=isGesloten(dagen[di],u*60,u*60+60),eerste=dicht&&!isGesloten(dagen[di],(u-1)*60,u*60);
+      if(dicht){h+='<div class="r-cel gesloten">'+(eerste?'<div class="gesloten-lbl">🔒 Gesloten</div>':'')+'</div>';return;}
       h+='<div class="r-cel">'+slots.filter(function(s){return +s.tijd.slice(0,2)===u;}).map(function(s){return slotKnop(s,mijn,n++);}).join('')+
         (zaal?zaalKnop(zaalSlot(dagen[di],u),mijn,0):'')+'</div>';
     });
@@ -209,6 +216,8 @@ function render(){
   }).join('')+'</div>';
   var items=perDag[gekozenDag].map(function(s){return {tijd:s.tijd,html:function(i){return slotKnop(s,mijn,i);}};});
   if(zaal)for(var zu=UUR_START;zu<=UUR_EINDE;zu++){(function(zs){if(zs)items.push({tijd:zs.tijd,html:function(i){return zaalKnop(zs,mijn,i);}});})(zaalSlot(dagen[gekozenDag],zu));}
+  var dicht=geslotenVanaf(dagen[gekozenDag]);
+  if(dicht)items.push({tijd:dicht,html:function(){return '<div class="dag-gesloten">🔒 Gesloten vanaf '+dicht+'</div>';}});
   items.sort(function(a,b){return a.tijd<b.tijd?-1:1;});
   var lijstHtml=items.map(function(it,i){return it.html(i);}).join('');
   m+=lijstHtml||'<div class="leeg">Geen lessen op deze dag.</div>';
@@ -271,7 +280,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')sluitModal()
 
 document.getElementById('legend').innerHTML=Object.keys(LESSEN).map(function(k){
   return '<div class="legend-dot les-'+k+'"><div class="legend-pip"></div>'+esc(LESSEN[k].naam)+'</div>';
-}).join('')+(magZaalHuren(user)?'<div class="legend-dot les-zaal"><div class="legend-pip"></div>Zaal huren</div>':'');
+}).join('')+(magZaalHuren(user)?'<div class="legend-dot les-zaal"><div class="legend-pip"></div>Zaal huren</div>':'')+'<div class="legend-dot gesloten"><div class="legend-pip"></div>Gesloten</div>';
 
 // Uitleg over zaalhuur voor professionals
 (function(){

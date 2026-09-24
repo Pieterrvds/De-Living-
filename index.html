@@ -971,7 +971,8 @@ var maandN=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus',
 // Het rooster komt uit assets/boeken.js (ROOSTER en LESSEN), zodat het maar op één plek staat.
 var rooster={};
 Object.keys(ROOSTER).forEach(function(dow){
-  rooster[dow]=ROOSTER[dow].map(function(r){var les=LESSEN[r[1]];return {t:r[1],l:les.icon+' '+(les.kort||les.naam)+' '+r[0]};});
+  rooster[dow]=ROOSTER[dow].filter(function(r){return !weekdagGesloten(+dow,naarMin(r[0]),naarMin(r[0])+LESSEN[r[1]].duur);})
+    .map(function(r){var les=LESSEN[r[1]];return {t:r[1],l:les.icon+' '+(les.kort||les.naam)+' '+r[0]};});
 });
 function renderKal(){
   var y=calDate.getFullYear(),m=calDate.getMonth();

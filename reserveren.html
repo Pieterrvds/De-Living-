@@ -93,6 +93,8 @@ function foutScherm(titel,tekst,knop){
 function maxPlaatsen(){return Math.max(1,Math.min(type.pro?MAX_PER_BOEKING.pro:MAX_PER_BOEKING.standaard,vrijePlaatsen(slot)));}
 
 function render(){
+  var ruw=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})_/.exec(new URLSearchParams(location.search).get('slot')||'');
+  if(!slot&&ruw&&isGesloten(new Date(+ruw[1],+ruw[2]-1,+ruw[3]),+ruw[4]*60+ +ruw[5],+ruw[4]*60+ +ruw[5]+1)){foutScherm('Op dit uur zijn we gesloten','Op dit moment kan niemand een les boeken of de zaal huren. Kies een ander uur in het rooster.');return;}
   if(!slot){foutScherm('Dit uur bestaat niet','We vinden dit uur niet terug in het rooster. Kies een uur in het rooster om te reserveren.');return;}
   if(isVoorbij(slot)){foutScherm('Dit uur is al voorbij','Kies een ander uur in het rooster.');return;}
   if(slot.lesId==='zaal'&&!magZaalHuren(user)){foutScherm('Zaalhuur is voor professionals','De zaal huren kan alleen als personal trainer, kinesist of lesgever. Kies een les in het rooster om te reserveren.');return;}

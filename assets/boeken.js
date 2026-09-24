@@ -23,6 +23,21 @@ var ROOSTER={
 };
 var UUR_START=7, UUR_EINDE=21;
 
+/* ── GESLOTEN PERIODES ── Weekdag → [van, tot]. In deze periodes kan niemand
+   een les boeken of de zaal huren. Pas hier aan om uren te sluiten of te openen. */
+var GESLOTEN={
+  0:[['13:00','24:00']],   // zondagnamiddag
+  1:[['19:00','24:00']],   // maandag na 19:00
+  4:[['19:00','24:00']]    // donderdag na 19:00
+};
+function naarMin(t){var p=t.split(':');return +p[0]*60+ +p[1];}
+// Overlapt [van, tot) (in minuten) met een gesloten periode op die dag?
+function weekdagGesloten(dow,van,tot){
+  return (GESLOTEN[dow]||[]).some(function(g){return naarMin(g[0])<tot&&naarMin(g[1])>van;});
+}
+function isGesloten(datum,van,tot){return weekdagGesloten(datum.getDay(),van,tot);}
+function geslotenVanaf(datum){var g=(GESLOTEN[datum.getDay()]||[])[0];return g?g[0]:null;}
+
 /* ── ZAALHUUR ── Professionals (types met zaal:true) kunnen elk vrij uur de zaal huren.
    Een uur is vrij als er geen les uit het ROOSTER overlapt. Prijs is een voorbeeldprijs. */
 var ZAAL={naam:'Zaal huren',kort:'Zaal',icon:'🏠',duur:60,trainer:'Zelf begeleid',max:1,prijs:20,soort:'Zaalhuur voor professionals'};
@@ -69,6 +84,7 @@ function parseSlot(id){
   }else{
     les=LESSEN[lesId];
     if(!les||!(ROOSTER[datum.getDay()]||[]).some(function(r){return r[0]===tijd&&r[1]===lesId;}))return null;
+    if(isGesloten(datum,naarMin(tijd),naarMin(tijd)+les.duur))return null;
   }
   var p=tijd.split(':');
   var start=new Date(datum.getFullYear(),datum.getMonth(),datum.getDate(),+p[0],+p[1]);
@@ -77,6 +93,7 @@ function parseSlot(id){
 // Is de zaal van uur:00 tot uur+1:00 vrij (geen overlap met een les)?
 function zaalVrij(datum,uur){
   var van=uur*60,tot=van+60;
+  if(isGesloten(datum,van,tot))return false;
   return !(ROOSTER[datum.getDay()]||[]).some(function(r){
     var p=r[0].split(':'),s=+p[0]*60+ +p[1],e=s+LESSEN[r[1]].duur;
     return s<tot&&e>van;
@@ -84,7 +101,7 @@ function zaalVrij(datum,uur){
 }
 function zaalSlot(datum,uur){return zaalVrij(datum,uur)?parseSlot(slotId(datum,pad(uur)+':00','zaal')):null;}
 function slotsVoorDag(datum){
-  return (ROOSTER[datum.getDay()]||[]).map(function(r){return parseSlot(slotId(datum,r[0],r[1]));});
+  return (ROOSTER[datum.getDay()]||[]).map(function(r){return parseSlot(slotId(datum,r[0],r[1]));}).filter(Boolean);
 }
 // Gesimuleerde bezetting door andere leden + echte reservaties in deze browser.
 function bezetting(slot){
