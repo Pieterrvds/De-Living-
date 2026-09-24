@@ -163,6 +163,12 @@ function zaalDurenVanaf(datum,uur){
 function zaalVrijLes(datum,van,tot){
   return !(ROOSTER[datum.getDay()]||[]).some(function(r){var s=naarMin(r[0]),e=s+LESSEN[r[1]].duur;return s<tot&&e>van;});
 }
+// Aantal lessen per week volgens het ROOSTER (lessen in een gesloten periode tellen niet mee).
+function lessenPerWeek(){
+  return Object.keys(ROOSTER).reduce(function(n,dow){
+    return n+ROOSTER[dow].filter(function(r){return !weekdagGesloten(+dow,naarMin(r[0]),naarMin(r[0])+LESSEN[r[1]].duur);}).length;
+  },0);
+}
 function slotsVoorDag(datum){
   return (ROOSTER[datum.getDay()]||[]).map(function(r){return parseSlot(slotId(datum,r[0],r[1]));}).filter(Boolean);
 }

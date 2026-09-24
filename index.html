@@ -473,8 +473,8 @@ footer::before{content:'';position:absolute;top:-60px;left:50%;transform:transla
 <!-- FLOATING STATS -->
 <div class="stats-lift">
   <div class="stats-card">
-    <div class="stat-cell sr scale d1"><span class="stat-n" data-target="3">0</span><span class="stat-l">Disciplines</span></div>
-    <div class="stat-cell sr scale d2"><span class="stat-n" data-target="12" data-suffix="+">0</span><span class="stat-l">Lessen per week</span></div>
+    <div class="stat-cell sr scale d1"><span class="stat-n" data-target="3" data-bron="disciplines">0</span><span class="stat-l">Disciplines</span></div>
+    <div class="stat-cell sr scale d2"><span class="stat-n" data-target="15" data-bron="lessen-per-week">0</span><span class="stat-l">Lessen per week</span></div>
     <div class="stat-cell sr scale d3"><span class="stat-n" data-target="300" data-suffix="+">0</span><span class="stat-l">Actieve leden</span></div>
     <div class="stat-cell sr scale d4"><span class="stat-n" data-target="100" data-suffix="%">0</span><span class="stat-l">Goed gevoel</span></div>
   </div>
@@ -575,7 +575,7 @@ footer::before{content:'';position:absolute;top:-60px;left:50%;transform:transla
             <div class="les-bul"><div class="bul-dot"></div>Hatha · Vinyasa · Yin · Yoga Nidra</div>
             <div class="les-bul"><div class="bul-dot"></div>Alle niveaus welkom</div>
             <div class="les-bul"><div class="bul-dot"></div>Gwen Deryck (RYT-500)</div>
-            <div class="les-bul"><div class="bul-dot"></div>Max. 16 personen</div>
+            <div class="les-bul"><div class="bul-dot"></div>Max. <span data-bron="max-yoga">16</span> personen</div>
           </div>
           <div class="les-btns">
             <a href="boeken.html" class="les-btn">🌹 Boek een les</a>
@@ -632,7 +632,7 @@ footer::before{content:'';position:absolute;top:-60px;left:50%;transform:transla
   <div class="nb-overlay"></div>
   <div class="nb-content">
     <div class="nb-stat sr d1"><span class="nb-n">🌹</span><span class="nb-l">La Vie en Rose</span></div>
-    <div class="nb-stat sr d2"><span class="nb-n count-up" data-target="12" data-suffix="+">12+</span><span class="nb-l">Lessen per week</span></div>
+    <div class="nb-stat sr d2"><span class="nb-n count-up" data-target="15" data-bron="lessen-per-week">15</span><span class="nb-l">Lessen per week</span></div>
     <div class="nb-stat sr d3"><span class="nb-n">100%</span><span class="nb-l">Goed gevoel</span></div>
   </div>
 </div>
@@ -785,6 +785,16 @@ footer::before{content:'';position:absolute;top:-60px;left:50%;transform:transla
 
 <script src="assets/boeken.js"></script>
 <script>
+/* ══ CIJFERS UIT HET ROOSTER ══ (assets/boeken.js) — vóór de teller-animatie invullen */
+(function(){
+  var bron={'disciplines':Object.keys(LESSEN).length,'lessen-per-week':lessenPerWeek(),'max-yoga':LESSEN.yoga.max};
+  document.querySelectorAll('[data-bron]').forEach(function(el){
+    var v=bron[el.getAttribute('data-bron')];if(v==null)return;
+    if(el.hasAttribute('data-target'))el.setAttribute('data-target',v);
+    if(!el.classList.contains('stat-n'))el.textContent=v;
+  });
+})();
+
 /* ══ CUSTOM CURSOR ══ */
 var cur=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
 var mx=0,my=0,rx=0,ry=0;
