@@ -30,12 +30,13 @@
 .voor-keuze input{accent-color:var(--rose-d);width:auto;margin:0;}
 .klant-veld{overflow:hidden;max-height:0;opacity:0;transition:max-height .45s cubic-bezier(.22,1,.36,1),opacity .3s,margin .3s;}
 .klant-veld.open{max-height:120px;opacity:1;margin-top:1.1rem;}
-.teller{display:flex;align-items:center;gap:.8rem;}
-.teller button{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:var(--vanilla);font-size:1.15rem;color:var(--espresso2);cursor:pointer;transition:all .2s;}
-.teller button:hover:not(:disabled){background:var(--rose-d);border-color:var(--rose-d);color:white;}
-.teller button:disabled{opacity:.3;cursor:not-allowed;}
-.teller output{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--espresso);min-width:30px;text-align:center;}
-.teller small{color:var(--muted);font-size:.82rem;font-weight:600;}
+.duur-keuze{display:flex;gap:.55rem;flex-wrap:wrap;}
+.duur-keuze label{flex:1;min-width:90px;display:flex;flex-direction:column;align-items:center;gap:.15rem;padding:.75rem .5rem;border:1.5px solid var(--border);border-radius:14px;background:var(--cream);cursor:pointer;font-size:.95rem;font-weight:800;color:var(--espresso2);transition:all .2s;text-transform:none;letter-spacing:0;}
+.duur-keuze label small{font-size:.75rem;font-weight:600;color:var(--muted);}
+.duur-keuze label:has(input:checked){border-color:var(--rose-d);background:var(--rose-pale);color:var(--rose-d);}
+.duur-keuze label:has(input:disabled){opacity:.4;cursor:not-allowed;}
+.duur-keuze input{position:absolute;opacity:0;pointer-events:none;}
+.week-info{font-size:.82rem;color:var(--muted);margin-top:.5rem;}
 .samenvatting{padding:2rem;position:sticky;top:96px;}
 .rij{display:flex;justify-content:space-between;gap:1rem;font-size:.92rem;color:var(--espresso2);padding:.5rem 0;}
 .rij b{color:var(--espresso);font-weight:700;text-align:right;}
@@ -75,10 +76,9 @@
 </main>
 
 <script>
-var MAX_PER_BOEKING={standaard:1,pro:4};
 var slot=parseSlot(new URLSearchParams(location.search).get('slot'));
 var type=user?getType(user.type):null;
-var aantal=1;
+var duur=slot?slot.les.duur:60;   // gekozen duur in minuten (enkel te kiezen bij zaalhuur)
 
 function stappen(n){
   var s=['Uur kiezen','Aanmelden','Reserveren','Betalen'];
@@ -90,56 +90,71 @@ function toon(html){document.getElementById('inhoud').innerHTML=html;reveal();}
 function foutScherm(titel,tekst,knop){
   toon('<div class="card fout-card sr scale"><h2 class="card-title">'+titel+'</h2><p>'+tekst+'</p>'+(knop||'<a class="btn btn-primary" href="boeken.html">Terug naar het rooster</a>')+'</div>');
 }
-function maxPlaatsen(){return Math.max(1,Math.min(type.pro?MAX_PER_BOEKING.pro:MAX_PER_BOEKING.standaard,vrijePlaatsen(slot)));}
+function isZaal(){return slot.lesId==='zaal';}
+function prijs(){return isZaal()?slot.les.prijs*duur/60:slot.les.prijs;}
+function resterendeUren(){return REGELS.maxUrenPerWeek-urenInWeek(user,slot.datum);}
 
 function render(){
   var ruw=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})_/.exec(new URLSearchParams(location.search).get('slot')||'');
   if(!slot&&ruw&&isGesloten(new Date(+ruw[1],+ruw[2]-1,+ruw[3]),+ruw[4]*60+ +ruw[5],+ruw[4]*60+ +ruw[5]+1)){foutScherm('Op dit uur zijn we gesloten','Op dit moment kan niemand een les boeken of de zaal huren. Kies een ander uur in het rooster.');return;}
   if(!slot){foutScherm('Dit uur bestaat niet','We vinden dit uur niet terug in het rooster. Kies een uur in het rooster om te reserveren.');return;}
   if(isVoorbij(slot)){foutScherm('Dit uur is al voorbij','Kies een ander uur in het rooster.');return;}
-  if(slot.lesId==='zaal'&&!magZaalHuren(user)){foutScherm('Zaalhuur is voor professionals','De zaal huren kan alleen als personal trainer, kinesist of lesgever. Kies een les in het rooster om te reserveren.');return;}
+  if(isTeLaat(slot)){foutScherm('Te laat om nog te boeken','Boeken kan tot '+REGELS.boekenTotMinVooraf+' minuten voor de start. Kies een later uur in het rooster.');return;}
+  if(isZaal()&&!magZaalHuren(user)){foutScherm('Zaalhuur is voor professionals','De zaal huren kan alleen als personal trainer, kinesist of lesgever. Kies een les in het rooster om te reserveren.');return;}
   var bestaand=getBookings().find(function(b){return b.userId===user.id&&b.slotId===slot.id;});
   if(bestaand){
     foutScherm('Je hebt dit uur al gereserveerd',esc(slot.les.naam)+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.',
-      bestaand.status==='betaald'?null:'<a class="btn btn-primary" href="betalen.html?booking='+bestaand.id+'">Verder naar betalen →</a>');
+      isBevestigd(bestaand)?null:'<a class="btn btn-primary" href="betalen.html?booking='+bestaand.id+'">Verder naar betalen →</a>');
     return;
   }
   if(vrijePlaatsen(slot)<=0){foutScherm('Dit uur is volzet','Er zijn geen plaatsen meer vrij. Kies een ander uur.');return;}
 
-  var vrij=vrijePlaatsen(slot);
+  // Weeklimiet: maximaal REGELS.maxUrenPerWeek uur per persoon per week
+  var rest=resterendeUren();
+  var duren=isZaal()?zaalDurenVanaf(slot.datum,+slot.tijd.slice(0,2)):[slot.les.duur];
+  var mogelijk=duren.filter(function(d){return d/60<=rest+1e-9;});
+  if(!mogelijk.length){
+    foutScherm('Je weeklimiet is bereikt','Je hebt deze week al '+fmtUren(urenInWeek(user,slot.datum))+' geboekt. Per persoon kan je maximaal '+REGELS.maxUrenPerWeek+' uur per week reserveren.');
+    return;
+  }
+  if(mogelijk.indexOf(duur)<0)duur=mogelijk[0];
+
   var html=stappen(2)+'<div class="res-grid"><form class="card res-card les-'+slot.lesId+' sr left" onsubmit="bevestig(event)">'+
     '<p class="eyebrow">Jouw reservatie</p>'+
     '<div class="les-kop"><div class="ic">'+slot.les.icon+'</div><div><div class="sr-soort">'+esc(slot.les.soort)+'</div><div class="nm">'+esc(slot.les.naam)+'</div>'+
-    '<div class="wn">'+fmtDatum(slot.datum)+' · '+slot.tijd+' – '+slot.eind+' · '+esc(slot.les.trainer)+'</div></div></div>'+
+    '<div class="wn">'+fmtDatum(slot.datum)+' · <span id="kopUur">'+slot.tijd+' – '+eindTijd(slot.tijd,duur)+'</span> · '+esc(slot.les.trainer)+'</div></div></div>'+
     '<div class="user-box"><div class="user-avatar">'+esc(initialen(user.naam))+'</div><div><div class="nm">'+esc(user.naam)+'</div>'+
     '<div class="em">'+esc(user.email)+'</div><div style="margin-top:5px;">'+typeBadge(user)+'</div></div></div>';
 
-  if(type.pro){
+  if(isZaal()){
+    html+='<div class="fg"><label>Hoe lang huur je de zaal?</label><div class="duur-keuze">'+
+      REGELS.zaalDuren.map(function(d){
+        var kan=mogelijk.indexOf(d)>=0,reden=duren.indexOf(d)<0?'niet vrij':'boven weeklimiet';
+        return '<label><input type="radio" name="duur" value="'+d+'"'+(d===duur?' checked':'')+(kan?'':' disabled')+' onchange="kiesDuur('+d+')">'+
+          fmtUren(d/60)+'<small>'+(kan?eindTijd(slot.tijd,d)+' · '+fmtEuro(slot.les.prijs*d/60):reden)+'</small></label>';
+      }).join('')+'</div></div>';
+  }
+  // Elke deelnemer boekt zelf: 'voor een klant' enkel bij 1-op-1 sessies en zaalhuur
+  if(type.pro&&slot.les.max===1){
     html+='<div class="fg"><label>Voor wie boek je?</label><div class="voor-keuze">'+
       '<label><input type="radio" name="voor" value="zelf" checked onchange="toggleKlant()"> Voor mezelf</label>'+
       '<label><input type="radio" name="voor" value="klant" onchange="toggleKlant()"> Voor een klant</label></div>'+
       '<div class="klant-veld" id="klantVeld"><div class="fg" style="margin:0;"><label for="klant">Naam van je klant</label><input type="text" id="klant" placeholder="Naam klant"></div></div></div>';
   }
-  if(slot.les.max>1&&maxPlaatsen()>1){
-    html+='<div class="fg"><label>Aantal plaatsen</label><div class="teller">'+
-      '<button type="button" id="min" onclick="wijzigAantal(-1)" aria-label="Minder">−</button><output id="aantal">1</output>'+
-      '<button type="button" id="plus" onclick="wijzigAantal(1)" aria-label="Meer">+</button>'+
-      '<small>max. '+maxPlaatsen()+' per reservatie · nog '+vrij+' vrij</small></div></div>';
-  }
   html+='<div class="fg"><label for="opm">Opmerking (optioneel)</label><textarea id="opm" rows="3" placeholder="Blessure, eerste keer, specifieke klacht…"></textarea></div>'+
+    '<div class="week-info">Deze week al geboekt: '+fmtUren(urenInWeek(user,slot.datum))+' van max. '+REGELS.maxUrenPerWeek+' uur.</div>'+
     '<div class="form-error" id="fout"></div>'+
     '</form>'+
     '<aside class="card samenvatting sr right"><p class="eyebrow">Overzicht</p>'+
-    '<div class="rij"><span>'+(slot.lesId==='zaal'?'Zaalhuur':slot.les.max>1?'Les':'Sessie')+'</span><b>'+esc(slot.les.naam)+'</b></div>'+
+    '<div class="rij"><span>'+(isZaal()?'Zaalhuur':slot.les.max>1?'Les':'Sessie')+'</span><b>'+esc(slot.les.naam)+'</b></div>'+
     '<div class="rij"><span>Datum</span><b>'+fmtDatum(slot.datum)+'</b></div>'+
-    '<div class="rij"><span>Uur</span><b>'+slot.tijd+' – '+slot.eind+'</b></div>'+
-    '<div class="rij"><span>Prijs'+(slot.les.max>1?' per plaats':'')+'</span><b>'+fmtEuro(slot.les.prijs)+'</b></div>'+
-    '<div class="rij"><span>Aantal</span><b id="sAantal">1</b></div>'+
+    '<div class="rij"><span>Uur</span><b id="sUur"></b></div>'+
+    '<div class="rij"><span>Prijs'+(isZaal()?' per uur':'')+'</span><b>'+fmtEuro(slot.les.prijs)+'</b></div>'+
     '<div class="totaal"><span>Totaal</span><b id="sTotaal"></b></div>'+
     '<button class="btn btn-primary btn-block" onclick="bevestig(event)">Verder naar betalen →</button>'+
-    '<div class="klein">Je plaats wordt vastgehouden tot je betaald hebt.</div></aside></div>';
+    '<div class="klein">Na het reserveren heb je '+REGELS.betaaltermijnMin+' minuten om te betalen, anders vervalt je reservatie.</div></aside></div>';
   toon(html);
-  updateAantal();
+  updateOverzicht();
 }
 
 function toggleKlant(){
@@ -147,12 +162,11 @@ function toggleKlant(){
   document.getElementById('klantVeld').classList.toggle('open',klant);
   if(klant)setTimeout(function(){document.getElementById('klant').focus();},200);
 }
-function wijzigAantal(n){aantal=Math.min(maxPlaatsen(),Math.max(1,aantal+n));updateAantal(true);}
-function updateAantal(anim){
-  var el=document.getElementById('aantal');
-  if(el){el.textContent=aantal;document.getElementById('min').disabled=aantal<=1;document.getElementById('plus').disabled=aantal>=maxPlaatsen();}
-  document.getElementById('sAantal').textContent=aantal;
-  var t=document.getElementById('sTotaal');t.textContent=fmtEuro(aantal*slot.les.prijs);
+function kiesDuur(d){duur=d;updateOverzicht(true);}
+function updateOverzicht(anim){
+  var uur=slot.tijd+' – '+eindTijd(slot.tijd,duur);
+  document.getElementById('sUur').textContent=uur;document.getElementById('kopUur').textContent=uur;
+  var t=document.getElementById('sTotaal');t.textContent=fmtEuro(prijs());
   if(anim){t.classList.remove('bump');void t.offsetWidth;t.classList.add('bump');}
 }
 
@@ -160,13 +174,17 @@ function bevestig(e){
   e.preventDefault();
   var fout=document.getElementById('fout');fout.textContent='';
   var voorWie='';
-  if(type.pro&&document.querySelector('input[name=voor]:checked').value==='klant'){
+  var voor=document.querySelector('input[name=voor]:checked');
+  if(voor&&voor.value==='klant'){
     voorWie=document.getElementById('klant').value.trim();
     if(!voorWie){fout.textContent='Vul de naam van je klant in.';document.getElementById('klant').focus();return;}
   }
-  if(aantal>vrijePlaatsen(slot)){fout.textContent='Er zijn niet genoeg plaatsen meer vrij.';return;}
-  var b={id:uid(),slotId:slot.id,userId:user.id,plaatsen:aantal,voorWie:voorWie,
-    opmerking:document.getElementById('opm').value.trim(),bedrag:aantal*slot.les.prijs,
+  // Opnieuw controleren: intussen kan er iets veranderd zijn
+  if(isTeLaat(slot)){fout.textContent='Boeken kan tot '+REGELS.boekenTotMinVooraf+' minuten voor de start.';return;}
+  if(vrijePlaatsen(slot)<=0||(isZaal()&&zaalDurenVanaf(slot.datum,+slot.tijd.slice(0,2)).indexOf(duur)<0)){fout.textContent='Dit uur is intussen niet meer vrij.';return;}
+  if(duur/60>resterendeUren()+1e-9){fout.textContent='Hiermee kom je boven de '+REGELS.maxUrenPerWeek+' uur per week.';return;}
+  var b={id:uid(),slotId:slot.id,userId:user.id,plaatsen:1,duur:duur,voorWie:voorWie,
+    opmerking:document.getElementById('opm').value.trim(),bedrag:prijs(),
     status:'wacht-op-betaling',aangemaakt:new Date().toISOString()};
   var all=getBookings();all.push(b);saveBookings(all);
   location.href='betalen.html?booking='+b.id;

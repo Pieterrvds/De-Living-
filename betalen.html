@@ -87,44 +87,68 @@ function stappen(n){
 }
 function toon(html){document.getElementById('inhoud').innerHTML=html;reveal();}
 
+var klok=null,wasOpen=false;
 function render(){
-  // Alleen eigen reservaties tonen.
+  // Alleen eigen reservaties tonen (getBookings laat vervallen reservaties al weg).
   booking=getBookings().find(function(b){return b.id===bookingId&&b.userId===user.id;});
   slot=booking&&parseSlot(booking.slotId);
+  clearInterval(klok);
   if(!booking||!slot){
-    toon('<div class="card fout-card sr scale"><h2 class="card-title">Reservatie niet gevonden</h2><p>Deze reservatie bestaat niet (meer) of hoort niet bij jouw account.</p><a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>');
+    toon(wasOpen
+      ?'<div class="card fout-card sr scale"><h2 class="card-title">⏳ Je reservatie is vervallen</h2><p>Je hebt niet binnen '+REGELS.betaaltermijnMin+' minuten betaald, dus je plaats is vrijgegeven. Je kan het uur opnieuw reserveren als het nog vrij is.</p><a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>'
+      :'<div class="card fout-card sr scale"><h2 class="card-title">Reservatie niet gevonden</h2><p>Deze reservatie bestaat niet (meer), is vervallen of hoort niet bij jouw account.</p><a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>');
     return;
   }
-  if(booking.status==='betaald'){
-    toon('<div class="card fout-card sr scale"><h2 class="card-title">✓ Al betaald</h2><p>Je plaats voor '+esc(slot.les.naam)+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+' is bevestigd. Tot dan! 🌹</p><a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>');
+  if(isBevestigd(booking)){
+    toon('<div class="card fout-card sr scale"><h2 class="card-title">✓ Je reservatie is bevestigd</h2><p>'+esc(slot.les.naam)+' op '+fmtDatum(slot.datum)+', '+slot.tijd+' – '+boekingEind(booking,slot)+'.<br>'+
+      (booking.status==='bevestigd'?'Je betaalt '+fmtEuro(booking.bedrag)+' aan de bar vóór je sessie.':'Betaald: '+fmtEuro(booking.bedrag)+'.')+' Tot dan! 🌹</p>'+
+      '<a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>');
     return;
   }
-  toon(stappen(3)+'<div class="pay-grid"><div class="card pay-card sr left"><p class="eyebrow">Betaalmethode</p><h2 class="card-title">Hoe wil je betalen?</h2><div class="methodes">'+
+  wasOpen=true;
+  toon(stappen(3)+'<div class="pay-grid"><div class="card pay-card sr left"><p class="eyebrow">Betaalmethode</p><h2 class="card-title">Hoe wil je betalen?</h2>'+
+    '<div class="notice" id="klok" style="margin-bottom:1.25rem;"></div><div class="methodes">'+
     METHODES.map(function(m,i){
-      return '<div class="methode"><input type="radio" name="methode" id="m-'+m.id+'" value="'+m.id+'"'+(i===0?' checked':'')+'>'+
+      return '<div class="methode"><input type="radio" name="methode" id="m-'+m.id+'" value="'+m.id+'"'+(i===0?' checked':'')+' onchange="updateKnop()">'+
         '<label for="m-'+m.id+'"><span class="m-icon">'+m.icon+'</span><span><div class="m-naam">'+m.naam+'</div><div class="m-sub">'+m.sub+'</div></span><span class="m-check"></span></label></div>';
     }).join('')+'</div>'+
-    '<div class="notice">🚧 Online betalen wordt binnenkort geactiveerd. Je reservatie is al vastgelegd en blijft op <b>wacht op betaling</b> staan.</div>'+
+    '<div class="notice">🚧 Online betalen wordt binnenkort geactiveerd. Kies voorlopig <b>Betalen aan de bar</b> om je reservatie te bevestigen.</div>'+
     '</div>'+
     '<aside class="card samenvatting les-'+slot.lesId+' sr right"><p class="eyebrow">Je reservatie</p>'+
-    '<div class="les-mini"><div class="ic">'+slot.les.icon+'</div><div><div class="nm">'+esc(slot.les.naam)+'</div><div class="wn">'+fmtDatum(slot.datum)+' · '+slot.tijd+' – '+slot.eind+'</div></div></div>'+
+    '<div class="les-mini"><div class="ic">'+slot.les.icon+'</div><div><div class="nm">'+esc(slot.les.naam)+'</div><div class="wn">'+fmtDatum(slot.datum)+' · '+slot.tijd+' – '+boekingEind(booking,slot)+'</div></div></div>'+
     '<div class="rij"><span>Geboekt door</span><b>'+esc(user.naam)+'</b></div>'+
     '<div class="rij"><span>Type</span><b>'+typeBadge(user)+'</b></div>'+
     (booking.voorWie?'<div class="rij"><span>Voor</span><b>'+esc(booking.voorWie)+'</b></div>':'')+
-    '<div class="rij"><span>Plaatsen</span><b>'+booking.plaatsen+' × '+fmtEuro(slot.les.prijs)+'</b></div>'+
+    '<div class="rij"><span>Duur</span><b>'+fmtUren(boekingDuur(booking,slot)/60)+'</b></div>'+
     '<div class="totaal"><span>Te betalen</span><b>'+fmtEuro(booking.bedrag)+'</b></div>'+
-    '<button class="btn btn-primary btn-block" style="margin-top:1.4rem;" onclick="betaal()">Betaal '+fmtEuro(booking.bedrag)+'</button>'+
+    '<button class="btn btn-primary btn-block" id="betaalKnop" style="margin-top:1.4rem;" onclick="betaal()"></button>'+
     '<div class="veilig">🔒 Veilig betalen</div>'+
     '<button class="annuleer" onclick="annuleer()">Reservatie annuleren</button></aside></div>');
+  updateKnop();tik();klok=setInterval(tik,1000);
 }
-
+// Aftellen tot de reservatie vervalt
+function tik(){
+  var rest=Math.max(0,vervaltOm(booking)-Date.now()),m=Math.floor(rest/60000),sec=Math.floor(rest%60000/1000);
+  var el=document.getElementById('klok');
+  if(el)el.innerHTML='⏳ Je plaats wordt nog <b>'+m+':'+pad(sec)+'</b> vastgehouden. Daarna vervalt je reservatie.';
+  if(rest<=0)render();
+}
+function gekozen(){var r=document.querySelector('input[name=methode]:checked');return r?r.value:'';}
+function updateKnop(){
+  document.getElementById('betaalKnop').textContent=gekozen()==='bar'?'Bevestig · betalen aan de bar':'Betaal '+fmtEuro(booking.bedrag);
+}
 function betaal(){
+  if(!getBookings().some(function(b){return b.id===booking.id;}))return render();
+  if(gekozen()==='bar'){
+    var all=getBookings();all.forEach(function(b){if(b.id===booking.id)b.status='bevestigd';});saveBookings(all);
+    showToast('✓ Bevestigd! Je betaalt aan de bar. 🌹');render();return;
+  }
   // TODO: hier komt later de koppeling met de betaalprovider (bv. Mollie of Stripe).
-  showToast('💡 Online betalen is nog niet actief. Je reservatie staat genoteerd.');
+  showToast('💡 Online betalen is nog niet actief. Kies "Betalen aan de bar".');
 }
 function annuleer(){
   if(!confirm('Wil je deze reservatie annuleren?'))return;
-  saveBookings(getBookings().filter(function(b){return b.id!==booking.id;}));
+  clearInterval(klok);annuleerBoeking(booking.id);
   showToast('Reservatie geannuleerd');
   setTimeout(function(){location.href='boeken.html';},700);
 }

@@ -69,9 +69,19 @@ function openingsurenTekst(){
   return regels.join('<br>');
 }
 
+/* ── BOEKINGSREGELS ── Pas de waarden hier aan. */
+var REGELS={
+  betaaltermijnMin:5,        // onbetaalde reservatie vervalt na zoveel minuten
+  boekenTotMinVooraf:60,     // boeken kan tot zoveel minuten voor de start
+  annulerenTotUurVooraf:24,  // zelf annuleren kan tot zoveel uur voor de start; daarna via WhatsApp
+  maxUrenPerWeek:10,         // maximaal aantal uren per persoon per week (ma–zo)
+  zaalDuren:[60,90,120],     // keuze bij zaalhuur: 1 uur, 1,5 uur of 2 uur
+  whatsapp:'32471955489'     // nummer voor annuleren na de termijn
+};
+
 /* ── ZAALHUUR ── Professionals (types met zaal:true) kunnen elk vrij uur de zaal huren.
    Een uur is vrij als er geen les uit het ROOSTER overlapt. Prijs is een voorbeeldprijs. */
-var ZAAL={naam:'Zaal huren',kort:'Zaal',icon:'🏠',duur:60,trainer:'Zelf begeleid',max:1,prijs:20,soort:'Zaalhuur voor professionals'};
+var ZAAL={naam:'Zaal huren',kort:'Zaal',icon:'🏠',duur:60,trainer:'Zelf begeleid',max:1,prijs:20,soort:'Zaalhuur voor professionals'};  // prijs per uur
 
 /* ── PERSOONSTYPES ── */
 var TYPES=[
@@ -131,6 +141,28 @@ function zaalVrij(datum,uur){
   });
 }
 function zaalSlot(datum,uur){return zaalVrij(datum,uur)?parseSlot(slotId(datum,pad(uur)+':00','zaal')):null;}
+// Zaalreservatie die [van, tot) (minuten) op die dag overlapt, of null.
+function zaalBoekingOp(datum,van,tot){
+  var dag=isoDate(datum);
+  return getBookings().find(function(b){
+    if(b.slotId.slice(0,10)!==dag||!/_zaal$/.test(b.slotId))return false;
+    var s=naarMin(b.slotId.slice(11,16)),e=s+(b.duur||60);
+    return s<tot&&e>van;
+  })||null;
+}
+// Welke duren (minuten) kan de zaal vanaf dit uur gehuurd worden?
+function zaalDurenVanaf(datum,uur){
+  var van=uur*60;
+  return REGELS.zaalDuren.filter(function(d){
+    for(var m=van;m<van+d;m+=30){
+      if(isGesloten(datum,m,m+30)||!zaalVrijLes(datum,m,m+30))return false;
+    }
+    return !zaalBoekingOp(datum,van,van+d);
+  });
+}
+function zaalVrijLes(datum,van,tot){
+  return !(ROOSTER[datum.getDay()]||[]).some(function(r){var s=naarMin(r[0]),e=s+LESSEN[r[1]].duur;return s<tot&&e>van;});
+}
 function slotsVoorDag(datum){
   return (ROOSTER[datum.getDay()]||[]).map(function(r){return parseSlot(slotId(datum,r[0],r[1]));}).filter(Boolean);
 }
@@ -138,11 +170,14 @@ function slotsVoorDag(datum){
 function bezetting(slot){
   var h=0;for(var i=0;i<slot.id.length;i++){h=(h*31+slot.id.charCodeAt(i))>>>0;}
   var basis=slot.les.max>1?h%Math.round(slot.les.max*0.85):0;
+  if(slot.lesId==='zaal'){var v=naarMin(slot.tijd);return zaalBoekingOp(slot.datum,v,v+60)?1:0;}
   var eigen=getBookings().filter(function(b){return b.slotId===slot.id;}).reduce(function(s,b){return s+b.plaatsen;},0);
   return Math.min(slot.les.max,basis+eigen);
 }
 function vrijePlaatsen(slot){return slot.les.max-bezetting(slot);}
 function isVoorbij(slot){return slot.start.getTime()<Date.now();}
+// Te laat om nog te boeken (minder dan REGELS.boekenTotMinVooraf voor de start)?
+function isTeLaat(slot){return slot.start.getTime()-Date.now()<REGELS.boekenTotMinVooraf*60000;}
 
 /* ── ACCOUNTS & SESSIE ── */
 function getUsers(){return load('living_users',[]);}
@@ -192,7 +227,37 @@ function requireLogin(next){
 }
 
 /* ── RESERVATIES ── */
-function getBookings(){return load('living_bookings',[]);}
+// Onbetaalde reservaties vervallen na REGELS.betaaltermijnMin minuten.
+function vervaltOm(b){return new Date(b.aangemaakt).getTime()+REGELS.betaaltermijnMin*60000;}
+function getBookings(){
+  var alle=load('living_bookings',[]),nu=Date.now();
+  var geldig=alle.filter(function(b){return !(b.status==='wacht-op-betaling'&&vervaltOm(b)<=nu);});
+  if(geldig.length!==alle.length)save('living_bookings',geldig);
+  return geldig;
+}
+function isBevestigd(b){return b.status==='betaald'||b.status==='bevestigd';}
+function statusLabel(b){return b.status==='betaald'?'Betaald':b.status==='bevestigd'?'Bevestigd · betalen aan de bar':'Wacht op betaling';}
+function boekingDuur(b,slot){return b.duur||(slot||parseSlot(b.slotId)).les.duur;}
+function boekingEind(b,slot){slot=slot||parseSlot(b.slotId);return eindTijd(slot.tijd,boekingDuur(b,slot));}
+// Geboekte uren van een persoon in de week (ma–zo) van een datum.
+function urenInWeek(user,datum){
+  var ma=mondayOf(datum).getTime(),zo=ma+7*864e5;
+  return getBookings().filter(function(b){return b.userId===user.id;}).reduce(function(som,b){
+    var s=parseSlot(b.slotId);if(!s)return som;
+    var t=s.datum.getTime();return t>=ma&&t<zo?som+boekingDuur(b,s)/60:som;
+  },0);
+}
+function magZelfAnnuleren(b,slot){
+  slot=slot||parseSlot(b.slotId);
+  return !isBevestigd(b)||slot.start.getTime()-Date.now()>=REGELS.annulerenTotUurVooraf*3600000;
+}
+function annuleerBoeking(id){saveBookings(getBookings().filter(function(b){return b.id!==id;}));}
+function waAnnuleerLink(b,slot){
+  slot=slot||parseSlot(b.slotId);
+  var t='Hallo! Ik wil graag mijn reservatie annuleren: '+slot.les.naam+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.';
+  return 'https://wa.me/'+REGELS.whatsapp+'?text='+encodeURIComponent(t);
+}
+function fmtUren(u){return (Math.round(u*100)/100).toString().replace('.',',')+' uur';}
 function saveBookings(b){save('living_bookings',b);}
 function mijnBookings(user){
   return getBookings().filter(function(b){return b.userId===user.id;})
