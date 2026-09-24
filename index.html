@@ -738,7 +738,7 @@ footer::before{content:'';position:absolute;top:-60px;left:50%;transform:transla
     <div class="con-grid">
       <div>
         <div class="con-item sr d1"><div class="con-icon">📍</div><div><div class="con-lbl">Adres</div><div class="con-val">Hoogstraat 40, 9308 Aalst</div></div></div>
-        <div class="con-item sr d2"><div class="con-icon">🕐</div><div><div class="con-lbl">Openingsuren</div><div class="con-val">Ma–Vr: 07:00 – 22:00<br>Za–Zo: 09:00 – 18:00</div><a href="https://calendar.google.com/calendar/r" target="_blank" class="con-gcal">↗ Actuele uren via Google Calendar</a></div></div>
+        <div class="con-item sr d2"><div class="con-icon">🕐</div><div><div class="con-lbl">Openingsuren</div><div class="con-val" id="openingsuren">Ma–Vr: 07:00 – 22:00<br>Za–Zo: 09:00 – 18:00</div><a href="https://calendar.google.com/calendar/r" target="_blank" class="con-gcal">↗ Actuele uren via Google Calendar</a></div></div>
         <div class="con-item sr d3"><div class="con-icon">📞</div><div><div class="con-lbl">Telefoon</div><div class="con-val"><a href="tel:+32471955489">+32 471 95 54 89</a></div></div></div>
         <div class="con-item sr d4"><div class="con-icon">✉️</div><div><div class="con-lbl">E-mail</div><div class="con-val"><a href="mailto:hallo@lavieenrose.be">hallo@lavieenrose.be</a></div></div></div>
         <div class="sr d4" style="font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--rose-d);margin-bottom:.7rem;">Volg ons</div>
@@ -1017,6 +1017,8 @@ function showToast(msg){
 document.getElementById('kalLeg').innerHTML=Object.keys(LESSEN).map(function(k){
   return '<div class="kl"><div class="kp '+k+'"></div>'+LESSEN[k].naam+'</div>';
 }).join('');
+// Openingsuren komen uit assets/boeken.js (OPENINGSUREN)
+document.getElementById('openingsuren').innerHTML=openingsurenTekst();
 renderKal();
 
 /* ══ EVENEMENTEN: horizontaal scrollen ══ */

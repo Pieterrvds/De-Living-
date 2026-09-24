@@ -202,7 +202,7 @@ function render(){
   for(var u=UUR_START;u<=UUR_EINDE;u++){
     h+='<div class="r-uur">'+pad(u)+':00</div>';
     perDag.forEach(function(slots,di){
-      var dicht=isGesloten(dagen[di],u*60,u*60+60),eerste=dicht&&!isGesloten(dagen[di],(u-1)*60,u*60);
+      var dicht=isGesloten(dagen[di],u*60,u*60+60),eerste=dicht&&(u===UUR_START||!isGesloten(dagen[di],(u-1)*60,u*60));
       if(dicht){h+='<div class="r-cel gesloten">'+(eerste?'<div class="gesloten-lbl">🔒 Gesloten</div>':'')+'</div>';return;}
       h+='<div class="r-cel">'+slots.filter(function(s){return +s.tijd.slice(0,2)===u;}).map(function(s){return slotKnop(s,mijn,n++);}).join('')+
         (zaal?zaalKnop(zaalSlot(dagen[di],u),mijn,0):'')+'</div>';
@@ -216,8 +216,10 @@ function render(){
   }).join('')+'</div>';
   var items=perDag[gekozenDag].map(function(s){return {tijd:s.tijd,html:function(i){return slotKnop(s,mijn,i);}};});
   if(zaal)for(var zu=UUR_START;zu<=UUR_EINDE;zu++){(function(zs){if(zs)items.push({tijd:zs.tijd,html:function(i){return zaalKnop(zs,mijn,i);}});})(zaalSlot(dagen[gekozenDag],zu));}
-  var dicht=geslotenVanaf(dagen[gekozenDag]);
-  if(dicht)items.push({tijd:dicht,html:function(){return '<div class="dag-gesloten">🔒 Gesloten vanaf '+dicht+'</div>';}});
+  geslotenBlokken(dagen[gekozenDag]).forEach(function(g){
+    var tekst=g[0]===UUR_START?'🔒 Gesloten tot '+pad(g[1])+':00':'🔒 Gesloten vanaf '+pad(g[0])+':00';
+    items.push({tijd:pad(g[0])+':00',html:function(){return '<div class="dag-gesloten">'+tekst+'</div>';}});
+  });
   items.sort(function(a,b){return a.tijd<b.tijd?-1:1;});
   var lijstHtml=items.map(function(it,i){return it.html(i);}).join('');
   m+=lijstHtml||'<div class="leeg">Geen lessen op deze dag.</div>';

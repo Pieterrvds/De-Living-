@@ -23,8 +23,16 @@ var ROOSTER={
 };
 var UUR_START=7, UUR_EINDE=21;
 
-/* ── GESLOTEN PERIODES ── Weekdag → [van, tot]. In deze periodes kan niemand
-   een les boeken of de zaal huren. Pas hier aan om uren te sluiten of te openen. */
+/* ── OPENINGSUREN ── Weekdag (0 = zondag … 6 = zaterdag) → [open, dicht].
+   Buiten deze uren kan niemand boeken of huren. De tekst bij Contact op de
+   hoofdpagina wordt hier ook uit opgebouwd. */
+var OPENINGSUREN={
+  1:['07:00','22:00'],2:['07:00','22:00'],3:['07:00','22:00'],4:['07:00','22:00'],5:['07:00','22:00'],
+  6:['09:00','18:00'],0:['09:00','18:00']
+};
+
+/* ── GESLOTEN PERIODES ── Extra periodes binnen de openingsuren waarin niemand
+   een les kan boeken of de zaal kan huren. Weekdag → [van, tot]. */
 var GESLOTEN={
   0:[['13:00','24:00']],   // zondagnamiddag
   1:[['19:00','24:00']],   // maandag na 19:00
@@ -33,10 +41,33 @@ var GESLOTEN={
 function naarMin(t){var p=t.split(':');return +p[0]*60+ +p[1];}
 // Overlapt [van, tot) (in minuten) met een gesloten periode op die dag?
 function weekdagGesloten(dow,van,tot){
+  var o=OPENINGSUREN[dow];
+  if(!o||van<naarMin(o[0])||tot>naarMin(o[1]))return true;   // buiten de openingsuren
   return (GESLOTEN[dow]||[]).some(function(g){return naarMin(g[0])<tot&&naarMin(g[1])>van;});
 }
 function isGesloten(datum,van,tot){return weekdagGesloten(datum.getDay(),van,tot);}
-function geslotenVanaf(datum){var g=(GESLOTEN[datum.getDay()]||[])[0];return g?g[0]:null;}
+// Gesloten blokken binnen het rooster (UUR_START … UUR_EINDE+1), per heel uur, als [van, tot] in uren.
+function geslotenBlokken(datum){
+  var blokken=[],b=null;
+  for(var u=UUR_START;u<=UUR_EINDE;u++){
+    if(isGesloten(datum,u*60,u*60+60)){if(b)b[1]=u+1;else b=[u,u+1];}
+    else if(b){blokken.push(b);b=null;}
+  }
+  if(b)blokken.push(b);
+  return blokken;
+}
+// Tekst voor de openingsuren, bv. 'Ma–Vr: 07:00 – 22:00<br>Za–Zo: 09:00 – 18:00'
+function openingsurenTekst(){
+  var volg=[1,2,3,4,5,6,0],regels=[],i=0;
+  while(i<volg.length){
+    var o=OPENINGSUREN[volg[i]],j=i;
+    while(j+1<volg.length&&String(OPENINGSUREN[volg[j+1]])===String(o))j++;
+    var dagen=DAGEN_KORT[volg[i]]+(j>i?'–'+DAGEN_KORT[volg[j]]:'');
+    regels.push(dagen+': '+(o?o[0]+' – '+o[1]:'gesloten'));
+    i=j+1;
+  }
+  return regels.join('<br>');
+}
 
 /* ── ZAALHUUR ── Professionals (types met zaal:true) kunnen elk vrij uur de zaal huren.
    Een uur is vrij als er geen les uit het ROOSTER overlapt. Prijs is een voorbeeldprijs. */
