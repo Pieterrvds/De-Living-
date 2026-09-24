@@ -23,15 +23,20 @@ var ROOSTER={
 };
 var UUR_START=7, UUR_EINDE=21;
 
+/* ── ZAALHUUR ── Professionals (types met zaal:true) kunnen elk vrij uur de zaal huren.
+   Een uur is vrij als er geen les uit het ROOSTER overlapt. Prijs is een voorbeeldprijs. */
+var ZAAL={naam:'Zaal huren',kort:'Zaal',icon:'🏠',duur:60,trainer:'Zelf begeleid',max:1,prijs:20,soort:'Zaalhuur voor professionals'};
+
 /* ── PERSOONSTYPES ── */
 var TYPES=[
   {id:'lid',label:'Lid / sporter',icon:'🏃',pro:false},
-  {id:'personal-trainer',label:'Personal trainer',icon:'💪',pro:true},
-  {id:'kinesist',label:'Kinesist',icon:'🩺',pro:true},
+  {id:'personal-trainer',label:'Personal trainer',icon:'💪',pro:true,zaal:true},
+  {id:'kinesist',label:'Kinesist',icon:'🩺',pro:true,zaal:true},
   {id:'dietist',label:'Diëtist',icon:'🥗',pro:true},
-  {id:'lesgever',label:'Lesgever',icon:'📣',pro:true}
+  {id:'lesgever',label:'Lesgever',icon:'📣',pro:true,zaal:true}
 ];
 function getType(id){return TYPES.find(function(t){return t.id===id;})||TYPES[0];}
+function magZaalHuren(user){return !!(user&&getType(user.type).zaal);}
 
 var DAGEN=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
 var DAGEN_KORT=['Zo','Ma','Di','Wo','Do','Vr','Za'];
@@ -54,15 +59,30 @@ function eindTijd(tijd,duur){var p=tijd.split(':');var m=+p[0]*60+ +p[1]+duur;re
 function slotId(datum,tijd,lesId){return isoDate(datum)+'T'+tijd+'_'+lesId;}
 function parseSlot(id){
   var m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})_([a-z]+)$/.exec(id||'');
-  if(!m||!LESSEN[m[5]])return null;
+  if(!m)return null;
   var datum=new Date(+m[1],+m[2]-1,+m[3]);
-  var tijd=m[4],lesId=m[5];
-  var geldig=(ROOSTER[datum.getDay()]||[]).some(function(r){return r[0]===tijd&&r[1]===lesId;});
-  if(!geldig)return null;
+  var tijd=m[4],lesId=m[5],les;
+  if(lesId==='zaal'){
+    var uur=+tijd.slice(0,2);
+    if(tijd.slice(3)!=='00'||uur<UUR_START||uur>UUR_EINDE||!zaalVrij(datum,uur))return null;
+    les=ZAAL;
+  }else{
+    les=LESSEN[lesId];
+    if(!les||!(ROOSTER[datum.getDay()]||[]).some(function(r){return r[0]===tijd&&r[1]===lesId;}))return null;
+  }
   var p=tijd.split(':');
   var start=new Date(datum.getFullYear(),datum.getMonth(),datum.getDate(),+p[0],+p[1]);
-  return {id:id,datum:datum,tijd:tijd,eind:eindTijd(tijd,LESSEN[lesId].duur),lesId:lesId,les:LESSEN[lesId],start:start};
+  return {id:id,datum:datum,tijd:tijd,eind:eindTijd(tijd,les.duur),lesId:lesId,les:les,start:start};
 }
+// Is de zaal van uur:00 tot uur+1:00 vrij (geen overlap met een les)?
+function zaalVrij(datum,uur){
+  var van=uur*60,tot=van+60;
+  return !(ROOSTER[datum.getDay()]||[]).some(function(r){
+    var p=r[0].split(':'),s=+p[0]*60+ +p[1],e=s+LESSEN[r[1]].duur;
+    return s<tot&&e>van;
+  });
+}
+function zaalSlot(datum,uur){return zaalVrij(datum,uur)?parseSlot(slotId(datum,pad(uur)+':00','zaal')):null;}
 function slotsVoorDag(datum){
   return (ROOSTER[datum.getDay()]||[]).map(function(r){return parseSlot(slotId(datum,r[0],r[1]));});
 }

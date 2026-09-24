@@ -95,6 +95,7 @@ function maxPlaatsen(){return Math.max(1,Math.min(type.pro?MAX_PER_BOEKING.pro:M
 function render(){
   if(!slot){foutScherm('Dit uur bestaat niet','We vinden dit uur niet terug in het rooster. Kies een uur in het rooster om te reserveren.');return;}
   if(isVoorbij(slot)){foutScherm('Dit uur is al voorbij','Kies een ander uur in het rooster.');return;}
+  if(slot.lesId==='zaal'&&!magZaalHuren(user)){foutScherm('Zaalhuur is voor professionals','De zaal huren kan alleen als personal trainer, kinesist of lesgever. Kies een les in het rooster om te reserveren.');return;}
   var bestaand=getBookings().find(function(b){return b.userId===user.id&&b.slotId===slot.id;});
   if(bestaand){
     foutScherm('Je hebt dit uur al gereserveerd',esc(slot.les.naam)+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.',
@@ -127,7 +128,7 @@ function render(){
     '<div class="form-error" id="fout"></div>'+
     '</form>'+
     '<aside class="card samenvatting sr right"><p class="eyebrow">Overzicht</p>'+
-    '<div class="rij"><span>'+(slot.les.max>1?'Les':'Sessie')+'</span><b>'+esc(slot.les.naam)+'</b></div>'+
+    '<div class="rij"><span>'+(slot.lesId==='zaal'?'Zaalhuur':slot.les.max>1?'Les':'Sessie')+'</span><b>'+esc(slot.les.naam)+'</b></div>'+
     '<div class="rij"><span>Datum</span><b>'+fmtDatum(slot.datum)+'</b></div>'+
     '<div class="rij"><span>Uur</span><b>'+slot.tijd+' – '+slot.eind+'</b></div>'+
     '<div class="rij"><span>Prijs'+(slot.les.max>1?' per plaats':'')+'</span><b>'+fmtEuro(slot.les.prijs)+'</b></div>'+
