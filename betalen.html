@@ -3,132 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Betalen – In de Living</title>
+<title>Betalen – La Vie en Rose</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/boeken.css">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700;800&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
 <script src="assets/boeken.js"></script>
 <script>
   // Toegangscontrole: niet aangemeld → eerst naar de aanmeldpagina.
   var user=requireLogin();
 </script>
 <style>
-.stappen{display:flex;gap:0.5rem;margin-bottom:2rem;flex-wrap:wrap;}
-.stap{display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:var(--text-muted);}
-.stap i{font-style:normal;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:500;background:white;}
-.stap.klaar i{background:var(--sage);border-color:var(--sage);color:white;}
-.stap.actief{color:var(--brown);font-weight:500;}
-.stap.actief i{background:var(--amber);border-color:var(--amber);color:white;}
-.stap-lijn{width:28px;height:1.5px;background:var(--border);align-self:center;}
 .pay-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:2rem;align-items:start;}
-.pay-card{padding:2rem;}
-.pay-card h2{font-family:'Fraunces',serif;font-size:1.35rem;color:var(--brown);margin-bottom:1.25rem;}
-.methodes{display:grid;gap:0.65rem;margin-bottom:1.5rem;}
+.pay-card{padding:2.25rem;}
+.methodes{display:grid;gap:.7rem;margin-bottom:1.5rem;}
 .methode{position:relative;}
 .methode input{position:absolute;opacity:0;}
-.methode label{display:flex;align-items:center;gap:1rem;padding:1rem 1.15rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--cream);cursor:pointer;transition:all 0.15s;}
-.methode label:hover{border-color:var(--amber-light);}
-.methode input:checked+label{border-color:var(--amber);background:rgba(232,136,58,0.08);}
-.methode input:focus-visible+label{outline:2px solid var(--amber);outline-offset:2px;}
-.m-icon{width:44px;height:30px;border-radius:6px;background:white;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;}
-.m-naam{font-weight:500;color:var(--brown);font-size:0.95rem;}
-.m-sub{font-size:0.78rem;color:var(--text-muted);}
-.m-check{margin-left:auto;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;}
-.methode input:checked+label .m-check{border:6px solid var(--amber);}
-.samenvatting{padding:1.75rem;position:sticky;top:84px;}
-.samenvatting h3{font-family:'Fraunces',serif;font-size:1.15rem;color:var(--brown);margin-bottom:1rem;}
-.les-mini{display:flex;gap:0.75rem;align-items:center;padding:0.85rem 1rem;border-radius:var(--radius-sm);background:var(--bg);border-left:4px solid var(--c);margin-bottom:1rem;}
-.les-mini .ic{font-size:1.5rem;}
-.les-mini .nm{font-weight:500;color:var(--brown);}
-.les-mini .wn{font-size:0.8rem;color:var(--text-mid);}
-.rij{display:flex;justify-content:space-between;gap:1rem;font-size:0.88rem;color:var(--text-mid);padding:0.45rem 0;}
-.rij b{color:var(--brown);font-weight:500;text-align:right;}
-.totaal{border-top:1px solid var(--border);margin-top:0.6rem;padding-top:0.9rem;display:flex;justify-content:space-between;align-items:baseline;}
-.totaal span{font-size:0.9rem;color:var(--text-mid);}
-.totaal b{font-family:'Fraunces',serif;font-size:1.6rem;color:var(--brown);}
-.annuleer{display:block;margin:1rem auto 0;background:none;border:none;color:var(--terracotta);font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;text-decoration:underline;}
-.veilig{display:flex;align-items:center;justify-content:center;gap:0.4rem;font-size:0.78rem;color:var(--text-muted);margin-top:0.9rem;}
-.fout-card{padding:2.5rem;text-align:center;max-width:520px;margin:0 auto;}
-.fout-card h2{font-family:'Fraunces',serif;color:var(--brown);margin-bottom:0.75rem;}
-.fout-card p{color:var(--text-mid);margin-bottom:1.5rem;line-height:1.6;}
-@media(max-width:860px){.pay-grid{grid-template-columns:1fr;}.samenvatting{position:static;order:-1;}.pay-card{padding:1.5rem;}}
+.methode label{display:flex;align-items:center;gap:1rem;padding:1.05rem 1.2rem;border:1.5px solid var(--border);border-radius:18px;background:var(--cream);cursor:pointer;transition:all .25s cubic-bezier(.22,1,.36,1);}
+.methode label:hover{border-color:var(--rose);transform:translateX(4px);}
+.methode input:checked+label{border-color:var(--rose-d);background:var(--rose-pale);box-shadow:0 6px 20px rgba(192,120,120,.15);}
+.methode input:focus-visible+label{outline:2px solid var(--rose-d);outline-offset:2px;}
+.m-icon{width:46px;height:46px;border-radius:14px;background:var(--vanilla);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;box-shadow:0 2px 10px var(--shadow);transition:transform .25s;}
+.methode input:checked+label .m-icon{transform:scale(1.08) rotate(-4deg);}
+.m-naam{font-weight:800;color:var(--espresso);font-size:1rem;}
+.m-sub{font-size:.82rem;color:var(--muted);}
+.m-check{margin-left:auto;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);flex-shrink:0;transition:border .25s;background:white;}
+.methode input:checked+label .m-check{border:7px solid var(--rose-d);}
+.samenvatting{padding:2rem;position:sticky;top:96px;}
+.les-mini{display:flex;gap:.8rem;align-items:center;padding:.95rem 1.05rem;border-radius:16px;background:var(--bg);border-left:4px solid var(--c);margin-bottom:1rem;}
+.les-mini .ic{font-size:1.6rem;}
+.les-mini .nm{font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:1.1rem;color:var(--espresso);}
+.les-mini .wn{font-size:.82rem;color:var(--espresso2);}
+.rij{display:flex;justify-content:space-between;gap:1rem;font-size:.92rem;color:var(--espresso2);padding:.5rem 0;}
+.rij b{color:var(--espresso);font-weight:700;text-align:right;}
+.totaal{border-top:1px solid var(--border);margin-top:.7rem;padding-top:1rem;display:flex;justify-content:space-between;align-items:baseline;}
+.totaal span{font-size:.92rem;font-weight:700;color:var(--espresso2);}
+.totaal b{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--rose-d);}
+.annuleer{display:block;margin:1.1rem auto 0;background:none;border:none;color:var(--rose-d);font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+.annuleer:hover{color:var(--espresso);}
+.veilig{display:flex;align-items:center;justify-content:center;gap:.4rem;font-size:.8rem;font-weight:600;color:var(--muted);margin-top:1rem;}
+.fout-card{padding:3rem 2.5rem;text-align:center;max-width:540px;margin:0 auto;}
+.fout-card p{color:var(--espresso2);margin-bottom:1.75rem;line-height:1.7;}
+@media(max-width:900px){.pay-grid{grid-template-columns:1fr;}.samenvatting{position:static;order:-1;}.pay-card{padding:1.5rem;}}
 </style>
 </head>
 <body>
+<script src="assets/site.js"></script>
 
-<nav>
-  <a href="index.html" class="nav-logo">In de <span>Living</span></a>
-  <div class="nav-right" id="navRight"></div>
-</nav>
+<header class="page-hero" style="--ph-img:url('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1800&q=80');">
+  <div class="ph-bg"></div><div class="ph-mid"></div>
+  <div class="ph-inner">
+    <a href="boeken.html" class="back-link">← Terug naar het rooster</a><br>
+    <div class="ph-badge"><div class="badge-dot"></div>Stap 4 · Betalen</div>
+    <h1 class="ph-title">
+      <span class="ph-word" style="animation-delay:.3s;">Bijna</span>
+      <span class="ph-word script" style="animation-delay:.45s;">klaar</span>
+    </h1>
+  </div>
+</header>
+<div class="morph-divider"><svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path id="wavePath" d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#FDF8EE"/></svg></div>
 
 <main>
-  <header class="page-head">
-    <div class="page-head-inner">
-      <a href="boeken.html" class="back-link">← Terug naar het rooster</a>
-      <div class="page-eyebrow">Betalen</div>
-      <h1 class="page-title">Bijna <em>klaar</em></h1>
-    </div>
-  </header>
-
-  <section class="section">
-    <div class="section-inner" id="inhoud"></div>
+  <section class="sec">
+    <div class="blob" style="width:420px;height:420px;top:-60px;left:-160px;background:rgba(232,164,160,.14);"></div>
+    <div class="inner" id="inhoud"></div>
   </section>
 </main>
-
-<footer>
-  <span class="foot-logo">In de Living</span>
-  <div class="foot-links"><a href="index.html">Home</a><a href="boeken.html">Les boeken</a><a href="index.html#contact">Contact</a></div>
-  <div>© 2025 In de Living · Sportstraat 14, 9000 Gent</div>
-</footer>
-<div class="toast" id="toast"></div>
 
 <script>
 var METHODES=[
   {id:'bancontact',naam:'Bancontact',sub:'Betaal met je bankkaart of de Bancontact-app',icon:'💳'},
   {id:'payconiq',naam:'Payconiq',sub:'Scan de QR-code met je bank-app',icon:'📱'},
   {id:'kaart',naam:'Kredietkaart',sub:'Visa, Mastercard',icon:'💳'},
-  {id:'bar',naam:'Betalen aan de bar',sub:'Betaal ter plaatse vóór de les',icon:'☕'}
+  {id:'bar',naam:'Betalen aan de bar',sub:'Betaal ter plaatse vóór je sessie',icon:'☕'}
 ];
 var bookingId=new URLSearchParams(location.search).get('booking');
 var booking=null,slot=null;
 
 function stappen(n){
   var s=['Uur kiezen','Aanmelden','Reserveren','Betalen'];
-  return '<div class="stappen">'+s.map(function(t,i){
+  return '<div class="stappen sr up">'+s.map(function(t,i){
     return (i?'<div class="stap-lijn"></div>':'')+'<div class="stap'+(i<n?' klaar':i===n?' actief':'')+'"><i>'+(i<n?'✓':i+1)+'</i>'+t+'</div>';
   }).join('')+'</div>';
 }
+function toon(html){document.getElementById('inhoud').innerHTML=html;reveal();}
 
 function render(){
   // Alleen eigen reservaties tonen.
   booking=getBookings().find(function(b){return b.id===bookingId&&b.userId===user.id;});
   slot=booking&&parseSlot(booking.slotId);
   if(!booking||!slot){
-    document.getElementById('inhoud').innerHTML='<div class="card fout-card"><h2>Reservatie niet gevonden</h2><p>Deze reservatie bestaat niet (meer) of hoort niet bij jouw account.</p><a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>';
+    toon('<div class="card fout-card sr scale"><h2 class="card-title">Reservatie niet gevonden</h2><p>Deze reservatie bestaat niet (meer) of hoort niet bij jouw account.</p><a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>');
     return;
   }
   if(booking.status==='betaald'){
-    document.getElementById('inhoud').innerHTML='<div class="card fout-card"><h2>✓ Al betaald</h2><p>Je plaats voor '+esc(slot.les.naam)+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+' is bevestigd. Tot dan!</p><a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>';
+    toon('<div class="card fout-card sr scale"><h2 class="card-title">✓ Al betaald</h2><p>Je plaats voor '+esc(slot.les.naam)+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+' is bevestigd. Tot dan! 🌹</p><a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>');
     return;
   }
-  var html=stappen(3)+'<div class="pay-grid"><div class="card pay-card"><h2>Kies je betaalmethode</h2><div class="methodes">'+
+  toon(stappen(3)+'<div class="pay-grid"><div class="card pay-card sr left"><p class="eyebrow">Betaalmethode</p><h2 class="card-title">Hoe wil je betalen?</h2><div class="methodes">'+
     METHODES.map(function(m,i){
       return '<div class="methode"><input type="radio" name="methode" id="m-'+m.id+'" value="'+m.id+'"'+(i===0?' checked':'')+'>'+
         '<label for="m-'+m.id+'"><span class="m-icon">'+m.icon+'</span><span><div class="m-naam">'+m.naam+'</div><div class="m-sub">'+m.sub+'</div></span><span class="m-check"></span></label></div>';
     }).join('')+'</div>'+
     '<div class="notice">🚧 Online betalen wordt binnenkort geactiveerd. Je reservatie is al vastgelegd en blijft op <b>wacht op betaling</b> staan.</div>'+
     '</div>'+
-    '<aside class="card samenvatting les-'+slot.lesId+'"><h3>Je reservatie</h3>'+
+    '<aside class="card samenvatting les-'+slot.lesId+' sr right"><p class="eyebrow">Je reservatie</p>'+
     '<div class="les-mini"><div class="ic">'+slot.les.icon+'</div><div><div class="nm">'+esc(slot.les.naam)+'</div><div class="wn">'+fmtDatum(slot.datum)+' · '+slot.tijd+' – '+slot.eind+'</div></div></div>'+
     '<div class="rij"><span>Geboekt door</span><b>'+esc(user.naam)+'</b></div>'+
     '<div class="rij"><span>Type</span><b>'+typeBadge(user)+'</b></div>'+
     (booking.voorWie?'<div class="rij"><span>Voor</span><b>'+esc(booking.voorWie)+'</b></div>':'')+
     '<div class="rij"><span>Plaatsen</span><b>'+booking.plaatsen+' × '+fmtEuro(slot.les.prijs)+'</b></div>'+
     '<div class="totaal"><span>Te betalen</span><b>'+fmtEuro(booking.bedrag)+'</b></div>'+
-    '<button class="btn btn-primary btn-block" style="margin-top:1.25rem;" onclick="betaal()">Betaal '+fmtEuro(booking.bedrag)+'</button>'+
+    '<button class="btn btn-primary btn-block" style="margin-top:1.4rem;" onclick="betaal()">Betaal '+fmtEuro(booking.bedrag)+'</button>'+
     '<div class="veilig">🔒 Veilig betalen</div>'+
-    '<button class="annuleer" onclick="annuleer()">Reservatie annuleren</button></aside></div>';
-  document.getElementById('inhoud').innerHTML=html;
+    '<button class="annuleer" onclick="annuleer()">Reservatie annuleren</button></aside></div>');
 }
 
 function betaal(){

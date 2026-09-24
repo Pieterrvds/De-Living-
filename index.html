@@ -3,796 +3,904 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>In de Living – Sports Café</title>
+<title>La Vie en Rose – Sports Café · Aalst</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--cream:#FAF6EF;--warm-white:#FDF9F3;--amber:#E8883A;--amber-light:#F5C97A;--amber-dark:#B55C1A;--terracotta:#C5513D;--sage:#6B8A5E;--sage-light:#9BB88E;--brown:#4A2F1A;--brown-mid:#7A4E30;--text:#2E1A0E;--text-mid:#5C3D22;--text-muted:#8B6247;--border:rgba(122,78,48,0.18);--radius:16px;--radius-sm:10px;}
-*{margin:0;padding:0;box-sizing:border-box;}
+/* ═══════════════════════ TOKENS ═══════════════════════ */
+:root{
+  --rose:#E8A4A0;--rose-d:#C07878;--rose-pale:#FBF0EE;
+  --vanilla:#FDF8EE;--cream:#F7F0DC;--beige:#EDE0C4;
+  --latte:#C8A86E;--caramel:#9B6E35;
+  --espresso:#3D2007;--espresso2:#5C3314;
+  --sage:#5A7A4A;--sage-l:#839E72;--sage-pale:#EBF2E5;
+  --gold:#B8862A;--gold-l:#D4A84C;
+  --border:rgba(61,32,7,.12);--shadow:rgba(61,32,7,.12);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden;}
+body{font-family:'Nunito',sans-serif;background:var(--vanilla);color:var(--espresso);overflow-x:hidden;}
 
-/* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(250,246,239,0.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;}
-.nav-logo{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;color:var(--brown);letter-spacing:-0.02em;text-decoration:none;}
-.nav-logo span{color:var(--amber);}
-.nav-links{display:flex;gap:2rem;list-style:none;}
-.nav-links a{font-size:0.9rem;font-weight:500;color:var(--text-mid);text-decoration:none;transition:color 0.2s;}
-.nav-links a:hover{color:var(--amber);}
-.nav-right{display:flex;align-items:center;gap:1rem;}
-.nav-cta{background:var(--amber);color:white;border:none;padding:0.55rem 1.25rem;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;transition:background 0.2s;text-decoration:none;}
-.nav-cta:hover{background:var(--amber-dark);}
-.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;}
-.hamburger span{display:block;width:22px;height:2px;background:var(--brown);border-radius:2px;transition:all 0.3s;}
+/* ═══════════════════════ SCROLL REVEAL ═══════════════════════ */
+.sr{opacity:0;transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1);}
+.sr.up   {transform:translateY(64px) rotateX(6deg);}
+.sr.left {transform:translateX(-72px) rotateY(-8deg);}
+.sr.right{transform:translateX(72px) rotateY(8deg);}
+.sr.scale{transform:scale(.88) translateY(32px);}
+.sr.in   {opacity:1;transform:none;}
+.d1{transition-delay:.1s;}.d2{transition-delay:.2s;}.d3{transition-delay:.32s;}
+.d4{transition-delay:.44s;}.d5{transition-delay:.56s;}.d6{transition-delay:.68s;}
+
+/* ═══════════════════════ CUSTOM CURSOR ═══════════════════════ */
+.cursor{
+  width:14px;height:14px;background:var(--rose-d);border-radius:50%;
+  position:fixed;top:0;left:0;z-index:9999;
+  pointer-events:none;transform:translate(-50%,-50%);
+  transition:transform .08s,width .2s,height .2s,background .2s;
+  mix-blend-mode:multiply;
+}
+.cursor-ring{
+  width:38px;height:38px;border:1.5px solid rgba(192,120,120,.55);border-radius:50%;
+  position:fixed;top:0;left:0;z-index:9998;
+  pointer-events:none;transform:translate(-50%,-50%);
+  transition:transform .18s cubic-bezier(.22,1,.36,1),width .3s,height .3s,border-color .3s;
+}
+.cursor.hover{width:8px;height:8px;background:var(--espresso2);}
+.cursor-ring.hover{width:52px;height:52px;border-color:rgba(192,120,120,.8);}
+
+/* ═══════════════════════ CANVAS PETALS ═══════════════════════ */
+#petalCanvas{
+  position:fixed;inset:0;z-index:1;
+  pointer-events:none;
+  opacity:.7;
+}
+
+/* ═══════════════════════ PROGRESS BAR ═══════════════════════ */
+.progress-bar{
+  position:fixed;top:0;left:0;z-index:1000;
+  height:3px;width:0;
+  background:linear-gradient(90deg,var(--rose-d),var(--rose),var(--gold-l));
+  transition:width .1s linear;
+  border-radius:0 2px 2px 0;
+}
+
+/* ═══════════════════════ NAV ═══════════════════════ */
+nav{
+  position:fixed;top:3px;left:0;right:0;z-index:900;
+  height:70px;display:flex;align-items:center;padding:0 3.5rem;
+  transition:background .4s,box-shadow .4s;
+}
+nav.solid{
+  background:rgba(253,248,238,.96);
+  backdrop-filter:blur(20px);
+  box-shadow:0 4px 40px rgba(61,32,7,.08);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{font-family:'Dancing Script',cursive;font-size:1.8rem;font-weight:700;color:#FDF8EE;text-decoration:none;text-shadow:0 2px 12px rgba(61,32,7,.5);transition:color .3s,text-shadow .3s;}
+nav.solid .nav-logo{color:var(--espresso);text-shadow:none;}
+.nav-logo em{color:var(--rose);font-style:normal;}
+nav.solid .nav-logo em{color:var(--rose-d);}
+.nav-links{display:flex;gap:2.5rem;list-style:none;margin-left:auto;margin-right:2.5rem;}
+.nav-links a{font-size:.88rem;font-weight:600;letter-spacing:.04em;color:rgba(253,248,238,.88);text-decoration:none;transition:color .2s;position:relative;}
+nav.solid .nav-links a{color:var(--espresso2);}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:2px;background:var(--rose-d);border-radius:2px;transform:scaleX(0);transform-origin:left;transition:transform .28s cubic-bezier(.22,1,.36,1);}
+.nav-links a:hover::after{transform:scaleX(1);}
+.nav-pill{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:700;letter-spacing:.04em;background:var(--rose-d);color:white;padding:.6rem 1.5rem;border-radius:50px;border:none;cursor:pointer;text-decoration:none;box-shadow:0 4px 18px rgba(192,120,120,.38);transition:background .2s,transform .15s;}
+.nav-pill:hover{background:var(--espresso2);transform:translateY(-2px);}
+nav.solid .nav-pill{background:var(--sage);box-shadow:0 4px 18px rgba(90,122,74,.28);}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;margin-left:auto;}
+.hamburger span{display:block;width:22px;height:2px;border-radius:2px;background:#FDF8EE;transition:all .3s;}
+nav.solid .hamburger span{background:var(--espresso);}
 .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
 .hamburger.open span:nth-child(2){opacity:0;}
 .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;z-index:190;background:rgba(250,246,239,0.98);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:1.5rem 2rem 2rem;flex-direction:column;}
-.mobile-menu.open{display:flex;}
-.mobile-menu a{display:block;padding:0.9rem 0;font-size:1.05rem;font-weight:500;color:var(--text-mid);text-decoration:none;border-bottom:1px solid var(--border);transition:color 0.2s;}
-.mobile-menu a:last-child{border-bottom:none;}
-.mobile-menu a:hover{color:var(--amber);}
-.mob-cta{margin-top:1.2rem;text-align:center;background:var(--amber);color:white !important;border-radius:50px;padding:0.85rem;font-size:1rem;font-weight:500;border-bottom:none !important;}
+.mob-menu{display:none;position:fixed;top:73px;left:0;right:0;z-index:890;background:rgba(253,248,238,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:1.5rem 2rem 2rem;flex-direction:column;box-shadow:0 12px 40px rgba(61,32,7,.1);}
+.mob-menu.open{display:flex;}
+.mob-menu a{display:block;padding:.95rem 0;font-size:1.05rem;font-weight:600;color:var(--espresso2);text-decoration:none;border-bottom:1px solid var(--border);transition:color .2s;}
+.mob-menu a:hover{color:var(--rose-d);}
+.mob-menu a:last-child{border-bottom:none;}
+.mob-pill-m{margin-top:1rem;text-align:center;background:var(--sage)!important;color:white!important;border-radius:50px!important;padding:1rem!important;border-bottom:none!important;}
 
-/* HERO */
-.hero{min-height:100vh;padding:120px 2rem 80px;display:flex;align-items:center;position:relative;overflow:hidden;}
-.hero-bg{position:absolute;inset:0;z-index:0;background-image:url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80');background-size:cover;background-position:center;filter:brightness(0.32) saturate(0.75);}
-.hero-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(135deg,rgba(74,47,26,0.7) 0%,rgba(232,136,58,0.15) 60%,rgba(107,138,94,0.1) 100%);}
-.hero-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;position:relative;z-index:2;}
-.hero-eyebrow{font-size:0.8rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber-light);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;}
-.hero-eyebrow::before{content:'';width:28px;height:1.5px;background:var(--amber-light);}
-.hero h1{font-family:'Fraunces',serif;font-size:clamp(2.8rem,5vw,4.2rem);font-weight:600;line-height:1.1;letter-spacing:-0.03em;color:#FDF9F3;margin-bottom:1.5rem;}
-.hero h1 em{font-style:italic;color:var(--amber-light);font-weight:300;}
-.hero-desc{font-size:1.05rem;line-height:1.8;color:rgba(253,249,243,0.82);margin-bottom:2.5rem;max-width:440px;}
-.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;}
+/* ═══════════════════════ HERO ═══════════════════════ */
+.hero{height:100vh;min-height:700px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.hero-layer-bg{position:absolute;inset:-20%;z-index:0;background-image:url('https://images.unsplash.com/photo-1471879832106-c7ab9e0cee23?w=1800&q=85');background-size:cover;background-position:center;will-change:transform;filter:brightness(.38) saturate(.7) sepia(.2);}
+.hero-layer-mid{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 80% 70% at 50% 30%,rgba(232,164,160,.18) 0%,transparent 65%),linear-gradient(180deg,rgba(61,32,7,.62) 0%,rgba(61,32,7,.12) 38%,rgba(61,32,7,.48) 100%);will-change:transform;}
+.hero-content{position:relative;z-index:3;text-align:center;padding:2rem;max-width:860px;margin:0 auto;}
 
-/* ── BIG HERO BUTTONS ── */
-.btn-hero-primary{
-  background:var(--amber);
-  color:white;border:none;
-  padding:1.1rem 2.6rem;
-  border-radius:50px;
-  font-family:'DM Sans',sans-serif;
-  font-size:1.05rem;font-weight:500;
-  cursor:pointer;
-  text-decoration:none;display:inline-flex;align-items:center;gap:8px;
-  letter-spacing:0.01em;
-  box-shadow:0 6px 28px rgba(232,136,58,0.45);
-  transition:background 0.2s,transform 0.15s,box-shadow 0.2s;
-}
-.btn-hero-primary:hover{background:var(--amber-dark);transform:translateY(-3px);box-shadow:0 10px 36px rgba(232,136,58,0.5);}
-.btn-hero-secondary{
-  background:rgba(253,249,243,0.1);
-  color:#FDF9F3;
-  border:2px solid rgba(253,249,243,0.55);
-  padding:1.1rem 2.6rem;
-  border-radius:50px;
-  font-family:'DM Sans',sans-serif;
-  font-size:1.05rem;font-weight:500;
-  cursor:pointer;
-  text-decoration:none;display:inline-flex;align-items:center;gap:8px;
-  letter-spacing:0.01em;
-  backdrop-filter:blur(4px);
-  transition:all 0.2s;
-}
-.btn-hero-secondary:hover{background:rgba(253,249,243,0.2);border-color:rgba(253,249,243,0.85);transform:translateY(-3px);}
+/* Word-by-word reveal on hero title */
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(253,248,238,.12);border:1px solid rgba(253,248,238,.3);backdrop-filter:blur(8px);color:rgba(253,248,238,.88);font-size:.72rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:.44rem 1.15rem;border-radius:50px;margin-bottom:1.5rem;opacity:0;animation:fadeUp .9s .2s forwards;}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--rose);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
 
-.hero-visual{position:relative;display:flex;justify-content:center;align-items:center;}
-.hero-card-stack{position:relative;width:340px;height:380px;}
-.hero-card{position:absolute;background:rgba(253,249,243,0.96);border-radius:var(--radius);border:1px solid rgba(122,78,48,0.15);padding:1.5rem;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
-.hero-card-main{width:280px;top:30px;left:30px;z-index:2;}
-.hero-card-back{width:260px;top:0;left:60px;background:rgba(245,201,122,0.9);transform:rotate(4deg);z-index:1;}
-.hero-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(107,138,94,0.15);color:var(--sage);padding:4px 12px;border-radius:50px;font-size:0.75rem;font-weight:500;margin-bottom:1rem;}
-.hero-pill-dot{width:6px;height:6px;border-radius:50%;background:var(--sage);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
-.hero-card-title{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:600;color:var(--brown);margin-bottom:0.25rem;}
-.hero-card-sub{font-size:0.8rem;color:var(--text-muted);margin-bottom:1.2rem;}
-.capacity-row{margin-bottom:0.8rem;}
-.cap-label{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-mid);margin-bottom:4px;}
-.cap-bar{height:6px;border-radius:50px;background:rgba(122,78,48,0.12);overflow:hidden;}
-.cap-fill{height:100%;border-radius:50px;}
+.hero-title{font-family:'Dancing Script',cursive;font-size:clamp(4rem,10vw,9rem);font-weight:700;color:#FDF8EE;line-height:1;letter-spacing:-.01em;text-shadow:0 8px 48px rgba(61,32,7,.55),0 2px 8px rgba(61,32,7,.4);}
+.hero-word{display:inline-block;opacity:0;transform:translateY(40px) rotateX(20deg);animation:wordUp .8s cubic-bezier(.22,1,.36,1) forwards;}
+@keyframes wordUp{to{opacity:1;transform:none;}}
+.hero-title .rose-word{color:var(--rose);}
 
-/* STATS */
-.stats-row{background:var(--brown);padding:2.5rem 2rem;}
-.stats-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;text-align:center;}
-.stat-num{font-family:'Fraunces',serif;font-size:2.5rem;font-weight:600;color:var(--amber-light);display:block;}
-.stat-label{font-size:0.85rem;color:rgba(250,201,122,0.6);margin-top:0.25rem;}
+.hero-subtitle{font-family:'Playfair Display',serif;font-size:clamp(1.05rem,2.2vw,1.45rem);font-style:italic;font-weight:400;color:rgba(253,248,238,.78);margin:1.1rem 0 .5rem;opacity:0;animation:fadeUp .9s .9s forwards;}
+.hero-loc{font-size:.72rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:rgba(212,168,76,.85);margin-bottom:2.6rem;opacity:0;animation:fadeUp .9s 1.05s forwards;}
+.hero-ctas{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp .9s 1.2s forwards;}
 
-/* SHARED */
-section{padding:5rem 2rem;}
-.section-inner{max-width:1100px;margin:0 auto;}
-.section-tag{font-size:0.75rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);margin-bottom:0.75rem;}
-.section-title{font-family:'Fraunces',serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:600;color:var(--brown);line-height:1.15;letter-spacing:-0.025em;margin-bottom:1.5rem;}
+.btn-rose{display:inline-flex;align-items:center;gap:8px;font-size:.92rem;font-weight:700;letter-spacing:.04em;background:var(--rose-d);color:white;padding:1.05rem 2.4rem;border-radius:50px;border:none;cursor:pointer;text-decoration:none;box-shadow:0 8px 32px rgba(192,120,120,.45);transition:background .2s,transform .18s,box-shadow .2s;}
+.btn-rose:hover{background:#A05858;transform:translateY(-4px);box-shadow:0 16px 44px rgba(192,120,120,.55);}
+.btn-glass{display:inline-flex;align-items:center;gap:8px;font-size:.92rem;font-weight:700;letter-spacing:.04em;background:rgba(253,248,238,.1);border:1.5px solid rgba(253,248,238,.45);color:#FDF8EE;padding:1.05rem 2.4rem;border-radius:50px;cursor:pointer;text-decoration:none;backdrop-filter:blur(8px);transition:all .2s;}
+.btn-glass:hover{background:rgba(253,248,238,.2);border-color:rgba(253,248,238,.8);transform:translateY(-4px);}
 
-/* KALENDER */
+.hero-scroll-hint{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0;animation:fadeUp .9s 1.5s forwards;}
+.scroll-txt{font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(212,168,76,.7);}
+.scroll-line{width:1px;height:44px;background:linear-gradient(180deg,rgba(212,168,76,.65) 0%,transparent 100%);animation:lineGrow 2s ease-in-out infinite;}
+@keyframes lineGrow{0%,100%{transform:scaleY(.5);opacity:.5;}50%{transform:scaleY(1) translateY(4px);opacity:1;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:none;}}
+
+/* ═══════════════════════ MORPHING DIVIDER ═══════════════════════ */
+.morph-divider{display:block;width:100%;overflow:hidden;line-height:0;}
+.morph-divider svg{display:block;width:100%;}
+
+/* ═══════════════════════ FLOATING STATS ═══════════════════════ */
+.stats-lift{position:relative;z-index:10;max-width:940px;margin:-3.5rem auto 0;padding:0 2rem;}
+.stats-card{background:var(--vanilla);border-radius:28px;box-shadow:0 32px 80px rgba(61,32,7,.14),0 0 0 1px var(--border);display:grid;grid-template-columns:repeat(4,1fr);overflow:hidden;}
+.stat-cell{padding:2rem 1.5rem;text-align:center;border-right:1px solid var(--border);transition:background .3s,transform .3s;cursor:default;position:relative;overflow:hidden;}
+.stat-cell::after{content:'';position:absolute;inset:0;background:var(--rose-pale);transform:scaleY(0);transform-origin:bottom;transition:transform .4s cubic-bezier(.22,1,.36,1);z-index:0;}
+.stat-cell:hover::after{transform:scaleY(1);}
+.stat-cell>*{position:relative;z-index:1;}
+.stat-cell:last-child{border-right:none;}
+.stat-n{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:700;color:var(--rose-d);line-height:1;display:block;transition:transform .3s;}
+.stat-cell:hover .stat-n{transform:scale(1.08);}
+.stat-l{font-size:.8rem;font-weight:600;letter-spacing:.04em;color:var(--espresso2);margin-top:5px;display:block;}
+
+/* ═══════════════════════ SHARED SECTIONS ═══════════════════════ */
+.sec{padding:7rem 2rem;position:relative;overflow:hidden;}
+.sec.cream{background:var(--cream);}
+.sec.beige{background:var(--beige);}
+.inner{max-width:1100px;margin:0 auto;}
+.eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--rose-d);margin-bottom:.75rem;display:flex;align-items:center;gap:8px;}
+.eyebrow::before{content:'';width:24px;height:2px;background:var(--rose-d);border-radius:2px;flex-shrink:0;}
+.sec-title{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,4vw,3.5rem);font-weight:700;font-style:italic;color:var(--espresso);line-height:1.1;letter-spacing:-.02em;margin-bottom:1.25rem;}
+.sec-lead{font-size:1.08rem;font-weight:400;color:var(--espresso2);line-height:1.9;max-width:540px;}
+
+/* Floating background blobs for sections */
+.blob{position:absolute;border-radius:50%;pointer-events:none;z-index:0;filter:blur(60px);}
+
+/* ═══════════════════════ ABOUT ═══════════════════════ */
+#about{background:var(--vanilla);padding-top:5.5rem;}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:5.5rem;align-items:center;position:relative;z-index:1;}
+.about-imgs{position:relative;}
+.img-main{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:24px;box-shadow:0 28px 72px rgba(61,32,7,.16);display:block;filter:saturate(.88);transition:transform .6s cubic-bezier(.22,1,.36,1),box-shadow .6s,filter .4s;}
+.about-imgs:hover .img-main{transform:translateY(-8px) scale(1.015);box-shadow:0 48px 96px rgba(61,32,7,.2);filter:saturate(1);}
+.img-float{position:absolute;bottom:-2rem;right:-2rem;width:52%;aspect-ratio:1;object-fit:cover;border-radius:20px;border:5px solid var(--vanilla);box-shadow:0 18px 48px rgba(61,32,7,.16);filter:saturate(.88);transition:transform .6s .06s cubic-bezier(.22,1,.36,1),filter .4s;}
+.about-imgs:hover .img-float{transform:translateY(-5px) rotate(1.5deg);filter:saturate(1);}
+
+/* Tilt on card hover */
+.tilt{transform-style:preserve-3d;transition:transform .4s cubic-bezier(.22,1,.36,1);}
+
+.about-quote{font-family:'Playfair Display',serif;font-size:1.3rem;font-style:italic;font-weight:400;color:var(--rose-d);line-height:1.55;border-left:3px solid var(--rose);padding-left:1.4rem;margin:2rem 0;position:relative;}
+/* Animated quote marks */
+.about-quote::before{content:'❝';position:absolute;top:-.8rem;left:-.2rem;font-size:2.5rem;color:rgba(232,164,160,.25);font-family:serif;line-height:1;}
+.about-body{font-size:1.05rem;font-weight:400;color:var(--espresso2);line-height:1.9;margin-bottom:1rem;}
+.about-chips{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.5rem;}
+.chip{font-size:.8rem;font-weight:700;background:var(--rose-pale);color:var(--rose-d);padding:.35rem .9rem;border-radius:50px;border:1px solid rgba(192,120,120,.2);transition:background .25s,transform .2s,box-shadow .2s;cursor:default;}
+.chip:hover{background:var(--rose-d);color:white;transform:translateY(-3px) scale(1.05);box-shadow:0 6px 18px rgba(192,120,120,.3);}
+
+/* ═══════════════════════ PARALLAX QUOTE BAND ═══════════════════════ */
+.quote-band{height:420px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.qb-bg{position:absolute;inset:-18% 0;background-image:url('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1600&q=80');background-size:cover;background-position:center 40%;will-change:transform;filter:brightness(.3) saturate(.6) sepia(.3);}
+.qb-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(61,32,7,.7) 0%,rgba(192,120,120,.3) 60%,rgba(61,32,7,.6) 100%);}
+.qb-content{position:relative;z-index:2;text-align:center;padding:2rem;max-width:700px;}
+.qb-quote{font-family:'Dancing Script',cursive;font-size:clamp(2.2rem,5vw,4rem);font-weight:600;color:#FDF8EE;text-shadow:0 4px 24px rgba(61,32,7,.5);line-height:1.2;margin-bottom:.75rem;}
+/* Each word slides in */
+.qb-word{display:inline-block;opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1);}
+.qb-word.in{opacity:1;transform:none;}
+.qb-attr{font-family:'Playfair Display',serif;font-size:1rem;font-style:italic;color:rgba(212,168,76,.8);letter-spacing:.06em;}
+
+/* ═══════════════════════ CALENDAR ═══════════════════════ */
 #kalender{background:var(--cream);}
-.boek-cta-wrap{margin-top:1.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
-.boek-cta{background:var(--amber);color:white;padding:0.9rem 2rem;border-radius:50px;font-size:1rem;font-weight:500;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 22px rgba(232,136,58,0.35);transition:background 0.2s,transform 0.15s;}
-.boek-cta:hover{background:var(--amber-dark);transform:translateY(-2px);}
-.boek-cta-sub{font-size:0.85rem;color:var(--text-muted);}
-.kalender-wrap{margin-top:1.5rem;background:white;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;}
-.kalender-top{padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--warm-white);}
-.kalender-nav-btns{display:flex;gap:0.5rem;}
-.kal-btn{width:34px;height:34px;border-radius:8px;background:white;border:1px solid var(--border);cursor:pointer;font-size:1rem;color:var(--text-mid);display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
-.kal-btn:hover{background:var(--cream);}
-.kal-month{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:600;color:var(--brown);}
+.kal-hdr{display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;margin-bottom:1.75rem;flex-wrap:wrap;}
+.boek-cta-wrap{display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap;margin-bottom:2rem;}
+.boek-cta{display:inline-flex;align-items:center;gap:10px;font-size:.95rem;font-weight:700;letter-spacing:.04em;background:var(--rose-d);color:white;padding:1.05rem 2.4rem;border-radius:50px;text-decoration:none;box-shadow:0 8px 32px rgba(192,120,120,.45);transition:background .2s,transform .18s,box-shadow .2s;position:relative;overflow:hidden;}
+.boek-cta::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:shine 3.2s ease-in-out infinite;}
+@keyframes shine{0%,60%{left:-60%;}100%{left:130%;}}
+.boek-cta:hover{background:#A05858;transform:translateY(-4px);box-shadow:0 16px 44px rgba(192,120,120,.55);}
+.boek-cta-sub{font-family:'Playfair Display',serif;font-style:italic;font-size:1rem;color:var(--espresso2);}
+.kal-wrap{background:var(--vanilla);border-radius:24px;border:1px solid var(--border);overflow:hidden;box-shadow:0 12px 48px var(--shadow);}
+.kal-top{padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;background:var(--beige);border-bottom:1px solid var(--border);}
+.kal-m{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;font-style:italic;color:var(--espresso);}
+.kal-nav{display:flex;align-items:center;gap:.75rem;}
+.kal-nb{width:36px;height:36px;border-radius:50%;background:white;border:1px solid var(--border);cursor:pointer;color:var(--espresso2);font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;}
+.kal-nb:hover{background:var(--rose-d);color:white;border-color:var(--rose-d);}
+.kal-gcal{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--sage);text-decoration:none;transition:color .2s;}
+.kal-gcal:hover{color:var(--espresso);}
 .kal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
-.kal-header-day{text-align:center;padding:0.65rem 0;font-size:0.72rem;font-weight:500;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid var(--border);}
-.kal-day{min-height:76px;padding:7px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
-.kal-day:hover{background:var(--cream);}
+.kal-dh{text-align:center;padding:.7rem 0;font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--espresso2);border-bottom:1px solid var(--border);}
+.kal-day{min-height:82px;padding:7px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s,transform .15s;}
+.kal-day:hover{background:var(--rose-pale);transform:scale(1.02);z-index:2;position:relative;border-radius:4px;}
 .kal-day:nth-child(7n){border-right:none;}
-.kal-day.other-month{background:rgba(250,246,239,0.5);}
-.kal-day.other-month .kal-day-num{color:var(--text-muted);opacity:0.35;}
-.kal-day-num{font-size:0.82rem;font-weight:500;color:var(--text-mid);margin-bottom:3px;}
-.kal-event{font-size:0.65rem;padding:2px 4px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
-.kal-event.yoga{background:rgba(107,138,94,0.2);color:#3D6632;}
-.kal-event.boxing{background:rgba(197,81,61,0.15);color:var(--terracotta);}
-.kal-event.pilates{background:rgba(232,136,58,0.2);color:var(--amber-dark);}
-.kal-event.spinning{background:rgba(122,78,48,0.15);color:var(--brown-mid);}
-.kal-event.hiit{background:rgba(196,77,88,0.15);color:#A03040;}
-.kal-event.stretching{background:rgba(155,184,142,0.25);color:#3E6B36;}
-.kal-legend{padding:0.9rem 1.5rem;display:flex;flex-wrap:wrap;gap:0.75rem;border-top:1px solid var(--border);}
-.legend-dot{display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text-mid);}
-.legend-pip{width:8px;height:8px;border-radius:50%;}
+.kal-day.other{background:rgba(237,224,196,.3);}
+.kal-day.other .kdn{opacity:.3;}
+.kdn{font-size:.8rem;font-weight:700;color:var(--espresso2);margin-bottom:3px;}
+.kal-day.today .kdn span{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--rose-d);color:white;font-size:.74rem;}
+.kev{font-size:.62rem;font-weight:700;padding:2px 5px;border-radius:6px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kev.yoga{background:rgba(90,122,74,.15);color:var(--sage);}
+.kev.kine{background:rgba(184,134,42,.14);color:var(--gold);}
+.kev.pt{background:rgba(192,120,120,.15);color:var(--rose-d);}
+.kal-leg{padding:1rem 2rem;display:flex;gap:1.5rem;flex-wrap:wrap;background:var(--beige);border-top:1px solid var(--border);}
+.kl{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--espresso2);}
+.kp{width:10px;height:10px;border-radius:3px;}
 
-/* LESSEN */
-#lessen{background:var(--warm-white);}
-.lessen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;margin-top:2.5rem;}
-.les-card{background:white;border-radius:var(--radius);border:1px solid var(--border);padding:1.75rem;transition:transform 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;}
-.les-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(74,47,26,0.1);}
-.les-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-.les-card.yoga::before{background:var(--sage);}
-.les-card.boxing::before{background:var(--terracotta);}
-.les-card.pilates::before{background:var(--amber);}
-.les-card.spinning::before{background:var(--brown-mid);}
-.les-card.hiit::before{background:#C44D58;}
-.les-card.stretching::before{background:var(--sage-light);}
-.les-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1rem;}
-.les-name{font-family:'Fraunces',serif;font-size:1.25rem;font-weight:600;color:var(--brown);margin-bottom:0.3rem;}
-.les-meta{font-size:0.8rem;color:var(--text-muted);margin-bottom:1.2rem;}
-.les-meta span{margin-right:0.8rem;}
-.cap-section{margin-bottom:1.2rem;}
-.cap-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-.cap-head-label{font-size:0.78rem;color:var(--text-mid);font-weight:500;}
-.cap-badge{font-size:0.72rem;font-weight:500;padding:2px 8px;border-radius:50px;}
-.cap-badge.vol{background:rgba(107,138,94,0.15);color:var(--sage);}
-.cap-badge.half{background:rgba(232,136,58,0.15);color:var(--amber-dark);}
-.cap-badge.full{background:rgba(197,81,61,0.12);color:var(--terracotta);}
-.cap-bar-large{height:10px;border-radius:50px;background:rgba(122,78,48,0.1);overflow:hidden;margin-bottom:4px;}
-.cap-bar-large .cap-fill{height:100%;border-radius:50px;}
-.cap-spots{font-size:0.72rem;color:var(--text-muted);}
-.subscribe-btn{width:100%;padding:0.7rem;border-radius:50px;border:1.5px solid var(--border);background:transparent;color:var(--brown);font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;transition:all 0.2s;}
-.subscribe-btn:hover:not(:disabled){background:var(--amber);border-color:var(--amber);color:white;}
-.subscribe-btn:disabled{opacity:0.45;cursor:not-allowed;}
-.subscribe-btn.subscribed{background:var(--sage);border-color:var(--sage);color:white;}
+/* ═══════════════════════ LESSEN ═══════════════════════ */
+#lessen{background:var(--vanilla);}
+.les-hdr{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:end;margin-bottom:3.5rem;}
+.les-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.75rem;}
+.les-card{background:var(--cream);border-radius:24px;border:1px solid var(--border);overflow:hidden;box-shadow:0 4px 24px var(--shadow);transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s;cursor:default;transform-style:preserve-3d;}
+.les-card:hover{transform:translateY(-14px) rotateX(3deg) rotateY(-1deg);box-shadow:0 40px 72px rgba(61,32,7,.18);}
+.les-img-w{overflow:hidden;height:240px;position:relative;}
+.les-img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.85);transition:transform .7s cubic-bezier(.22,1,.36,1),filter .5s;}
+.les-card:hover .les-img{transform:scale(1.1);filter:saturate(1.08);}
+/* Shine overlay on hover */
+.les-img-w::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(253,248,238,.25) 0%,transparent 60%);opacity:0;transition:opacity .4s;}
+.les-card:hover .les-img-w::after{opacity:1;}
+.les-body{padding:1.75rem;}
+.les-ey{font-size:.68rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--rose-d);margin-bottom:.5rem;}
+.les-name{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:700;font-style:italic;color:var(--espresso);margin-bottom:.75rem;line-height:1.15;}
+.les-desc{font-size:.96rem;font-weight:400;color:var(--espresso2);line-height:1.82;margin-bottom:1.25rem;}
+.les-buls{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.5rem;}
+.les-bul{display:flex;align-items:flex-start;gap:8px;font-size:.87rem;font-weight:500;color:var(--espresso2);line-height:1.5;}
+.bul-dot{width:6px;height:6px;border-radius:50%;background:var(--rose);flex-shrink:0;margin-top:8px;transition:transform .2s;}
+.les-bul:hover .bul-dot{transform:scale(1.6);}
+.les-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--rose-d);color:white;border:none;border-radius:50px;padding:.78rem 1.5rem;width:100%;font-size:.86rem;font-weight:700;letter-spacing:.04em;cursor:pointer;text-decoration:none;box-shadow:0 4px 18px rgba(192,120,120,.28);transition:background .2s,transform .2s,box-shadow .2s;}
+.les-btn:hover{background:var(--espresso2);transform:translateY(-3px);box-shadow:0 10px 30px rgba(61,32,7,.22);}
 
-/* Mobile: hidden cards + toon meer btn */
-.les-card.mobile-hidden{display:none;}
-.show-more-wrap{display:none;text-align:center;margin-top:1.5rem;}
-.show-more-btn{padding:0.85rem 2.5rem;border-radius:50px;border:2px solid var(--amber);background:transparent;color:var(--amber);font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:500;cursor:pointer;transition:all 0.2s;}
-.show-more-btn:hover{background:var(--amber);color:white;}
+/* ═══════════════════════ NATURE BAND ═══════════════════════ */
+.nature-band{height:360px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.nb-bg{position:absolute;inset:-18% 0;background-image:url('https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=1600&q=80');background-size:cover;background-position:center 30%;will-change:transform;filter:brightness(.32) saturate(.65) sepia(.25);}
+.nb-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(61,32,7,.6) 0%,rgba(90,122,74,.25) 50%,rgba(61,32,7,.55) 100%);}
+.nb-content{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;max-width:900px;width:100%;padding:0 2rem;}
+.nb-stat{text-align:center;padding:2rem 1rem;border-right:1px solid rgba(253,248,238,.15);}
+.nb-stat:last-child{border-right:none;}
+.nb-n{font-family:'Dancing Script',cursive;font-size:3.5rem;font-weight:700;color:#FDF8EE;display:block;line-height:1;text-shadow:0 4px 20px rgba(61,32,7,.5);}
+.nb-l{font-size:.82rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(253,248,238,.65);margin-top:6px;display:block;}
+/* Counter animation */
+.count-up{display:inline-block;}
 
-/* BAR – overhauled as menu */
-#bar{background:var(--cream);}
-.bar-hero-img{
-  width:100%;height:380px;
-  border-radius:var(--radius);
-  overflow:hidden;
-  position:relative;
-  margin-bottom:3rem;
-}
-.bar-hero-img img{width:100%;height:100%;object-fit:cover;object-position:center;}
-.bar-hero-img::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(74,47,26,0.6) 0%,transparent 50%);
-  border-radius:var(--radius);
-}
-.bar-hero-caption{
-  position:absolute;bottom:1.5rem;left:1.75rem;z-index:1;
-  color:white;font-family:'Fraunces',serif;font-size:1.4rem;font-weight:600;
-}
-.bar-hero-sub{font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:400;opacity:0.8;margin-top:2px;}
+/* ═══════════════════════ EVENTS ═══════════════════════ */
+#evenementen{background:var(--beige);position:relative;overflow:hidden;}
+.ev-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:end;margin-bottom:3rem;}
+.ev-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;}
+.ev-card{background:var(--vanilla);border-radius:24px;border:1px solid var(--border);padding:2rem 1.75rem;position:relative;overflow:hidden;box-shadow:0 4px 20px var(--shadow);transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s;}
+.ev-card:hover{transform:translateY(-10px) rotate(.4deg);box-shadow:0 24px 60px rgba(61,32,7,.15);}
+.ev-card::after{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:24px 24px 0 0;}
+.ev-card.c1::after{background:linear-gradient(90deg,var(--sage),var(--sage-l));}
+.ev-card.c2::after{background:linear-gradient(90deg,var(--gold),var(--gold-l));}
+.ev-card.c3::after{background:linear-gradient(90deg,var(--rose-d),var(--rose));}
+.ev-card.c4::after{background:linear-gradient(90deg,var(--espresso2),var(--caramel));}
+/* Number badge */
+.ev-num{position:absolute;top:1.5rem;right:1.5rem;font-family:'Playfair Display',serif;font-size:4rem;font-weight:700;color:rgba(61,32,7,.05);line-height:1;pointer-events:none;}
+.ev-icon{font-size:2.2rem;margin-bottom:.75rem;}
+.ev-name{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;font-style:italic;color:var(--espresso);margin-bottom:.6rem;}
+.ev-desc{font-size:.95rem;font-weight:400;color:var(--espresso2);line-height:1.76;margin-bottom:.9rem;}
+.ev-chip{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--rose-d);background:var(--rose-pale);border-radius:50px;padding:.28rem .8rem;}
+.insta-strip{margin-top:2.5rem;background:var(--espresso);border-radius:24px;padding:2.5rem 3rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap;box-shadow:0 8px 40px rgba(61,32,7,.22);}
+.ist-txt{font-family:'Playfair Display',serif;font-size:1.25rem;font-style:italic;font-weight:400;color:rgba(253,248,238,.8);flex:1;min-width:200px;}
+.ist-txt strong{color:var(--rose);font-style:normal;}
+.ist-btn{display:inline-flex;align-items:center;gap:8px;font-size:.85rem;font-weight:700;letter-spacing:.06em;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#bc1888);color:white;padding:.88rem 2rem;border-radius:50px;text-decoration:none;box-shadow:0 4px 20px rgba(220,39,67,.3);transition:opacity .2s,transform .15s;white-space:nowrap;}
+.ist-btn:hover{opacity:.88;transform:translateY(-2px);}
 
-/* Menu tabs */
-.menu-tabs{display:flex;gap:0.5rem;margin-bottom:2rem;flex-wrap:wrap;}
-.menu-tab{padding:0.5rem 1.2rem;border-radius:50px;border:1.5px solid var(--border);background:white;color:var(--text-mid);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.2s;}
-.menu-tab:hover{border-color:var(--amber);color:var(--amber-dark);}
-.menu-tab.active{background:var(--amber);border-color:var(--amber);color:white;}
+/* ═══════════════════════ CONTACT ═══════════════════════ */
+#contact{background:var(--cream);}
+.con-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-top:3rem;}
+.con-item{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem;}
+.con-icon{width:44px;height:44px;border-radius:14px;background:var(--vanilla);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;box-shadow:0 2px 10px var(--shadow);transition:background .2s,transform .25s;}
+.con-item:hover .con-icon{background:var(--rose-pale);transform:scale(1.1) rotate(-4deg);}
+.con-lbl{font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--rose-d);margin-bottom:2px;}
+.con-val{font-size:1rem;font-weight:500;color:var(--espresso2);line-height:1.55;}
+.con-val a{color:var(--espresso2);text-decoration:none;transition:color .2s;}
+.con-val a:hover{color:var(--rose-d);}
+.con-gcal{display:inline-flex;align-items:center;gap:4px;font-size:.74rem;font-weight:700;color:var(--sage);text-decoration:none;margin-top:4px;transition:color .2s;}
+.con-gcal:hover{color:var(--espresso);}
+.soc-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.5rem;}
+.soc-btn{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;font-weight:700;letter-spacing:.06em;color:var(--espresso2);text-decoration:none;padding:.45rem .9rem;border-radius:50px;border:1.5px solid var(--border);background:var(--vanilla);transition:all .25s;}
+.soc-btn:hover{border-color:var(--rose-d);color:var(--rose-d);background:var(--rose-pale);transform:translateY(-2px);}
+.soc-btn svg{width:13px;height:13px;}
+.con-form{background:var(--vanilla);border-radius:24px;border:1px solid var(--border);padding:2.25rem;box-shadow:0 8px 36px var(--shadow);}
+.form-ttl{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;font-style:italic;color:var(--espresso);margin-bottom:1.5rem;}
+.fg{margin-bottom:1.1rem;}
+.fg label{display:block;font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);margin-bottom:5px;}
+.fg input,.fg textarea,.fg select{width:100%;padding:.78rem 1rem;border:1.5px solid var(--border);border-radius:14px;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:400;color:var(--espresso);background:var(--cream);outline:none;transition:border-color .2s,box-shadow .2s,transform .2s;}
+.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--rose-d);box-shadow:0 0 0 3px rgba(192,120,120,.12);transform:translateY(-1px);}
+.fg textarea{resize:vertical;min-height:110px;}
+.form-btn{width:100%;padding:.92rem;background:var(--rose-d);color:white;border:none;border-radius:50px;font-family:'Nunito',sans-serif;font-size:.92rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:background .2s,transform .2s,box-shadow .2s;box-shadow:0 4px 18px rgba(192,120,120,.28);}
+.form-btn:hover{background:var(--espresso2);transform:translateY(-3px);box-shadow:0 10px 30px rgba(61,32,7,.22);}
+.form-note{margin-top:1.25rem;padding:1.1rem 1.25rem;background:var(--rose-pale);border-radius:14px;font-size:.93rem;font-style:italic;font-weight:400;color:var(--rose-d);font-family:'Playfair Display',serif;}
+.map-wrap{margin-top:2rem;border-radius:20px;overflow:hidden;border:1px solid var(--border);box-shadow:0 8px 28px var(--shadow);}
+.map-wrap iframe{display:block;}
+.map-lks{display:flex;gap:1.5rem;margin-top:.8rem;flex-wrap:wrap;}
+.map-lk{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:700;color:var(--rose-d);text-decoration:none;transition:color .2s;}
+.map-lk:hover{color:var(--espresso);}
 
-/* Menu grid */
-.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.25rem;}
-.menu-card{
-  background:white;border-radius:var(--radius);border:1px solid var(--border);
-  overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;
-}
-.menu-card:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(74,47,26,0.1);}
-.menu-card-img{width:100%;height:160px;object-fit:cover;display:block;}
-.menu-card-body{padding:1rem 1.25rem;}
-.menu-card-name{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;color:var(--brown);margin-bottom:0.25rem;}
-.menu-card-desc{font-size:0.78rem;color:var(--text-muted);line-height:1.6;margin-bottom:0.75rem;}
-.menu-card-footer{display:flex;align-items:center;justify-content:space-between;}
-.menu-card-price{font-size:1.1rem;font-weight:600;color:var(--amber-dark);font-family:'Fraunces',serif;}
-.menu-card-tag{font-size:0.68rem;font-weight:500;padding:3px 8px;border-radius:50px;background:rgba(107,138,94,0.12);color:var(--sage);}
-.menu-section{display:none;}
-.menu-section.active{display:block;}
+/* ═══════════════════════ FOOTER ═══════════════════════ */
+footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;overflow:hidden;}
+footer::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:600px;height:120px;background:radial-gradient(ellipse,rgba(232,164,160,.12) 0%,transparent 70%);pointer-events:none;}
+.foot-inner{max-width:1100px;margin:0 auto;}
+.foot-logo{font-family:'Dancing Script',cursive;font-size:2.4rem;font-weight:700;color:var(--rose);display:block;margin-bottom:.3rem;}
+.foot-tag{font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(232,164,160,.4);margin-bottom:2rem;display:block;}
+.foot-lks{display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:2.5rem;}
+.foot-lks a{font-size:.8rem;font-weight:600;letter-spacing:.06em;color:rgba(253,248,238,.42);text-decoration:none;transition:color .2s;}
+.foot-lks a:hover{color:var(--rose);}
+.foot-copy{font-size:.72rem;font-weight:500;color:rgba(253,248,238,.2);letter-spacing:.06em;border-top:1px solid rgba(253,248,238,.07);padding-top:1.5rem;}
 
-/* CONTACT */
-#contact{background:var(--warm-white);}
-.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-top:2.5rem;}
-.contact-item{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.4rem;}
-.contact-icon{width:40px;height:40px;background:rgba(232,136,58,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
-.contact-label{font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;}
-.contact-val{font-size:0.95rem;color:var(--text-mid);font-weight:500;}
-.contact-val a{color:var(--text-mid);text-decoration:none;}
-.contact-val a:hover{color:var(--amber);}
-.hours-link{display:inline-flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--amber);text-decoration:none;margin-top:4px;font-weight:500;}
-.hours-link:hover{color:var(--amber-dark);}
-.social-row{margin-top:1.5rem;}
-.social-row-label{font-size:0.75rem;color:var(--text-muted);margin-bottom:0.75rem;}
-.social-links{display:flex;gap:0.6rem;flex-wrap:wrap;}
-.social-btn{display:inline-flex;align-items:center;gap:6px;padding:0.5rem 0.9rem;border-radius:50px;font-size:0.8rem;font-weight:500;text-decoration:none;border:1.5px solid var(--border);color:var(--text-mid);transition:all 0.2s;}
-.social-btn:hover{border-color:var(--amber);color:var(--amber-dark);background:rgba(232,136,58,0.07);}
-.social-btn svg{width:15px;height:15px;flex-shrink:0;}
-.contact-form{background:white;border-radius:var(--radius);border:1px solid var(--border);padding:2rem;}
-.form-group{margin-bottom:1.2rem;}
-.form-group label{display:block;font-size:0.8rem;font-weight:500;color:var(--text-mid);margin-bottom:5px;}
-.form-group input,.form-group textarea,.form-group select{width:100%;padding:0.7rem 1rem;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--text);background:var(--cream);outline:none;transition:border-color 0.2s;}
-.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--amber);}
-.form-group textarea{resize:vertical;min-height:100px;}
-.form-submit{width:100%;padding:0.85rem;background:var(--amber);color:white;border:none;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:500;cursor:pointer;transition:background 0.2s;}
-.form-submit:hover{background:var(--amber-dark);}
-
-/* WHATSAPP FLOAT */
-.wa-float{position:fixed;bottom:1.8rem;right:1.8rem;z-index:300;width:58px;height:58px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,0.45);text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;}
-.wa-float:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(37,211,102,0.55);}
-.wa-float svg{width:30px;height:30px;fill:white;}
-.wa-tooltip{position:absolute;right:68px;top:50%;transform:translateY(-50%);background:var(--brown);color:white;font-size:0.75rem;font-weight:500;padding:5px 10px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;}
-.wa-float:hover .wa-tooltip{opacity:1;}
-
-/* FOOTER */
-footer{background:var(--brown);padding:3rem 2rem;text-align:center;color:rgba(250,201,122,0.6);font-size:0.85rem;}
-.foot-logo{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:600;color:var(--amber-light);margin-bottom:0.5rem;display:block;}
-.foot-tagline{color:rgba(250,201,122,0.5);margin-bottom:1.5rem;font-size:0.9rem;}
-.foot-links{display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;margin-bottom:2rem;}
-.foot-links a{color:rgba(250,201,122,0.7);text-decoration:none;font-size:0.85rem;}
-.foot-links a:hover{color:var(--amber-light);}
-
-/* TOAST */
-.toast{position:fixed;bottom:6rem;right:2rem;z-index:999;background:var(--brown);color:white;padding:1rem 1.5rem;border-radius:var(--radius-sm);font-size:0.9rem;font-weight:500;transform:translateY(80px);opacity:0;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;max-width:280px;}
+/* ═══════════════════════ WHATSAPP + TOAST ═══════════════════════ */
+.wa{position:fixed;bottom:2rem;right:2rem;z-index:800;width:58px;height:58px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 22px rgba(37,211,102,.42);text-decoration:none;transition:transform .2s,box-shadow .2s;}
+.wa:hover{transform:scale(1.12);box-shadow:0 6px 30px rgba(37,211,102,.58);}
+.wa svg{width:30px;height:30px;fill:white;}
+.wa-tip{position:absolute;right:66px;top:50%;transform:translateY(-50%);background:var(--espresso);color:white;font-size:.73rem;font-weight:700;padding:5px 11px;border-radius:9px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;}
+.wa:hover .wa-tip{opacity:1;}
+.toast{position:fixed;bottom:5.8rem;right:2rem;z-index:999;background:var(--espresso);color:white;font-size:.9rem;font-weight:600;padding:1rem 1.5rem;border-radius:16px;transform:translateY(70px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;max-width:260px;}
 .toast.show{transform:translateY(0);opacity:1;}
 
-/* RESPONSIVE */
-@media(max-width:860px){
-  .nav-links,.nav-cta{display:none;}
+/* ═══════════════════════ RESPONSIVE ═══════════════════════ */
+@media(max-width:900px){
+  .nav-links,.nav-pill{display:none;}
   .hamburger{display:flex;}
-  .hero-inner{grid-template-columns:1fr;}
-  .hero-visual{display:none;}
-  .stats-inner{grid-template-columns:1fr 1fr;}
-  .bar-grid{grid-template-columns:1fr;}
-  .contact-grid{grid-template-columns:1fr;}
-  .kal-event{display:none;}
-  .kal-day{min-height:55px;}
-
-  /* Mobile lessen: show only 2, rest hidden */
-  .lessen-grid{grid-template-columns:1fr;}
-  .les-card.mobile-hidden{display:none;}
-  .les-card.mobile-hidden.shown{display:block;}
-  .show-more-wrap{display:block;}
-  .hero-actions{flex-direction:column;}
-  .btn-hero-primary,.btn-hero-secondary{justify-content:center;text-align:center;}
+  nav{padding:0 1.5rem;}
+  .stats-card{grid-template-columns:1fr 1fr;}
+  .about-grid,.les-hdr,.ev-intro,.con-grid{grid-template-columns:1fr;gap:2.5rem;}
+  .les-grid{grid-template-columns:1fr;}
+  .ev-grid{grid-template-columns:1fr;}
+  .img-float{display:none;}
+  .nb-content{grid-template-columns:1fr;gap:0;}
+  .nb-stat{border-right:none;border-bottom:1px solid rgba(253,248,238,.1);}
+  .insta-strip{flex-direction:column;text-align:center;}
+  .cursor,.cursor-ring{display:none;}
 }
-@media(max-width:480px){
-  .stats-inner{grid-template-columns:1fr 1fr;gap:1rem;}
-  section{padding:3.5rem 1.25rem;}
-  .menu-grid{grid-template-columns:1fr;}
+@media(max-width:580px){
+  .sec{padding:5rem 1.25rem;}
+  .hero-ctas{flex-direction:column;}
+  .stats-card{grid-template-columns:1fr 1fr;}
 }
 </style>
 </head>
 <body>
 
+<!-- PROGRESS BAR -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- CUSTOM CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- CANVAS PETALS -->
+<canvas id="petalCanvas"></canvas>
+
 <!-- WHATSAPP -->
-<a class="wa-float" href="https://wa.me/32471955489" target="_blank" rel="noopener" aria-label="WhatsApp">
-  <div class="wa-tooltip">Stuur ons een berichtje!</div>
+<a class="wa" href="https://wa.me/32471955489" target="_blank" rel="noopener">
+  <div class="wa-tip">Stuur ons een berichtje</div>
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
 </a>
 
 <!-- NAV -->
-<nav>
-  <a href="index.html" class="nav-logo">In de <span>Living</span></a>
+<nav id="nav">
+  <a href="#home" class="nav-logo">La Vie <em>en Rose</em></a>
   <ul class="nav-links">
+    <li><a href="#about">Over ons</a></li>
     <li><a href="#kalender">Rooster</a></li>
     <li><a href="#lessen">Lessen</a></li>
-    <li><a href="#bar">Bar & Menu</a></li>
-    <li><a href="gallery.html">Foto's</a></li>
+    <li><a href="#evenementen">Evenementen</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
-  <div class="nav-right">
-    <a href="#lessen" class="nav-cta">Inschrijven</a>
-    <button class="hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
-  </div>
+  <a href="menu.html" class="nav-pill">🌹 Menukaart</a>
+  <button class="hamburger" id="hbg" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
-
-<!-- MOBILE MENU -->
-<div class="mobile-menu" id="mobileMenu">
-  <a href="#kalender" onclick="closeMenu()">📅 Rooster</a>
-  <a href="#lessen" onclick="closeMenu()">🏋️ Lessen</a>
-  <a href="#bar" onclick="closeMenu()">☕ Bar & Menu</a>
-  <a href="gallery.html" onclick="closeMenu()">📸 Foto's</a>
-  <a href="#contact" onclick="closeMenu()">📍 Contact</a>
-  <a href="#lessen" class="mob-cta" onclick="closeMenu()">Inschrijven voor een les</a>
+<div class="mob-menu" id="mobMenu">
+  <a href="#about"       onclick="cm()">Over ons</a>
+  <a href="#kalender"    onclick="cm()">Rooster</a>
+  <a href="#lessen"      onclick="cm()">Lessen</a>
+  <a href="#evenementen" onclick="cm()">Evenementen</a>
+  <a href="#contact"     onclick="cm()">Contact</a>
+  <a href="menu.html"    onclick="cm()" class="mob-pill-m">🌹 Menukaart</a>
 </div>
 
 <!-- HERO -->
 <section class="hero" id="home">
-  <div class="hero-bg"></div>
-  <div class="hero-overlay"></div>
-  <div class="hero-inner">
-    <div>
-      <div class="hero-eyebrow">Sports Café · Gent</div>
-      <h1>Zweet, <em>kracht</em> &amp; een goeie koffie</h1>
-      <p class="hero-desc">In de Living is meer dan een sportplek — het is jouw thuisbasis. Train hard, daarna verwennen we je aan de bar met verse smoothies, koffie en gezonde snacks.</p>
-      <div class="hero-actions">
-        <a href="#lessen" class="btn-hero-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          Bekijk de lessen
-        </a>
-        <a href="#kalender" class="btn-hero-secondary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Kalender bekijken
-        </a>
-      </div>
+  <div class="hero-layer-bg" id="heroBg"></div>
+  <div class="hero-layer-mid" id="heroMid"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><div class="badge-dot"></div>Sports Café · Aalst · Hoogstraat 40</div>
+    <h1 class="hero-title" id="heroTitle">
+      <span class="hero-word" style="animation-delay:.5s;">La</span>&nbsp;<span class="hero-word" style="animation-delay:.68s;">Vie</span><br>
+      <span class="hero-word rose-word" style="animation-delay:.86s;">en</span>&nbsp;<span class="hero-word rose-word" style="animation-delay:1.04s;">Rose</span>
+    </h1>
+    <p class="hero-subtitle">Bewegen, rusten &amp; genieten — onder één dak</p>
+    <p class="hero-loc">Yoga &nbsp;·&nbsp; Kinesitherapie &nbsp;·&nbsp; Personal Training &nbsp;·&nbsp; Bar</p>
+    <div class="hero-ctas">
+      <a href="#lessen" class="btn-rose">✦ Ontdek onze lessen</a>
+      <a href="menu.html" class="btn-glass">🌹 Bekijk menukaart</a>
     </div>
-    <div class="hero-visual">
-      <div class="hero-card-stack">
-        <div class="hero-card hero-card-back"></div>
-        <div class="hero-card hero-card-main">
-          <div class="hero-pill"><div class="hero-pill-dot"></div>Nu beschikbaar</div>
-          <div class="hero-card-title">Plaatsen vandaag</div>
-          <div class="hero-card-sub">Capaciteit per les</div>
-          <div class="capacity-row">
-            <div class="cap-label"><span>🧘 Yoga</span><span>8/16</span></div>
-            <div class="cap-bar"><div class="cap-fill" style="width:50%;background:#6B8A5E;"></div></div>
-          </div>
-          <div class="capacity-row">
-            <div class="cap-label"><span>🥊 Boksen</span><span>14/16</span></div>
-            <div class="cap-bar"><div class="cap-fill" style="width:87%;background:#C5513D;"></div></div>
-          </div>
-          <div class="capacity-row">
-            <div class="cap-label"><span>🚴 Spinning</span><span>6/20</span></div>
-            <div class="cap-bar"><div class="cap-fill" style="width:30%;background:#E8883A;"></div></div>
-          </div>
+  </div>
+  <div class="hero-scroll-hint">
+    <div class="scroll-line"></div>
+    <span class="scroll-txt">Scroll</span>
+  </div>
+</section>
+
+<!-- MORPHING SVG WAVE -->
+<div class="morph-divider">
+  <svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="height:80px;">
+    <path id="wavePath" d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#FDF8EE"/>
+  </svg>
+</div>
+
+<!-- FLOATING STATS -->
+<div class="stats-lift">
+  <div class="stats-card">
+    <div class="stat-cell sr scale d1"><span class="stat-n" data-target="3">0</span><span class="stat-l">Disciplines</span></div>
+    <div class="stat-cell sr scale d2"><span class="stat-n" data-target="12" data-suffix="+">0</span><span class="stat-l">Lessen per week</span></div>
+    <div class="stat-cell sr scale d3"><span class="stat-n" data-target="300" data-suffix="+">0</span><span class="stat-l">Actieve leden</span></div>
+    <div class="stat-cell sr scale d4"><span class="stat-n" data-target="100" data-suffix="%">0</span><span class="stat-l">Goed gevoel</span></div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section class="sec" id="about" style="padding-top:6rem;">
+  <!-- Floating background blobs -->
+  <div class="blob" style="width:400px;height:400px;top:-100px;right:-120px;background:rgba(232,164,160,.12);"></div>
+  <div class="blob" style="width:300px;height:300px;bottom:-80px;left:-80px;background:rgba(90,122,74,.08);"></div>
+  <div class="inner">
+    <div class="about-grid">
+      <div class="about-imgs sr left tilt" id="aboutImgs">
+        <img class="img-main" src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=900&q=85" alt="La Vie en Rose sfeer" loading="lazy">
+        <img class="img-float" src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=85" alt="Yoga" loading="lazy">
+      </div>
+      <div>
+        <p class="eyebrow sr">Ons verhaal</p>
+        <h2 class="sec-title sr d1">Een thuis voor<br>lichaam &amp; geest</h2>
+        <blockquote class="about-quote sr d2">"La vie en rose — het leven door een roze bril zien.<br>Dat is precies wat we hier creëren."</blockquote>
+        <p class="about-body sr d3">La Vie en Rose is niet zomaar een sportcafé. Het is een plek waar warm hout, veel planten en de geur van verse koffie je verwelkomen — zoals thuiskomen in een Frans landhuisje.</p>
+        <p class="about-body sr d4">We bieden bewuste beweging via yoga, kinesitherapie en personal training. Daarna verwennen we je aan onze bar met verse smoothies, specialty koffie en gezonde snacks.</p>
+        <div class="about-chips sr d5">
+          <span class="chip">🌹 Yoga</span>
+          <span class="chip">💆 Kinesitherapie</span>
+          <span class="chip">💪 Personal Training</span>
+          <span class="chip">☕ Verse bar</span>
+          <span class="chip">🌿 Huiselijk</span>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- STATS -->
-<div class="stats-row">
-  <div class="stats-inner">
-    <div><span class="stat-num">12+</span><div class="stat-label">Groepslessen per week</div></div>
-    <div><span class="stat-num">300+</span><div class="stat-label">Actieve leden</div></div>
-    <div><span class="stat-num">6</span><div class="stat-label">Lessoorten</div></div>
-    <div><span class="stat-num">100%</span><div class="stat-label">Goed gevoel gegarandeerd</div></div>
+<!-- PARALLAX QUOTE BAND -->
+<div class="quote-band">
+  <div class="qb-bg" id="qbBg"></div>
+  <div class="qb-overlay"></div>
+  <div class="qb-content sr scale">
+    <p class="qb-quote" id="qbQuote">
+      <span class="qb-word">La</span> <span class="qb-word">vie</span> <span class="qb-word">est</span> <span class="qb-word">belle</span> <span class="qb-word">quand</span> <span class="qb-word">on</span> <span class="qb-word">bouge.</span>
+    </p>
+    <p class="qb-attr">— Het leven is mooi als je beweegt</p>
   </div>
 </div>
 
-<!-- KALENDER -->
-<section id="kalender">
-  <div class="section-inner">
-    <div class="section-tag">Rooster</div>
-    <h2 class="section-title">Wekelijks lesrooster</h2>
-    <p style="color:var(--text-mid);max-width:540px;line-height:1.8;font-size:0.95rem;">Plan je week vooruit. Zie in één oogopslag welke lessen er zijn en wanneer. Koppel ook je Google Calendar.</p>
-    <div class="boek-cta-wrap">
+<!-- CALENDAR -->
+<section class="sec cream" id="kalender">
+  <div class="inner">
+    <div class="kal-hdr">
+      <div>
+        <p class="eyebrow sr">Planning</p>
+        <h2 class="sec-title sr d1">Wekelijks lesrooster</h2>
+      </div>
+      <p class="sec-lead sr d2" style="max-width:360px;">Plan je week vooruit. Koppel ook je Google Calendar voor automatische updates.</p>
+    </div>
+    <div class="boek-cta-wrap sr d2">
       <a href="boeken.html" class="boek-cta">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>
         Les boeken
       </a>
       <span class="boek-cta-sub">Kies een uur in het rooster en reserveer je plaats</span>
     </div>
-    <div class="kalender-wrap">
-      <div class="kalender-top">
-        <div class="kal-month" id="kalTitle"></div>
-        <div style="display:flex;align-items:center;gap:1rem;">
-          <a href="https://calendar.google.com/calendar/r" target="_blank" style="font-size:0.8rem;color:var(--amber);text-decoration:none;font-weight:500;">+ Google Calendar</a>
-          <div class="kalender-nav-btns">
-            <button class="kal-btn" onclick="changeMonth(-1)">&#8249;</button>
-            <button class="kal-btn" onclick="changeMonth(1)">&#8250;</button>
-          </div>
+    <div class="kal-wrap sr scale d1">
+      <div class="kal-top">
+        <div class="kal-m" id="kalTitle"></div>
+        <div class="kal-nav">
+          <a href="https://calendar.google.com/calendar/r" target="_blank" class="kal-gcal">+ Google Calendar</a>
+          <button class="kal-nb" onclick="changeMonth(-1)">&#8249;</button>
+          <button class="kal-nb" onclick="changeMonth(1)">&#8250;</button>
         </div>
       </div>
       <div class="kal-grid" id="kalGrid"></div>
-      <div class="kal-legend">
-        <div class="legend-dot"><div class="legend-pip" style="background:#6B8A5E"></div>Yoga</div>
-        <div class="legend-dot"><div class="legend-pip" style="background:#C5513D"></div>Boksen</div>
-        <div class="legend-dot"><div class="legend-pip" style="background:#E8883A"></div>Pilates</div>
-        <div class="legend-dot"><div class="legend-pip" style="background:#7A4E30"></div>Spinning</div>
-        <div class="legend-dot"><div class="legend-pip" style="background:#C44D58"></div>HIIT</div>
-        <div class="legend-dot"><div class="legend-pip" style="background:#9BB88E"></div>Stretching</div>
+      <div class="kal-leg">
+        <div class="kl"><div class="kp" style="background:rgba(90,122,74,.4);"></div>Yoga</div>
+        <div class="kl"><div class="kp" style="background:rgba(184,134,42,.4);"></div>Kinesitherapie</div>
+        <div class="kl"><div class="kp" style="background:rgba(192,120,120,.4);"></div>Personal Training</div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- LESSEN -->
-<section id="lessen">
-  <div class="section-inner">
-    <div class="section-tag">Groepslessen</div>
-    <h2 class="section-title">Kies jouw les &amp; schrijf je in</h2>
-    <p style="color:var(--text-mid);max-width:540px;line-height:1.8;font-size:0.95rem;">Elke les staat voor maximaal 20 deelnemers. De capaciteitsbalk toont je in één oogopslag hoeveel plaatsen er nog vrij zijn.</p>
-    <div class="lessen-grid" id="lessenGrid"></div>
-    <div class="show-more-wrap" id="showMoreWrap">
-      <button class="show-more-btn" id="showMoreBtn" onclick="toggleMoreLessen()">Toon alle lessen ↓</button>
+<section class="sec" id="lessen">
+  <div class="blob" style="width:500px;height:500px;top:-150px;left:-200px;background:rgba(232,164,160,.08);"></div>
+  <div class="inner">
+    <div class="les-hdr">
+      <div>
+        <p class="eyebrow sr">Beweging met aandacht</p>
+        <h2 class="sec-title sr d1">Onze lessen<br>&amp; begeleiding</h2>
+      </div>
+      <p class="sec-lead sr d2">Drie disciplines, één filosofie: bewust bewegen in een warme omgeving.</p>
+    </div>
+    <div class="les-grid">
+      <div class="les-card sr d1">
+        <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=85" alt="Yoga" loading="lazy"></div>
+        <div class="les-body">
+          <div class="les-ey">Groepsles</div>
+          <div class="les-name">Yoga</div>
+          <p class="les-desc">Van zachte Hatha tot dynamische Vinyasa. Gwen Deryck begeleidt je met warmte doorheen ademhaling, houding en rust.</p>
+          <div class="les-buls">
+            <div class="les-bul"><div class="bul-dot"></div>Hatha · Vinyasa · Yin · Yoga Nidra</div>
+            <div class="les-bul"><div class="bul-dot"></div>Alle niveaus welkom</div>
+            <div class="les-bul"><div class="bul-dot"></div>Gwen Deryck (RYT-500)</div>
+            <div class="les-bul"><div class="bul-dot"></div>Max. 16 personen</div>
+          </div>
+          <a href="https://wa.me/32471955489?text=Hallo!%20Yoga%20bij%20La%20Vie%20en%20Rose!" target="_blank" class="les-btn">Inschrijven via WhatsApp ↗</a>
+        </div>
+      </div>
+      <div class="les-card sr d2">
+        <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=85" alt="Kinesitherapie" loading="lazy"></div>
+        <div class="les-body">
+          <div class="les-ey">Individuele begeleiding</div>
+          <div class="les-name">Kinesitherapie</div>
+          <p class="les-desc">Professionele begeleiding voor herstel, preventie en optimale prestaties — volledig op maat van jouw klachten.</p>
+          <div class="les-buls">
+            <div class="les-bul"><div class="bul-dot"></div>Sportblessures &amp; revalidatie</div>
+            <div class="les-bul"><div class="bul-dot"></div>Rugklachten &amp; houding</div>
+            <div class="les-bul"><div class="bul-dot"></div>Droognaald &amp; manuele therapie</div>
+            <div class="les-bul"><div class="bul-dot"></div>Op afspraak</div>
+          </div>
+          <a href="https://wa.me/32471955489?text=Hallo!%20Kinesitherapie%20bij%20La%20Vie%20en%20Rose!" target="_blank" class="les-btn">Afspraak maken ↗</a>
+        </div>
+      </div>
+      <div class="les-card sr d3">
+        <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=85" alt="Personal Training" loading="lazy"></div>
+        <div class="les-body">
+          <div class="les-ey">1-op-1 Training</div>
+          <div class="les-name">Personal Training</div>
+          <p class="les-desc">Jouw doelen, jouw tempo. Een coach die je begeleidt, aanmoedigt en uitdaagt — met een volledig op maat programma.</p>
+          <div class="les-buls">
+            <div class="les-bul"><div class="bul-dot"></div>Intake &amp; doelenmeting</div>
+            <div class="les-bul"><div class="bul-dot"></div>Kracht · conditie · mobiliteit</div>
+            <div class="les-bul"><div class="bul-dot"></div>Voedingsadvies inbegrepen</div>
+            <div class="les-bul"><div class="bul-dot"></div>Flexibele uurregeling</div>
+          </div>
+          <a href="https://wa.me/32471955489?text=Hallo!%20Personal%20Training%20bij%20La%20Vie%20en%20Rose!" target="_blank" class="les-btn">Start vandaag ↗</a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- BAR & MENU -->
-<section id="bar">
-  <div class="section-inner">
-    <div class="section-tag">Bar &amp; Menu</div>
-    <h2 class="section-title">Onze bar &amp; verse drankkaart</h2>
-    <p style="color:var(--text-mid);max-width:540px;line-height:1.8;font-size:0.95rem;margin-bottom:2rem;">Na een goede training verdien je het beste. Scan de QR-code aan de bar of tafel om direct hier te komen. Vers gemaakt, elke dag.</p>
+<!-- NATURE BAND -->
+<div class="nature-band">
+  <div class="nb-bg" id="nbBg"></div>
+  <div class="nb-overlay"></div>
+  <div class="nb-content">
+    <div class="nb-stat sr d1"><span class="nb-n">🌹</span><span class="nb-l">La Vie en Rose</span></div>
+    <div class="nb-stat sr d2"><span class="nb-n count-up" data-target="12" data-suffix="+">12+</span><span class="nb-l">Lessen per week</span></div>
+    <div class="nb-stat sr d3"><span class="nb-n">100%</span><span class="nb-l">Goed gevoel</span></div>
+  </div>
+</div>
 
-    <!-- Bar hero image -->
-    <div class="bar-hero-img">
-      <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1200&q=80" alt="Gezellige bar met couches bij In de Living">
-      <div class="bar-hero-caption">
-        In de Living Bar
-        <div class="bar-hero-sub">Gezellig, warm &amp; gezond — voor en na je training</div>
+<!-- EVENTS -->
+<section class="sec" id="evenementen" style="background:var(--beige);">
+  <div class="blob" style="width:450px;height:450px;top:-120px;right:-150px;background:rgba(184,134,42,.07);"></div>
+  <div class="inner">
+    <div class="ev-intro">
+      <div>
+        <p class="eyebrow sr">Beleving &amp; gemeenschap</p>
+        <h2 class="sec-title sr d1">Evenementen<br>&amp; activiteiten</h2>
       </div>
+      <p class="sec-lead sr d2">Regelmatig organiseren we bijzondere momenten voor iedereen die wil opladen en genieten.</p>
     </div>
-
-    <!-- Menu tabs -->
-    <div class="menu-tabs">
-      <button class="menu-tab active" onclick="setMenuTab('shakes',this)">🥤 Shakes</button>
-      <button class="menu-tab" onclick="setMenuTab('koffie',this)">☕ Koffie</button>
-      <button class="menu-tab" onclick="setMenuTab('snacks',this)">🍌 Snacks</button>
+    <div class="ev-grid">
+      <div class="ev-card c1 sr d1"><div class="ev-num">01</div><div class="ev-icon">🧘</div><div class="ev-name">Yoga Bijeenkomsten</div><p class="ev-desc">Uitgebreide yoga-sessies buiten of in studio. Perfect om nieuwe stijlen te ontdekken.</p><span class="ev-chip">Maandelijks · weekend</span></div>
+      <div class="ev-card c2 sr d2"><div class="ev-num">02</div><div class="ev-icon">🌿</div><div class="ev-name">Avondmarkt Hofstade</div><p class="ev-desc">Verse smoothies, cold brew en gezonde snacks op de avondmarkt. Gezelligheid buiten.</p><span class="ev-chip">Zomers · weekends</span></div>
+      <div class="ev-card c3 sr d3"><div class="ev-num">03</div><div class="ev-icon">🌅</div><div class="ev-name">Seizoenssessies</div><p class="ev-desc">Zonnewende yoga bij zonsopgang, herfstretraite, winter bootcamp — altijd memorabel.</p><span class="ev-chip">Per seizoen</span></div>
+      <div class="ev-card c4 sr d4"><div class="ev-num">04</div><div class="ev-icon">💛</div><div class="ev-name">Workshops &amp; Infosessies</div><p class="ev-desc">Lezingen over voeding, ademwerk en blessurepreventie. Kennis delen is onze passie.</p><span class="ev-chip">Doorheen het jaar</span></div>
     </div>
-
-    <!-- SHAKES -->
-    <div class="menu-section active" id="menu-shakes">
-      <div class="menu-grid">
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=600&q=80" alt="Proteïne Shake">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Proteïne Shake</div>
-            <div class="menu-card-desc">Chocolade of vanille whey, havermilk &amp; banaan. 28g proteïne per portie. Perfect na je training.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 5,50</span>
-              <span class="menu-card-tag">Post-workout</span>
-            </div>
-          </div>
-        </div>
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=600&q=80" alt="Groene Boost">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Groene Boost</div>
-            <div class="menu-card-desc">Spinazie, komkommer, groene appel, gember &amp; citroen. Fris, licht en boordevol vitamines.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 5,00</span>
-              <span class="menu-card-tag">Vitamines</span>
-            </div>
-          </div>
-        </div>
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=600&q=80" alt="Recovery Smoothie">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Recovery Smoothie</div>
-            <div class="menu-card-desc">Aardbei, bosvruchten, havermout &amp; Griekse yoghurt. Rijk aan antioxidanten en herstelvoedingsstoffen.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 5,50</span>
-              <span class="menu-card-tag">Herstel</span>
-            </div>
-          </div>
-        </div>
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?w=600&q=80" alt="Tropical Boost">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Tropical Boost</div>
-            <div class="menu-card-desc">Mango, ananas, kokosmelk &amp; chiazaad. Zoet, exotisch en vol energie voor voor je les.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 5,00</span>
-              <span class="menu-card-tag">Pre-workout</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="insta-strip sr scale d2">
+      <p class="ist-txt">Alle aankondigingen verschijnen als eerste op onze <strong>Instagram</strong>. Volg ons en mis geen enkel moment.</p>
+      <a href="https://instagram.com/lavieenrose.aalst" target="_blank" class="ist-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        Volg @lavieenrose.aalst
+      </a>
     </div>
-
-    <!-- KOFFIE -->
-    <div class="menu-section" id="menu-koffie">
-      <div class="menu-grid">
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600&q=80" alt="Cold Brew">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Cold Brew</div>
-            <div class="menu-card-desc">18 uur koud gebrouwen, rijke koffiesmaak zonder bitterheid. Geserveerd over ijs met oatmilk.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 3,50</span>
-              <span class="menu-card-tag">Cafeïne boost</span>
-            </div>
-          </div>
-        </div>
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1485808191679-5f86510bd9d4?w=600&q=80" alt="Gouden Latte">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Gouden Latte</div>
-            <div class="menu-card-desc">Kurkuma, kaneel, gember &amp; havermilk. Anti-inflammatoir en heerlijk warm of koud te drinken.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 4,00</span>
-              <span class="menu-card-tag">Anti-inflammatoir</span>
-            </div>
-          </div>
-        </div>
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=600&q=80" alt="Espresso">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Espresso / Lungo</div>
-            <div class="menu-card-desc">Vers gemalen specialty koffie, dagelijks vers gezet. Kort, krachtig en vol karakter.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 2,50</span>
-              <span class="menu-card-tag">Klassiek</span>
-            </div>
-          </div>
-        </div>
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=600&q=80" alt="Protein Iced Coffee">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Protein Iced Coffee</div>
-            <div class="menu-card-desc">Cold brew, vanille proteïne &amp; oatmilk over ijs. 20g proteïne én cafeïne in één glas.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 5,50</span>
-              <span class="menu-card-tag">Post-workout</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SNACKS -->
-    <div class="menu-section" id="menu-snacks">
-      <div class="menu-grid">
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&q=80" alt="Havermoutpap">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Overnight Oats</div>
-            <div class="menu-card-desc">Havermout, chiazaad, vers fruit &amp; een scheut honing. Koud geserveerd, klaar om te genieten.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 4,50</span>
-              <span class="menu-card-tag">Langzame koolh.</span>
-            </div>
-          </div>
-        </div>
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1561043433-aaf687c4cf04?w=600&q=80" alt="Proteïnebar">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Huisgemaakte Proteïnebar</div>
-            <div class="menu-card-desc">Dadelbase, cashewnoten, cacao &amp; proteïnepoeder. Geen suiker toegevoegd, 15g proteïne.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 3,00</span>
-              <span class="menu-card-tag">Suikervrij</span>
-            </div>
-          </div>
-        </div>
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=600&q=80" alt="Avocado Toast">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Avocado Toast</div>
-            <div class="menu-card-desc">Zuurdesembrood, avocado, limoen, chilivlokken &amp; een gepocheerd ei. Gezond &amp; voedzaam.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 6,50</span>
-              <span class="menu-card-tag">Gezonde vetten</span>
-            </div>
-          </div>
-        </div>
-        <div class="menu-card">
-          <img class="menu-card-img" src="https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=600&q=80" alt="Fruit en noten mix">
-          <div class="menu-card-body">
-            <div class="menu-card-name">Noten &amp; Fruit Mix</div>
-            <div class="menu-card-desc">Handgemengd: amandelen, cashewnoten, walnoten, gedroogd fruit &amp; zonnebloempitjes.</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price">€ 3,50</span>
-              <span class="menu-card-tag">Gezonde vetten</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:1.5rem;">Prijzen inclusief BTW · Seizoensgebonden aanbod kan variëren · Vraag naar dagverse opties</p>
   </div>
 </section>
 
 <!-- CONTACT -->
-<section id="contact">
-  <div class="section-inner">
-    <div class="section-tag">Contact &amp; Locatie</div>
-    <h2 class="section-title">Kom langs of stuur<br>een berichtje</h2>
-    <div class="contact-grid">
+<section class="sec cream" id="contact">
+  <div class="inner">
+    <p class="eyebrow sr">Vind ons</p>
+    <h2 class="sec-title sr d1">Contact &amp; locatie</h2>
+    <div class="con-grid">
       <div>
-        <div class="contact-item">
-          <div class="contact-icon">📍</div>
-          <div><div class="contact-label">Adres</div><div class="contact-val">Sportstraat 14, 9000 Gent</div></div>
+        <div class="con-item sr d1"><div class="con-icon">📍</div><div><div class="con-lbl">Adres</div><div class="con-val">Hoogstraat 40, 9308 Aalst</div></div></div>
+        <div class="con-item sr d2"><div class="con-icon">🕐</div><div><div class="con-lbl">Openingsuren</div><div class="con-val">Ma–Vr: 07:00 – 22:00<br>Za–Zo: 09:00 – 18:00</div><a href="https://calendar.google.com/calendar/r" target="_blank" class="con-gcal">↗ Actuele uren via Google Calendar</a></div></div>
+        <div class="con-item sr d3"><div class="con-icon">📞</div><div><div class="con-lbl">Telefoon</div><div class="con-val"><a href="tel:+32471955489">+32 471 95 54 89</a></div></div></div>
+        <div class="con-item sr d4"><div class="con-icon">✉️</div><div><div class="con-lbl">E-mail</div><div class="con-val"><a href="mailto:hallo@lavieenrose.be">hallo@lavieenrose.be</a></div></div></div>
+        <div class="sr d4" style="font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--rose-d);margin-bottom:.7rem;">Volg ons</div>
+        <div class="soc-row sr d5">
+          <a href="https://instagram.com/lavieenrose.aalst" target="_blank" class="soc-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>Instagram</a>
+          <a href="https://facebook.com/lavieenrose.aalst" target="_blank" class="soc-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>Facebook</a>
+          <a href="https://wa.me/32471955489" target="_blank" class="soc-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.471-.149-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12 12 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.999-3.648-.236-.374a9.86 9.86 0 01-1.51-5.26c.002-5.45 4.437-9.884 9.889-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.438 9.884-9.886 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>WhatsApp</a>
         </div>
-        <div class="contact-item">
-          <div class="contact-icon">🕐</div>
-          <div>
-            <div class="contact-label">Openingsuren</div>
-            <div class="contact-val">Ma–Vr: 07:00 – 22:00<br>Za–Zo: 09:00 – 18:00</div>
-            <a href="https://calendar.google.com/calendar/r" target="_blank" class="hours-link">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              Bekijk actuele uren in Google Calendar
-            </a>
-          </div>
+        <div class="map-wrap sr d5" style="margin-top:2rem;">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2508.1!2d4.0386!3d50.9413!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c3762e6b8b1a1f%3A0x1!2sHoogstraat%2040%2C%209308%20Aalst!5e0!3m2!1snl!2sbe!4v1700000000000" width="100%" height="240" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="La Vie en Rose locatie"></iframe>
         </div>
-        <div class="contact-item">
-          <div class="contact-icon">📞</div>
-          <div><div class="contact-label">Telefoon</div><div class="contact-val"><a href="tel:+32471955489">+32 471 95 54 89</a></div></div>
-        </div>
-        <div class="contact-item">
-          <div class="contact-icon">✉️</div>
-          <div><div class="contact-label">E-mail</div><div class="contact-val"><a href="mailto:hallo@indeliving.be">hallo@indeliving.be</a></div></div>
-        </div>
-        <div class="social-row">
-          <div class="social-row-label">Volg ons op social media</div>
-          <div class="social-links">
-            <a href="https://instagram.com/indeliving" target="_blank" class="social-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>Instagram
-            </a>
-            <a href="https://facebook.com/indeliving" target="_blank" class="social-btn">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>Facebook
-            </a>
-            <a href="https://tiktok.com/@indeliving" target="_blank" class="social-btn">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.74a4.85 4.85 0 01-1.01-.05z"/></svg>TikTok
-            </a>
-            <a href="https://wa.me/32471955489" target="_blank" class="social-btn">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.1-.471-.149-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12 12 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.999-3.648-.236-.374a9.86 9.86 0 01-1.51-5.26c.002-5.45 4.437-9.884 9.889-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.438 9.884-9.886 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>WhatsApp
-            </a>
-          </div>
-        </div>
-        <div style="margin-top:1.5rem;padding:1.5rem;background:var(--cream);border-radius:var(--radius);border:1px solid var(--border);">
-          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.5rem;">Nieuw? Geen stress.</p>
-          <p style="font-size:1rem;color:var(--brown);font-weight:500;line-height:1.6;">Je eerste les is altijd gratis.<br>Kom gewoon langs of schrijf in via het formulier.</p>
+        <div class="map-lks sr d5">
+          <a href="https://maps.google.com/?q=Hoogstraat+40,+9308+Aalst" target="_blank" class="map-lk">↗ Open in Google Maps</a>
+          <a href="https://maps.google.com/?q=Hoogstraat+40,+9308+Aalst&dirflg=d" target="_blank" class="map-lk">🧭 Routebeschrijving</a>
         </div>
       </div>
-      <div class="contact-form">
-        <h3 style="font-family:'Fraunces',serif;font-size:1.2rem;color:var(--brown);margin-bottom:1.5rem;">Stuur ons een bericht</h3>
-        <div class="form-group"><label>Naam</label><input type="text" placeholder="Jouw naam" id="c-naam"></div>
-        <div class="form-group"><label>E-mail</label><input type="email" placeholder="jouw@email.be" id="c-email"></div>
-        <div class="form-group">
-          <label>Interesse</label>
-          <select id="c-les">
-            <option value="">Kies een les...</option>
-            <option>Yoga</option><option>Boksen</option><option>Pilates</option>
-            <option>Spinning</option><option>HIIT</option><option>Stretching &amp; Mobiliteit</option>
-            <option>Algemene info</option>
-          </select>
-        </div>
-        <div class="form-group"><label>Bericht</label><textarea placeholder="Stel gerust een vraag..." id="c-bericht"></textarea></div>
-        <button class="form-submit" onclick="submitForm()">Verstuur bericht 🌿</button>
+      <div class="con-form sr right">
+        <div class="form-ttl">Stuur ons een bericht</div>
+        <div class="fg"><label>Naam</label><input type="text" placeholder="Jouw naam" id="cn"></div>
+        <div class="fg"><label>E-mail</label><input type="email" placeholder="jouw@email.be" id="ce"></div>
+        <div class="fg"><label>Interesse</label><select id="cs"><option value="">Kies een onderwerp...</option><option>Yoga</option><option>Kinesitherapie</option><option>Personal Training</option><option>Evenementen</option><option>Algemene vraag</option></select></div>
+        <div class="fg"><label>Bericht</label><textarea placeholder="Stel gerust een vraag..." id="cb"></textarea></div>
+        <button class="form-btn" onclick="submitForm()">Verstuur bericht 🌹</button>
+        <div class="form-note">Je eerste les is altijd gratis. Kom gewoon langs — wij zorgen voor de rest.</div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- FOOTER -->
 <footer>
-  <span class="foot-logo">In de Living</span>
-  <div class="foot-tagline">Sports Café · Gent</div>
-  <div class="foot-links">
-    <a href="#home">Home</a><a href="#kalender">Rooster</a><a href="#lessen">Lessen</a>
-    <a href="#bar">Bar &amp; Menu</a><a href="gallery.html">Foto's</a><a href="#contact">Contact</a>
+  <div class="foot-inner">
+    <span class="foot-logo">La Vie en Rose</span>
+    <span class="foot-tag">Sports Café · Aalst</span>
+    <div class="foot-lks">
+      <a href="#home">Home</a><a href="#about">Over ons</a><a href="#kalender">Rooster</a>
+      <a href="#lessen">Lessen</a><a href="#evenementen">Evenementen</a>
+      <a href="#contact">Contact</a><a href="menu.html">Menukaart</a><a href="boeken.html">Les boeken</a><a href="Gallery.html">Foto's</a>
+    </div>
+    <div class="foot-copy">© 2025 La Vie en Rose · Hoogstraat 40, 9308 Aalst · Gemaakt met ❤️</div>
   </div>
-  <div>© 2025 In de Living · Sportstraat 14, 9000 Gent · Gemaakt met ❤️</div>
 </footer>
-
 <div class="toast" id="toast"></div>
 
 <script>
-function toggleMenu(){document.getElementById('hamburger').classList.toggle('open');document.getElementById('mobileMenu').classList.toggle('open');}
-function closeMenu(){document.getElementById('hamburger').classList.remove('open');document.getElementById('mobileMenu').classList.remove('open');}
+/* ══ CUSTOM CURSOR ══ */
+var cur=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
+var mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',function(e){
+  mx=e.clientX; my=e.clientY;
+  cur.style.left=mx+'px'; cur.style.top=my+'px';
+});
+(function animRing(){
+  rx+=(mx-rx)*.12; ry+=(my-ry)*.12;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(animRing);
+})();
+document.querySelectorAll('a,button,.chip,.stat-cell,.les-card,.ev-card').forEach(function(el){
+  el.addEventListener('mouseenter',function(){cur.classList.add('hover');ring.classList.add('hover');});
+  el.addEventListener('mouseleave',function(){cur.classList.remove('hover');ring.classList.remove('hover');});
+});
 
-/* MENU TABS */
-function setMenuTab(tab, btn){
-  document.querySelectorAll('.menu-tab').forEach(function(b){b.classList.remove('active');});
-  document.querySelectorAll('.menu-section').forEach(function(s){s.classList.remove('active');});
-  btn.classList.add('active');
-  document.getElementById('menu-'+tab).classList.add('active');
-}
+/* ══ PROGRESS BAR ══ */
+var pb=document.getElementById('progressBar');
+window.addEventListener('scroll',function(){
+  var pct=(window.scrollY/(document.body.scrollHeight-window.innerHeight))*100;
+  pb.style.width=pct+'%';
+},{passive:true});
 
-/* LESSEN */
-var lessen=[
-  {id:'yoga',naam:'Yoga',icon:'🧘',kleur:'yoga',color:'#6B8A5E',duur:'60 min',niveau:'Alle niveaus',trainer:'Sara V.',max:16,ingeschreven:8,desc:'Rust, ademhaling en flexibiliteit in een warme gezellige sfeer.'},
-  {id:'boxing',naam:'Boksen',icon:'🥊',kleur:'boxing',color:'#C5513D',duur:'45 min',niveau:'Beginners & gevorderden',trainer:'Koen D.',max:16,ingeschreven:14,desc:'Leer de basis van boksen en geef al je stress een eerlijke kans.'},
-  {id:'pilates',naam:'Pilates',icon:'🤸',kleur:'pilates',color:'#E8883A',duur:'50 min',niveau:'Beginners',trainer:'Elien B.',max:14,ingeschreven:7,desc:'Kernkracht en houding verbeteren op een zachte, doordachte manier.'},
-  {id:'spinning',naam:'Spinning',icon:'🚴',kleur:'spinning',color:'#7A4E30',duur:'45 min',niveau:'Alle niveaus',trainer:'Tim R.',max:20,ingeschreven:6,desc:'Fiets jezelf warm op het ritme van energieke muziek.'},
-  {id:'hiit',naam:'HIIT',icon:'🔥',kleur:'hiit',color:'#C44D58',duur:'30 min',niveau:'Gevorderd',trainer:'Nathalie M.',max:12,ingeschreven:11,desc:'Maximale resultaten in minimale tijd. Intensief, effectief en leuk.'},
-  {id:'stretching',naam:'Stretching & Mobiliteit',icon:'🌿',kleur:'stretching',color:'#9BB88E',duur:'40 min',niveau:'Alle niveaus',trainer:'Lies T.',max:18,ingeschreven:4,desc:'Herstel en beweeglijkheid — de perfecte les na een lange dag.'}
-];
-var subscribed=new Set();
-var moreShown=false;
+/* ══ CANVAS PETALS ══ */
+(function(){
+  var c=document.getElementById('petalCanvas');
+  var ctx=c.getContext('2d');
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  resize(); window.addEventListener('resize',resize);
 
-function renderLessen(){
-  var g=document.getElementById('lessenGrid');
-  var isMobile=window.innerWidth<=860;
-  g.innerHTML=lessen.map(function(l,i){
-    var pct=Math.round((l.ingeschreven/l.max)*100);
-    var vrij=l.max-l.ingeschreven;
-    var isVol=vrij<=0;
-    var isSub=subscribed.has(l.id);
-    var badge=pct>=90?'<span class="cap-badge full">Bijna vol</span>':pct>=55?'<span class="cap-badge half">Halfvol</span>':'<span class="cap-badge vol">Plaatsen vrij</span>';
-    // On mobile, hide cards beyond index 1 unless moreShown
-    var extraClass='';
-    if(isMobile&&i>1){
-      extraClass=moreShown?' mobile-hidden shown':' mobile-hidden';
-    }
-    return '<div class="les-card '+l.kleur+extraClass+'"><div class="les-icon" style="background:'+l.color+'22;">'+l.icon+'</div><div class="les-name">'+l.naam+'</div><div class="les-meta"><span>⏱ '+l.duur+'</span><span>👤 '+l.trainer+'</span><span>📊 '+l.niveau+'</span></div><p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.2rem;line-height:1.6;">'+l.desc+'</p><div class="cap-section"><div class="cap-head"><span class="cap-head-label">Bezetting</span>'+badge+'</div><div class="cap-bar-large"><div class="cap-fill" style="width:'+pct+'%;background:'+l.color+';"></div></div><div class="cap-spots">'+l.ingeschreven+' / '+l.max+' plaatsen bezet'+(isVol?' · Vol!':' · nog '+vrij+' vrij')+'</div></div><button class="subscribe-btn'+(isSub?' subscribed':'')+'" '+(isVol&&!isSub?'disabled':'')+' onclick="toggleSubscribe(\''+l.id+'\')">'+(isSub?'✓ Ingeschreven':isVol?'Volzet':'Inschrijven')+'</button></div>';
-  }).join('');
-  // Show/hide the "show more" button
-  var wrap=document.getElementById('showMoreWrap');
-  if(isMobile){
-    wrap.style.display='block';
-    document.getElementById('showMoreBtn').textContent=moreShown?'Verberg lessen ↑':'Toon alle lessen ↓';
-  } else {
-    wrap.style.display='none';
+  var petals=[];
+  for(var i=0;i<28;i++){
+    petals.push({
+      x:Math.random()*window.innerWidth,
+      y:Math.random()*window.innerHeight*2,
+      r:Math.random()*14+6,
+      vx:(Math.random()-.5)*.4,
+      vy:Math.random()*.5+.2,
+      rot:Math.random()*Math.PI*2,
+      vr:(Math.random()-.5)*.02,
+      op:Math.random()*.35+.05,
+      hue:Math.random()*20+340  /* rose/pink hues */
+    });
   }
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    petals.forEach(function(p){
+      ctx.save();
+      ctx.translate(p.x,p.y-window.scrollY*.15);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha=p.op;
+      ctx.fillStyle='hsl('+p.hue+',70%,78%)';
+      ctx.beginPath();
+      /* Petal shape: two arcs */
+      ctx.moveTo(0,0);
+      ctx.bezierCurveTo(p.r*.5,-p.r,p.r,-p.r*.5,0,-p.r*1.6);
+      ctx.bezierCurveTo(-p.r,-p.r*.5,-p.r*.5,-p.r,0,0);
+      ctx.fill();
+      ctx.restore();
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+      if(p.y-window.scrollY*.15>window.innerHeight+20){
+        p.y=-20; p.x=Math.random()*window.innerWidth;
+      }
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ══ MORPHING WAVE ══ */
+(function(){
+  var path=document.getElementById('wavePath');
+  if(!path)return;
+  var t=0;
+  function animWave(){
+    t+=.012;
+    var a=Math.sin(t)*12, b=Math.cos(t*.7)*10;
+    path.setAttribute('d',
+      'M0,'+(40+a)+' C240,'+(80+b)+' 480,'+(b)+' 720,'+(40+a)+
+      ' C960,'+(80-b)+' 1200,'+(b)+' 1440,'+(40+a)+
+      ' L1440,80 L0,80 Z'
+    );
+    requestAnimationFrame(animWave);
+  }
+  animWave();
+})();
+
+/* ══ NAV ══ */
+function toggleMenu(){document.getElementById('hbg').classList.toggle('open');document.getElementById('mobMenu').classList.toggle('open');}
+function cm(){document.getElementById('hbg').classList.remove('open');document.getElementById('mobMenu').classList.remove('open');}
+window.addEventListener('scroll',function(){
+  document.getElementById('nav').classList.toggle('solid',window.scrollY>60);
+},{passive:true});
+
+/* ══ PARALLAX ══ */
+var heroBg=document.getElementById('heroBg');
+var heroMid=document.getElementById('heroMid');
+var qbBg=document.getElementById('qbBg');
+var nbBg=document.getElementById('nbBg');
+
+function getTop(el){var r=0;while(el){r+=el.offsetTop;el=el.offsetParent;}return r;}
+
+function onScroll(){
+  var sy=window.scrollY;
+  if(heroBg)  heroBg.style.transform ='translateY('+(sy*.38)+'px)';
+  if(heroMid) heroMid.style.transform='translateY('+(sy*.18)+'px)';
+  if(qbBg){var rel=sy-getTop(qbBg.parentElement)+window.innerHeight;qbBg.style.transform='translateY('+(rel*.22-80)+'px)';}
+  if(nbBg){var rel2=sy-getTop(nbBg.parentElement)+window.innerHeight;nbBg.style.transform='translateY('+(rel2*.22-80)+'px)';}
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+onScroll();
+
+/* ══ 3D TILT on about images ══ */
+var tiltEl=document.getElementById('aboutImgs');
+if(tiltEl){
+  tiltEl.addEventListener('mousemove',function(e){
+    var r=tiltEl.getBoundingClientRect();
+    var x=(e.clientX-r.left)/r.width-.5;
+    var y=(e.clientY-r.top)/r.height-.5;
+    tiltEl.style.transform='rotateY('+(x*12)+'deg) rotateX('+(-y*10)+'deg) scale(1.02)';
+  });
+  tiltEl.addEventListener('mouseleave',function(){
+    tiltEl.style.transform='rotateY(0) rotateX(0) scale(1)';
+    tiltEl.style.transition='transform .6s cubic-bezier(.22,1,.36,1)';
+  });
 }
 
-function toggleMoreLessen(){
-  moreShown=!moreShown;
-  renderLessen();
-  if(!moreShown){document.getElementById('lessen').scrollIntoView({behavior:'smooth'});}
-}
+/* ══ SCROLL REVEAL ══ */
+(function(){
+  var els=document.querySelectorAll('.sr');
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+    });
+  },{threshold:.1,rootMargin:'0px 0px -48px 0px'});
+  els.forEach(function(el){io.observe(el);});
+})();
 
-function toggleSubscribe(id){
-  var l=lessen.find(function(x){return x.id===id;});
-  if(!l)return;
-  if(subscribed.has(id)){subscribed.delete(id);l.ingeschreven=Math.max(0,l.ingeschreven-1);showToast('Uitgeschreven voor '+l.naam);}
-  else{subscribed.add(id);l.ingeschreven=Math.min(l.max,l.ingeschreven+1);showToast('🎉 Ingeschreven voor '+l.naam+'! Tot dan.');}
-  renderLessen();
-}
-window.addEventListener('resize',function(){moreShown=false;renderLessen();});
+/* ══ ANIMATED QUOTE WORDS ══ */
+(function(){
+  var words=document.querySelectorAll('.qb-word');
+  var io=new IntersectionObserver(function(entries){
+    if(entries[0].isIntersecting){
+      words.forEach(function(w,i){
+        setTimeout(function(){w.classList.add('in');},i*110);
+      });
+      io.disconnect();
+    }
+  },{threshold:.3});
+  var band=document.querySelector('.quote-band');
+  if(band)io.observe(band);
+})();
 
-/* CALENDAR */
+/* ══ COUNTER ANIMATION ══ */
+function animCount(el){
+  var target=parseInt(el.getAttribute('data-target'))||0;
+  var suffix=el.getAttribute('data-suffix')||'';
+  var dur=1800, start=null, startVal=0;
+  function step(ts){
+    if(!start)start=ts;
+    var prog=Math.min((ts-start)/dur,1);
+    var ease=1-Math.pow(1-prog,4);
+    el.textContent=Math.round(startVal+(target-startVal)*ease)+suffix;
+    if(prog<1)requestAnimationFrame(step);
+    else el.textContent=target+suffix;
+  }
+  requestAnimationFrame(step);
+}
+(function(){
+  var counters=document.querySelectorAll('[data-target]');
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){animCount(e.target);io.unobserve(e.target);}
+    });
+  },{threshold:.5});
+  counters.forEach(function(el){io.observe(el);});
+})();
+
+/* ══ CALENDAR ══ */
 var calDate=new Date();
 var dagN=['Ma','Di','Wo','Do','Vr','Za','Zo'];
 var maandN=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
-var rooster={1:[{t:'yoga',l:'Yoga 09:00'},{t:'spinning',l:'Spinning 18:30'}],2:[{t:'boxing',l:'Boksen 07:30'},{t:'pilates',l:'Pilates 19:00'}],3:[{t:'hiit',l:'HIIT 12:00'},{t:'yoga',l:'Yoga 19:30'}],4:[{t:'stretching',l:'Stretching 08:00'},{t:'boxing',l:'Boksen 18:00'}],5:[{t:'spinning',l:'Spinning 07:00'},{t:'pilates',l:'Pilates 12:00'},{t:'hiit',l:'HIIT 20:00'}],6:[{t:'yoga',l:'Yoga 10:00'},{t:'boxing',l:'Boksen 11:30'}],0:[{t:'stretching',l:'Stretching 10:00'},{t:'spinning',l:'Spinning 11:30'}]};
-function renderKalender(){
+var rooster={
+  1:[{t:'yoga',l:'🧘 Yoga 09:00'},{t:'pt',l:'💪 PT 18:00'}],
+  2:[{t:'kine',l:'💆 Kine 09:00'},{t:'pt',l:'💪 PT 19:00'}],
+  3:[{t:'yoga',l:'🧘 Yoga 12:00'},{t:'kine',l:'💆 Kine 17:00'},{t:'yoga',l:'🧘 Yoga 19:30'}],
+  4:[{t:'pt',l:'💪 PT 07:30'},{t:'kine',l:'💆 Kine 16:00'}],
+  5:[{t:'yoga',l:'🧘 Yoga 07:00'},{t:'pt',l:'💪 PT 12:00'}],
+  6:[{t:'yoga',l:'🧘 Yoga 10:00'},{t:'pt',l:'💪 PT 11:30'}],
+  0:[{t:'yoga',l:'🧘 Yoga 10:00'},{t:'kine',l:'💆 Kine 11:30'}]
+};
+function renderKal(){
   var y=calDate.getFullYear(),m=calDate.getMonth();
   document.getElementById('kalTitle').textContent=maandN[m]+' '+y;
   var today=new Date();
   var dim=new Date(y,m+1,0).getDate();
   var sd=new Date(y,m,1).getDay();sd=sd===0?6:sd-1;
   var pd=new Date(y,m,0).getDate();
-  var html=dagN.map(function(d){return'<div class="kal-header-day">'+d+'</div>';}).join('');
+  var html=dagN.map(function(d){return'<div class="kal-dh">'+d+'</div>';}).join('');
   var cells=[];
   for(var i=sd-1;i>=0;i--)cells.push({day:pd-i,cur:false});
   for(var d=1;d<=dim;d++)cells.push({day:d,cur:true});
-  while(cells.length%7!==0)cells.push({day:cells.filter(function(c){return!c.cur;}).length-sd+1,cur:false});
+  while(cells.length%7!==0)cells.push({day:cells.length-sd-dim+1,cur:false});
   cells.forEach(function(c){
-    var isToday=c.cur&&today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===c.day;
+    var isT=c.cur&&today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===c.day;
     var dow=c.cur?new Date(y,m,c.day).getDay():-1;
     var ev=c.cur?(rooster[dow]||[]):[];
-    var evH=ev.slice(0,2).map(function(e){return'<div class="kal-event '+e.t+'">'+e.l+'</div>';}).join('');
-    var nH=isToday?'<div class="kal-day-num"><span style="background:#E8883A;color:white;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-weight:500;font-size:0.8rem;">'+c.day+'</span></div>':'<div class="kal-day-num">'+c.day+'</div>';
-    html+='<div class="kal-day'+(!c.cur?' other-month':'')+'">'+nH+evH+'</div>';
+    var evH=ev.slice(0,2).map(function(e){return'<div class="kev '+e.t+'">'+e.l+'</div>';}).join('');
+    var nH=isT?'<div class="kdn"><span>'+c.day+'</span></div>':'<div class="kdn">'+c.day+'</div>';
+    html+='<div class="kal-day'+(!c.cur?' other':'')+(isT?' today':'')+'">'+nH+evH+'</div>';
   });
   document.getElementById('kalGrid').innerHTML=html;
 }
-function changeMonth(d){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+d,1);renderKalender();}
+function changeMonth(d){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+d,1);renderKal();}
 
+/* ══ FORM ══ */
 function submitForm(){
-  var naam=document.getElementById('c-naam').value.trim();
-  var email=document.getElementById('c-email').value.trim();
-  if(!naam||!email){showToast('⚠️ Vul naam en e-mail in');return;}
-  showToast('✉️ Bedankt '+naam+'! We nemen snel contact op.');
-  document.getElementById('c-naam').value='';document.getElementById('c-email').value='';document.getElementById('c-bericht').value='';
+  var n=document.getElementById('cn').value.trim();
+  var e=document.getElementById('ce').value.trim();
+  if(!n||!e){showToast('Vul naam en e-mail in.');return;}
+  showToast('Merci '+n+'! We nemen snel contact op. 🌹');
+  document.getElementById('cn').value='';
+  document.getElementById('ce').value='';
+  document.getElementById('cb').value='';
 }
-function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3200);}
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},3500);
+}
 
-renderLessen();
-renderKalender();
+renderKal();
 </script>
 </body>
 </html>

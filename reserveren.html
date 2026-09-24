@@ -3,83 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reserveren – In de Living</title>
+<title>Reserveren – La Vie en Rose</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/boeken.css">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700;800&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
 <script src="assets/boeken.js"></script>
 <script>
   // Toegangscontrole: niet aangemeld → eerst naar de aanmeldpagina.
   var user=requireLogin();
 </script>
 <style>
-.stappen{display:flex;gap:0.5rem;margin-bottom:2rem;flex-wrap:wrap;}
-.stap{display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:var(--text-muted);}
-.stap i{font-style:normal;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:500;background:white;}
-.stap.klaar i{background:var(--sage);border-color:var(--sage);color:white;}
-.stap.actief{color:var(--brown);font-weight:500;}
-.stap.actief i{background:var(--amber);border-color:var(--amber);color:white;}
-.stap-lijn{width:28px;height:1.5px;background:var(--border);align-self:center;}
 .res-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:2rem;align-items:start;}
-.res-card{padding:2rem;}
-.res-card h2{font-family:'Fraunces',serif;font-size:1.35rem;color:var(--brown);margin-bottom:1.25rem;}
-.les-kop{display:flex;gap:1rem;align-items:center;padding:1.1rem 1.25rem;border-radius:var(--radius-sm);background:var(--bg);border-left:4px solid var(--c);margin-bottom:1.5rem;}
-.les-kop .ic{font-size:2rem;}
-.les-kop .nm{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:600;color:var(--brown);}
-.les-kop .wn{font-size:0.88rem;color:var(--text-mid);margin-top:2px;}
-.user-box{display:flex;align-items:center;gap:0.9rem;padding:1rem 1.1rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--cream);margin-bottom:1.5rem;}
-.user-box .user-avatar{width:42px;height:42px;font-size:1rem;}
-.user-box .em{font-size:0.8rem;color:var(--text-muted);}
-.voor-keuze{display:flex;gap:0.5rem;margin-bottom:1rem;}
-.voor-keuze label{flex:1;display:flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.65rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--cream);cursor:pointer;font-size:0.88rem;color:var(--text-mid);}
-.voor-keuze input{accent-color:var(--amber);width:auto;margin:0;}
-.teller{display:flex;align-items:center;gap:0.75rem;}
-.teller button{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:white;font-size:1.1rem;color:var(--text-mid);cursor:pointer;}
-.teller button:disabled{opacity:0.35;cursor:not-allowed;}
-.teller output{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:600;color:var(--brown);min-width:28px;text-align:center;}
-.teller small{color:var(--text-muted);font-size:0.8rem;}
-.samenvatting{padding:1.75rem;position:sticky;top:84px;}
-.samenvatting h3{font-family:'Fraunces',serif;font-size:1.15rem;color:var(--brown);margin-bottom:1rem;}
-.rij{display:flex;justify-content:space-between;font-size:0.88rem;color:var(--text-mid);padding:0.45rem 0;}
-.rij b{color:var(--brown);font-weight:500;text-align:right;}
-.totaal{border-top:1px solid var(--border);margin-top:0.6rem;padding-top:0.9rem;display:flex;justify-content:space-between;align-items:baseline;}
-.totaal span{font-size:0.9rem;color:var(--text-mid);}
-.totaal b{font-family:'Fraunces',serif;font-size:1.6rem;color:var(--brown);}
-.samenvatting .btn{margin-top:1.25rem;}
-.klein{font-size:0.78rem;color:var(--text-muted);text-align:center;margin-top:0.75rem;line-height:1.5;}
-.fout-card{padding:2.5rem;text-align:center;max-width:520px;margin:0 auto;}
-.fout-card h2{font-family:'Fraunces',serif;color:var(--brown);margin-bottom:0.75rem;}
-.fout-card p{color:var(--text-mid);margin-bottom:1.5rem;line-height:1.6;}
-@media(max-width:860px){.res-grid{grid-template-columns:1fr;}.samenvatting{position:static;}.res-card{padding:1.5rem;}}
+.res-card{padding:2.25rem;}
+.les-kop{display:flex;gap:1.1rem;align-items:center;padding:1.2rem 1.35rem;border-radius:18px;background:var(--bg);border-left:4px solid var(--c);margin-bottom:1.5rem;}
+.les-kop .ic{font-size:2.2rem;}
+.les-kop .sr-soort{font-size:.66rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--fg);}
+.les-kop .nm{font-family:'Playfair Display',serif;font-size:1.45rem;font-weight:700;font-style:italic;color:var(--espresso);}
+.les-kop .wn{font-size:.9rem;color:var(--espresso2);margin-top:2px;}
+.user-box{display:flex;align-items:center;gap:.95rem;padding:1rem 1.15rem;border:1px solid var(--border);border-radius:18px;background:var(--cream);margin-bottom:1.5rem;}
+.user-box .user-avatar{width:46px;height:46px;font-size:1rem;}
+.user-box .nm{font-weight:800;color:var(--espresso);}
+.user-box .em{font-size:.82rem;color:var(--muted);}
+.voor-keuze{display:flex;gap:.55rem;}
+.voor-keuze label{flex:1;display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.75rem;border:1.5px solid var(--border);border-radius:14px;background:var(--cream);cursor:pointer;font-size:.92rem;font-weight:700;color:var(--espresso2);transition:all .2s;}
+.voor-keuze label:has(input:checked){border-color:var(--rose-d);background:var(--rose-pale);color:var(--rose-d);}
+.voor-keuze input{accent-color:var(--rose-d);width:auto;margin:0;}
+.klant-veld{overflow:hidden;max-height:0;opacity:0;transition:max-height .45s cubic-bezier(.22,1,.36,1),opacity .3s,margin .3s;}
+.klant-veld.open{max-height:120px;opacity:1;margin-top:1.1rem;}
+.teller{display:flex;align-items:center;gap:.8rem;}
+.teller button{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:var(--vanilla);font-size:1.15rem;color:var(--espresso2);cursor:pointer;transition:all .2s;}
+.teller button:hover:not(:disabled){background:var(--rose-d);border-color:var(--rose-d);color:white;}
+.teller button:disabled{opacity:.3;cursor:not-allowed;}
+.teller output{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--espresso);min-width:30px;text-align:center;}
+.teller small{color:var(--muted);font-size:.82rem;font-weight:600;}
+.samenvatting{padding:2rem;position:sticky;top:96px;}
+.rij{display:flex;justify-content:space-between;gap:1rem;font-size:.92rem;color:var(--espresso2);padding:.5rem 0;}
+.rij b{color:var(--espresso);font-weight:700;text-align:right;}
+.totaal{border-top:1px solid var(--border);margin-top:.7rem;padding-top:1rem;display:flex;justify-content:space-between;align-items:baseline;}
+.totaal span{font-size:.92rem;font-weight:700;color:var(--espresso2);}
+.totaal b{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--rose-d);transition:transform .3s;}
+.totaal b.bump{animation:bump .4s;}
+@keyframes bump{50%{transform:scale(1.12);}}
+.samenvatting .btn{margin-top:1.4rem;}
+.klein{font-size:.8rem;color:var(--muted);text-align:center;margin-top:.8rem;line-height:1.5;}
+.fout-card{padding:3rem 2.5rem;text-align:center;max-width:540px;margin:0 auto;}
+.fout-card p{color:var(--espresso2);margin-bottom:1.75rem;line-height:1.7;}
+@media(max-width:900px){.res-grid{grid-template-columns:1fr;}.samenvatting{position:static;}.res-card{padding:1.5rem;}}
 </style>
 </head>
 <body>
+<script src="assets/site.js"></script>
 
-<nav>
-  <a href="index.html" class="nav-logo">In de <span>Living</span></a>
-  <div class="nav-right" id="navRight"></div>
-</nav>
+<header class="page-hero" style="--ph-img:url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1800&q=85');">
+  <div class="ph-bg"></div><div class="ph-mid"></div>
+  <div class="ph-inner">
+    <a href="boeken.html" class="back-link">← Ander uur kiezen</a><br>
+    <div class="ph-badge"><div class="badge-dot"></div>Stap 3 · Reserveren</div>
+    <h1 class="ph-title">
+      <span class="ph-word" style="animation-delay:.3s;">Bevestig</span> <span class="ph-word" style="animation-delay:.42s;">je</span>
+      <span class="ph-word script" style="animation-delay:.54s;">plaats</span>
+    </h1>
+  </div>
+</header>
+<div class="morph-divider"><svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path id="wavePath" d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#FDF8EE"/></svg></div>
 
 <main>
-  <header class="page-head">
-    <div class="page-head-inner">
-      <a href="boeken.html" class="back-link">← Ander uur kiezen</a>
-      <div class="page-eyebrow">Reserveren</div>
-      <h1 class="page-title">Bevestig je <em>plaats</em></h1>
-    </div>
-  </header>
-
-  <section class="section">
-    <div class="section-inner" id="inhoud"></div>
+  <section class="sec">
+    <div class="blob" style="width:420px;height:420px;top:-60px;right:-160px;background:rgba(232,164,160,.14);"></div>
+    <div class="inner" id="inhoud"></div>
   </section>
 </main>
-
-<footer>
-  <span class="foot-logo">In de Living</span>
-  <div class="foot-links"><a href="index.html">Home</a><a href="boeken.html">Les boeken</a><a href="index.html#contact">Contact</a></div>
-  <div>© 2025 In de Living · Sportstraat 14, 9000 Gent</div>
-</footer>
-<div class="toast" id="toast"></div>
 
 <script>
 var MAX_PER_BOEKING={standaard:1,pro:4};
@@ -89,72 +82,75 @@ var aantal=1;
 
 function stappen(n){
   var s=['Uur kiezen','Aanmelden','Reserveren','Betalen'];
-  return '<div class="stappen">'+s.map(function(t,i){
+  return '<div class="stappen sr up">'+s.map(function(t,i){
     return (i?'<div class="stap-lijn"></div>':'')+'<div class="stap'+(i<n?' klaar':i===n?' actief':'')+'"><i>'+(i<n?'✓':i+1)+'</i>'+t+'</div>';
   }).join('')+'</div>';
 }
-function foutScherm(titel,tekst){
-  document.getElementById('inhoud').innerHTML='<div class="card fout-card"><h2>'+titel+'</h2><p>'+tekst+'</p><a class="btn btn-primary" href="boeken.html">Terug naar het rooster</a></div>';
+function toon(html){document.getElementById('inhoud').innerHTML=html;reveal();}
+function foutScherm(titel,tekst,knop){
+  toon('<div class="card fout-card sr scale"><h2 class="card-title">'+titel+'</h2><p>'+tekst+'</p>'+(knop||'<a class="btn btn-primary" href="boeken.html">Terug naar het rooster</a>')+'</div>');
 }
 function maxPlaatsen(){return Math.max(1,Math.min(type.pro?MAX_PER_BOEKING.pro:MAX_PER_BOEKING.standaard,vrijePlaatsen(slot)));}
 
 function render(){
-  if(!slot){foutScherm('Dit uur bestaat niet','We vinden deze les niet terug in het rooster. Kies een uur in het rooster om te reserveren.');return;}
-  if(isVoorbij(slot)){foutScherm('Deze les is al voorbij','Kies een ander uur in het rooster.');return;}
+  if(!slot){foutScherm('Dit uur bestaat niet','We vinden dit uur niet terug in het rooster. Kies een uur in het rooster om te reserveren.');return;}
+  if(isVoorbij(slot)){foutScherm('Dit uur is al voorbij','Kies een ander uur in het rooster.');return;}
   var bestaand=getBookings().find(function(b){return b.userId===user.id&&b.slotId===slot.id;});
   if(bestaand){
-    document.getElementById('inhoud').innerHTML='<div class="card fout-card"><h2>Je hebt dit uur al gereserveerd</h2><p>'+
-      esc(slot.les.naam)+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.</p>'+
-      (bestaand.status==='betaald'?'<a class="btn btn-primary" href="boeken.html">Terug naar het rooster</a>':'<a class="btn btn-primary" href="betalen.html?booking='+bestaand.id+'">Verder naar betalen →</a>')+'</div>';
+    foutScherm('Je hebt dit uur al gereserveerd',esc(slot.les.naam)+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.',
+      bestaand.status==='betaald'?null:'<a class="btn btn-primary" href="betalen.html?booking='+bestaand.id+'">Verder naar betalen →</a>');
     return;
   }
-  if(vrijePlaatsen(slot)<=0){foutScherm('Deze les is volzet','Er zijn geen plaatsen meer vrij. Kies een ander uur.');return;}
+  if(vrijePlaatsen(slot)<=0){foutScherm('Dit uur is volzet','Er zijn geen plaatsen meer vrij. Kies een ander uur.');return;}
 
   var vrij=vrijePlaatsen(slot);
-  var html=stappen(2)+'<div class="res-grid"><form class="card res-card les-'+slot.lesId+'" onsubmit="bevestig(event)">'+
-    '<h2>Je reservatie</h2>'+
-    '<div class="les-kop"><div class="ic">'+slot.les.icon+'</div><div><div class="nm">'+esc(slot.les.naam)+'</div>'+
-    '<div class="wn">'+fmtDatum(slot.datum)+' · '+slot.tijd+' – '+slot.eind+' · met '+esc(slot.les.trainer)+'</div></div></div>'+
-    '<div class="user-box"><div class="user-avatar">'+esc(initialen(user.naam))+'</div><div><div class="user-name">'+esc(user.naam)+'</div>'+
-    '<div class="em">'+esc(user.email)+'</div><div style="margin-top:4px;">'+typeBadge(user)+'</div></div></div>';
+  var html=stappen(2)+'<div class="res-grid"><form class="card res-card les-'+slot.lesId+' sr left" onsubmit="bevestig(event)">'+
+    '<p class="eyebrow">Jouw reservatie</p>'+
+    '<div class="les-kop"><div class="ic">'+slot.les.icon+'</div><div><div class="sr-soort">'+esc(slot.les.soort)+'</div><div class="nm">'+esc(slot.les.naam)+'</div>'+
+    '<div class="wn">'+fmtDatum(slot.datum)+' · '+slot.tijd+' – '+slot.eind+' · '+esc(slot.les.trainer)+'</div></div></div>'+
+    '<div class="user-box"><div class="user-avatar">'+esc(initialen(user.naam))+'</div><div><div class="nm">'+esc(user.naam)+'</div>'+
+    '<div class="em">'+esc(user.email)+'</div><div style="margin-top:5px;">'+typeBadge(user)+'</div></div></div>';
 
   if(type.pro){
-    html+='<div class="form-group"><label>Voor wie boek je?</label><div class="voor-keuze">'+
+    html+='<div class="fg"><label>Voor wie boek je?</label><div class="voor-keuze">'+
       '<label><input type="radio" name="voor" value="zelf" checked onchange="toggleKlant()"> Voor mezelf</label>'+
-      '<label><input type="radio" name="voor" value="klant" onchange="toggleKlant()"> Voor een klant</label></div></div>'+
-      '<div class="form-group" id="klantVeld" style="display:none;"><label for="klant">Naam van je klant</label><input type="text" id="klant" placeholder="Naam klant"></div>';
+      '<label><input type="radio" name="voor" value="klant" onchange="toggleKlant()"> Voor een klant</label></div>'+
+      '<div class="klant-veld" id="klantVeld"><div class="fg" style="margin:0;"><label for="klant">Naam van je klant</label><input type="text" id="klant" placeholder="Naam klant"></div></div></div>';
   }
-  html+='<div class="form-group"><label>Aantal plaatsen</label><div class="teller">'+
-    '<button type="button" id="min" onclick="wijzigAantal(-1)" aria-label="Minder">−</button><output id="aantal">1</output>'+
-    '<button type="button" id="plus" onclick="wijzigAantal(1)" aria-label="Meer">+</button>'+
-    '<small>'+(type.pro?'max. '+maxPlaatsen()+' per reservatie · ':'')+'nog '+vrij+' vrij</small></div></div>'+
-    '<div class="form-group"><label for="opm">Opmerking (optioneel)</label><textarea id="opm" rows="3" placeholder="Blessure, eerste keer, …"></textarea></div>'+
+  if(slot.les.max>1&&maxPlaatsen()>1){
+    html+='<div class="fg"><label>Aantal plaatsen</label><div class="teller">'+
+      '<button type="button" id="min" onclick="wijzigAantal(-1)" aria-label="Minder">−</button><output id="aantal">1</output>'+
+      '<button type="button" id="plus" onclick="wijzigAantal(1)" aria-label="Meer">+</button>'+
+      '<small>max. '+maxPlaatsen()+' per reservatie · nog '+vrij+' vrij</small></div></div>';
+  }
+  html+='<div class="fg"><label for="opm">Opmerking (optioneel)</label><textarea id="opm" rows="3" placeholder="Blessure, eerste keer, specifieke klacht…"></textarea></div>'+
     '<div class="form-error" id="fout"></div>'+
     '</form>'+
-    '<aside class="card samenvatting"><h3>Overzicht</h3>'+
-    '<div class="rij"><span>Les</span><b>'+esc(slot.les.naam)+'</b></div>'+
+    '<aside class="card samenvatting sr right"><p class="eyebrow">Overzicht</p>'+
+    '<div class="rij"><span>'+(slot.les.max>1?'Les':'Sessie')+'</span><b>'+esc(slot.les.naam)+'</b></div>'+
     '<div class="rij"><span>Datum</span><b>'+fmtDatum(slot.datum)+'</b></div>'+
     '<div class="rij"><span>Uur</span><b>'+slot.tijd+' – '+slot.eind+'</b></div>'+
-    '<div class="rij"><span>Prijs per plaats</span><b>'+fmtEuro(slot.les.prijs)+'</b></div>'+
+    '<div class="rij"><span>Prijs'+(slot.les.max>1?' per plaats':'')+'</span><b>'+fmtEuro(slot.les.prijs)+'</b></div>'+
     '<div class="rij"><span>Aantal</span><b id="sAantal">1</b></div>'+
     '<div class="totaal"><span>Totaal</span><b id="sTotaal"></b></div>'+
     '<button class="btn btn-primary btn-block" onclick="bevestig(event)">Verder naar betalen →</button>'+
     '<div class="klein">Je plaats wordt vastgehouden tot je betaald hebt.</div></aside></div>';
-  document.getElementById('inhoud').innerHTML=html;
+  toon(html);
   updateAantal();
 }
 
 function toggleKlant(){
   var klant=document.querySelector('input[name=voor]:checked').value==='klant';
-  document.getElementById('klantVeld').style.display=klant?'block':'none';
+  document.getElementById('klantVeld').classList.toggle('open',klant);
+  if(klant)setTimeout(function(){document.getElementById('klant').focus();},200);
 }
-function wijzigAantal(n){aantal=Math.min(maxPlaatsen(),Math.max(1,aantal+n));updateAantal();}
-function updateAantal(){
-  document.getElementById('aantal').textContent=aantal;
+function wijzigAantal(n){aantal=Math.min(maxPlaatsen(),Math.max(1,aantal+n));updateAantal(true);}
+function updateAantal(anim){
+  var el=document.getElementById('aantal');
+  if(el){el.textContent=aantal;document.getElementById('min').disabled=aantal<=1;document.getElementById('plus').disabled=aantal>=maxPlaatsen();}
   document.getElementById('sAantal').textContent=aantal;
-  document.getElementById('sTotaal').textContent=fmtEuro(aantal*slot.les.prijs);
-  document.getElementById('min').disabled=aantal<=1;
-  document.getElementById('plus').disabled=aantal>=maxPlaatsen();
+  var t=document.getElementById('sTotaal');t.textContent=fmtEuro(aantal*slot.les.prijs);
+  if(anim){t.classList.remove('bump');void t.offsetWidth;t.classList.add('bump');}
 }
 
 function bevestig(e){

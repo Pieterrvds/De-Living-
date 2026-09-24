@@ -3,78 +3,88 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aanmelden – In de Living</title>
+<title>Aanmelden – La Vie en Rose</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/boeken.css">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700;800&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
 <style>
-.auth-wrap{max-width:980px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start;}
-.auth-side{padding-top:0.5rem;}
-.auth-side h2{font-family:'Fraunces',serif;font-size:1.6rem;color:var(--brown);margin-bottom:0.75rem;letter-spacing:-0.02em;}
-.auth-side p{color:var(--text-mid);line-height:1.7;font-size:0.95rem;margin-bottom:1.25rem;}
-.type-list{display:grid;gap:0.6rem;margin-bottom:1.5rem;}
-.type-item{display:flex;align-items:center;gap:0.75rem;font-size:0.9rem;color:var(--text-mid);}
-.type-item span:first-child{width:36px;height:36px;border-radius:10px;background:white;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
-.auth-card{padding:2rem;}
-.tabs{display:flex;background:var(--cream);border-radius:50px;padding:4px;margin-bottom:1.75rem;border:1px solid var(--border);}
-.tab{flex:1;border:none;background:none;padding:0.65rem;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;color:var(--text-mid);cursor:pointer;transition:all 0.2s;}
-.tab.active{background:var(--amber);color:white;box-shadow:0 4px 14px rgba(232,136,58,0.3);}
+.auth-wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:3.5rem;align-items:start;}
+.auth-card{padding:2.25rem;}
+.tabs{display:flex;background:var(--cream);border-radius:50px;padding:5px;margin-bottom:1.75rem;border:1px solid var(--border);position:relative;}
+.tab-glider{position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 5px);border-radius:50px;background:var(--rose-d);box-shadow:0 4px 16px rgba(192,120,120,.35);transition:transform .45s cubic-bezier(.22,1,.36,1);}
+.tabs.reg .tab-glider{transform:translateX(100%);}
+.tab{flex:1;border:none;background:none;padding:.7rem;border-radius:50px;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:800;color:var(--espresso2);cursor:pointer;position:relative;z-index:1;transition:color .3s;}
+.tab.active{color:white;}
 .pane{display:none;}
-.pane.active{display:block;}
-.type-choices{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
+.pane.active{display:block;animation:paneIn .5s cubic-bezier(.22,1,.36,1);}
+@keyframes paneIn{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:none;}}
+.type-choices{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;}
 .type-choice{position:relative;}
 .type-choice input{position:absolute;opacity:0;}
-.type-choice label{display:flex;align-items:center;gap:0.5rem;padding:0.65rem 0.8rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--cream);cursor:pointer;font-size:0.85rem;color:var(--text-mid);margin:0;transition:all 0.15s;}
-.type-choice input:checked+label{border-color:var(--amber);background:rgba(232,136,58,0.1);color:var(--amber-dark);font-weight:500;}
-.type-choice input:focus-visible+label{outline:2px solid var(--amber);outline-offset:2px;}
-.switch-hint{text-align:center;font-size:0.85rem;color:var(--text-muted);margin-top:1rem;}
-.switch-hint a{color:var(--amber-dark);font-weight:500;cursor:pointer;text-decoration:none;}
-@media(max-width:860px){.auth-wrap{grid-template-columns:1fr;}.auth-side{order:2;}}
-@media(max-width:420px){.type-choices{grid-template-columns:1fr;}.auth-card{padding:1.5rem;}}
+.type-choice label{display:flex;align-items:center;gap:.5rem;padding:.7rem .85rem;border:1.5px solid var(--border);border-radius:14px;background:var(--cream);cursor:pointer;font-size:.88rem;font-weight:600;color:var(--espresso2);transition:all .2s;}
+.type-choice label:hover{border-color:var(--rose);transform:translateY(-2px);}
+.type-choice input:checked+label{border-color:var(--rose-d);background:var(--rose-pale);color:var(--rose-d);font-weight:800;box-shadow:0 4px 14px rgba(192,120,120,.18);}
+.type-choice input:focus-visible+label{outline:2px solid var(--rose-d);outline-offset:2px;}
+.switch-hint{text-align:center;font-size:.88rem;color:var(--muted);margin-top:1.1rem;}
+.switch-hint a{color:var(--rose-d);font-weight:800;cursor:pointer;text-decoration:none;}
+.side-title{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:700;font-style:italic;color:var(--espresso);line-height:1.15;margin-bottom:1rem;}
+.side-lead{color:var(--espresso2);line-height:1.85;font-size:1.02rem;margin-bottom:1.75rem;}
+.type-list{display:grid;gap:.75rem;margin-bottom:2rem;}
+.type-item{display:flex;align-items:center;gap:.9rem;font-size:.95rem;font-weight:600;color:var(--espresso2);}
+.type-item .ic{width:44px;height:44px;border-radius:14px;background:var(--vanilla);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 2px 10px var(--shadow);transition:transform .25s,background .25s;flex-shrink:0;}
+.type-item:hover .ic{transform:scale(1.1) rotate(-4deg);background:var(--rose-pale);}
+.type-item small{display:block;font-weight:500;color:var(--muted);font-size:.82rem;}
+@media(max-width:900px){.auth-wrap{grid-template-columns:1fr;gap:2.5rem;}}
+@media(max-width:440px){.type-choices{grid-template-columns:1fr;}.auth-card{padding:1.5rem;}}
 </style>
 </head>
 <body>
+<script src="assets/site.js"></script>
+<script src="assets/boeken.js"></script>
 
-<nav>
-  <a href="index.html" class="nav-logo">In de <span>Living</span></a>
-  <div class="nav-right"><a href="boeken.html" class="nav-link">← Terug naar het rooster</a></div>
-</nav>
+<header class="page-hero" style="--ph-img:url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1800&q=85');">
+  <div class="ph-bg"></div><div class="ph-mid"></div>
+  <div class="ph-inner">
+    <a href="boeken.html" class="back-link">← Terug naar het rooster</a><br>
+    <div class="ph-badge"><div class="badge-dot"></div>Jouw account</div>
+    <h1 class="ph-title">
+      <span class="ph-word" style="animation-delay:.3s;">Welkom</span>
+      <span class="ph-word script" style="animation-delay:.45s;">thuis</span>
+    </h1>
+    <p class="ph-desc" id="introTekst">Om een uur te reserveren moet je aangemeld zijn. Nog geen account? Maak er in een halve minuut een aan.</p>
+  </div>
+</header>
+<div class="morph-divider"><svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path id="wavePath" d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#FDF8EE"/></svg></div>
 
 <main>
-  <header class="page-head">
-    <div class="page-head-inner">
-      <div class="page-eyebrow">Jouw account</div>
-      <h1 class="page-title">Meld je <em>aan</em></h1>
-      <p class="page-desc" id="introTekst">Om een les te reserveren moet je aangemeld zijn. Nog geen account? Maak er in een halve minuut een aan.</p>
-    </div>
-  </header>
-
-  <section class="section">
-    <div class="auth-wrap">
-      <div class="card auth-card">
-        <div class="tabs" role="tablist">
+  <section class="sec">
+    <div class="blob" style="width:420px;height:420px;top:-60px;left:-160px;background:rgba(232,164,160,.14);"></div>
+    <div class="inner auth-wrap">
+      <div class="card auth-card sr left">
+        <div class="tabs" id="tabs" role="tablist">
+          <div class="tab-glider"></div>
           <button class="tab active" id="tab-login" onclick="toonTab('login')">Aanmelden</button>
           <button class="tab" id="tab-registreer" onclick="toonTab('registreer')">Account maken</button>
         </div>
 
         <form class="pane active" id="pane-login" onsubmit="doeLogin(event)">
-          <div class="form-group"><label for="l-email">E-mail</label><input type="email" id="l-email" autocomplete="email" placeholder="jouw@email.be" required></div>
-          <div class="form-group"><label for="l-pw">Wachtwoord</label><input type="password" id="l-pw" autocomplete="current-password" required></div>
+          <div class="fg"><label for="l-email">E-mail</label><input type="email" id="l-email" autocomplete="email" placeholder="jouw@email.be" required></div>
+          <div class="fg"><label for="l-pw">Wachtwoord</label><input type="password" id="l-pw" autocomplete="current-password" required></div>
           <div class="form-error" id="l-fout"></div>
-          <button class="btn btn-primary btn-block" type="submit">Aanmelden</button>
+          <button class="btn btn-primary btn-block" type="submit">Aanmelden 🌹</button>
           <div class="switch-hint">Nog geen account? <a onclick="toonTab('registreer')">Maak er een aan</a></div>
         </form>
 
         <form class="pane" id="pane-registreer" onsubmit="doeRegistreer(event)">
-          <div class="form-group"><label for="r-naam">Naam</label><input type="text" id="r-naam" autocomplete="name" placeholder="Voornaam Achternaam" required></div>
-          <div class="form-group"><label for="r-email">E-mail</label><input type="email" id="r-email" autocomplete="email" placeholder="jouw@email.be" required></div>
-          <div class="form-group">
+          <div class="fg"><label for="r-naam">Naam</label><input type="text" id="r-naam" autocomplete="name" placeholder="Voornaam Achternaam" required></div>
+          <div class="fg"><label for="r-email">E-mail</label><input type="email" id="r-email" autocomplete="email" placeholder="jouw@email.be" required></div>
+          <div class="fg">
             <label>Ik ben een…</label>
             <div class="type-choices" id="typeKeuzes"></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label for="r-pw">Wachtwoord</label><input type="password" id="r-pw" autocomplete="new-password" minlength="6" required></div>
-            <div class="form-group"><label for="r-pw2">Herhaal wachtwoord</label><input type="password" id="r-pw2" autocomplete="new-password" minlength="6" required></div>
+            <div class="fg"><label for="r-pw">Wachtwoord</label><input type="password" id="r-pw" autocomplete="new-password" minlength="6" required></div>
+            <div class="fg"><label for="r-pw2">Herhaal wachtwoord</label><input type="password" id="r-pw2" autocomplete="new-password" minlength="6" required></div>
           </div>
           <div class="form-error" id="r-fout"></div>
           <button class="btn btn-primary btn-block" type="submit">Account maken &amp; verder</button>
@@ -82,31 +92,24 @@
         </form>
       </div>
 
-      <div class="auth-side">
-        <h2>Voor sporters én professionals</h2>
-        <p>Bij het aanmaken van je account kies je welk type gebruiker je bent. Personal trainers, kinesisten en andere professionals kunnen een les ook boeken voor hun klant.</p>
+      <div class="sr right">
+        <p class="eyebrow">Voor iedereen</p>
+        <h2 class="side-title">Sporters, therapeuten<br>&amp; coaches</h2>
+        <p class="side-lead">Bij het aanmaken van je account kies je welk type gebruiker je bent. Personal trainers, kinesisten en andere professionals kunnen een uur ook boeken voor hun klant.</p>
         <div class="type-list" id="typeLijst"></div>
-        <div class="notice sage">🌿 Je eerste les is altijd gratis. Vragen? Stuur ons een berichtje via de <a href="index.html#contact" style="color:var(--sage);font-weight:500;">contactpagina</a>.</div>
+        <div class="notice sage">🌿 Je eerste les is altijd gratis. Vragen? Stuur ons een berichtje via de <a href="index.html#contact">contactpagina</a>.</div>
       </div>
     </div>
   </section>
 </main>
 
-<footer>
-  <span class="foot-logo">In de Living</span>
-  <div class="foot-links"><a href="index.html">Home</a><a href="boeken.html">Les boeken</a><a href="index.html#contact">Contact</a></div>
-  <div>© 2025 In de Living · Sportstraat 14, 9000 Gent</div>
-</footer>
-<div class="toast" id="toast"></div>
-
-<script src="assets/boeken.js"></script>
 <script>
 var next=veiligeNext(new URLSearchParams(location.search).get('next'));
 
 // Al aangemeld? Meteen door.
 if(currentUser())location.replace(next);
 if(next.indexOf('reserveren.html')===0){
-  document.getElementById('introTekst').textContent='Je staat op het punt een les te reserveren. Meld je eerst aan of maak een account, daarna ga je meteen verder.';
+  document.getElementById('introTekst').textContent='Je staat op het punt een uur te reserveren. Meld je eerst aan of maak een account, daarna ga je meteen verder.';
 }
 
 document.getElementById('typeKeuzes').innerHTML=TYPES.map(function(t,i){
@@ -114,10 +117,11 @@ document.getElementById('typeKeuzes').innerHTML=TYPES.map(function(t,i){
     '<label for="type-'+t.id+'">'+t.icon+' '+esc(t.label)+'</label></div>';
 }).join('');
 document.getElementById('typeLijst').innerHTML=TYPES.map(function(t){
-  return '<div class="type-item"><span>'+t.icon+'</span><span>'+esc(t.label)+(t.pro?' — boek voor jezelf of voor een klant':'')+'</span></div>';
+  return '<div class="type-item"><span class="ic">'+t.icon+'</span><span>'+esc(t.label)+'<small>'+(t.pro?'Boek voor jezelf of voor een klant':'Boek je eigen lessen')+'</small></span></div>';
 }).join('');
 
 function toonTab(t){
+  document.getElementById('tabs').classList.toggle('reg',t==='registreer');
   ['login','registreer'].forEach(function(x){
     document.getElementById('tab-'+x).classList.toggle('active',x===t);
     document.getElementById('pane-'+x).classList.toggle('active',x===t);
@@ -128,7 +132,7 @@ function doeLogin(e){
   e.preventDefault();
   var fout=document.getElementById('l-fout');fout.textContent='';
   login(document.getElementById('l-email').value,document.getElementById('l-pw').value)
-    .then(function(u){showToast('Welkom terug, '+u.naam.split(' ')[0]+'!');setTimeout(function(){location.href=next;},500);})
+    .then(function(u){showToast('Welkom terug, '+u.naam.split(' ')[0]+'! 🌹');setTimeout(function(){location.href=next;},500);})
     .catch(function(msg){fout.textContent=msg;});
 }
 
@@ -139,7 +143,7 @@ function doeRegistreer(e){
   if(pw!==document.getElementById('r-pw2').value){fout.textContent='De wachtwoorden komen niet overeen.';return;}
   var type=(document.querySelector('input[name=type]:checked')||{}).value;
   registreer(document.getElementById('r-naam').value,document.getElementById('r-email').value,type,pw)
-    .then(function(u){showToast('🎉 Welkom bij In de Living, '+u.naam.split(' ')[0]+'!');setTimeout(function(){location.href=next;},600);})
+    .then(function(u){showToast('Welkom bij La Vie en Rose, '+u.naam.split(' ')[0]+'! 🌹');setTimeout(function(){location.href=next;},600);})
     .catch(function(msg){fout.textContent=msg;});
 }
 </script>

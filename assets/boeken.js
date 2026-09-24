@@ -1,26 +1,23 @@
-/* In de Living – gedeelde logica voor het boekingssysteem.
+/* La Vie en Rose – gedeelde logica voor het boekingssysteem.
    LET OP: de site heeft (nog) geen server. Accounts, sessie en reservaties
    worden in de browser (localStorage) bewaard. Dit is een werkend prototype,
    geen echte beveiliging: koppel later een backend voor echte accounts. */
 
-/* ── LESSEN & ROOSTER ── */
+/* ── LESSEN & ROOSTER ── (prijzen zijn voorlopige voorbeeldprijzen) */
 var LESSEN={
-  yoga:{naam:'Yoga',icon:'🧘',duur:60,trainer:'Sara V.',max:16,prijs:12},
-  boxing:{naam:'Boksen',icon:'🥊',duur:45,trainer:'Koen D.',max:16,prijs:12},
-  pilates:{naam:'Pilates',icon:'🤸',duur:50,trainer:'Elien B.',max:14,prijs:12},
-  spinning:{naam:'Spinning',icon:'🚴',duur:45,trainer:'Tim R.',max:20,prijs:10},
-  hiit:{naam:'HIIT',icon:'🔥',duur:30,trainer:'Nathalie M.',max:12,prijs:10},
-  stretching:{naam:'Stretching & Mobiliteit',icon:'🌿',duur:40,trainer:'Lies T.',max:18,prijs:10}
+  yoga:{naam:'Yoga',icon:'🧘',duur:60,trainer:'Gwen Deryck',max:16,prijs:15,soort:'Groepsles'},
+  kine:{naam:'Kinesitherapie',icon:'💆',duur:45,trainer:'Onze kinesist',max:1,prijs:40,soort:'Individuele begeleiding'},
+  pt:{naam:'Personal Training',icon:'💪',duur:60,trainer:'Je coach',max:1,prijs:50,soort:'1-op-1 training'}
 };
 // Weekdag (0 = zondag … 6 = zaterdag) → lessen. Zelfde rooster als op index.html.
 var ROOSTER={
-  1:[['09:00','yoga'],['18:30','spinning']],
-  2:[['07:30','boxing'],['19:00','pilates']],
-  3:[['12:00','hiit'],['19:30','yoga']],
-  4:[['08:00','stretching'],['18:00','boxing']],
-  5:[['07:00','spinning'],['12:00','pilates'],['20:00','hiit']],
-  6:[['10:00','yoga'],['11:30','boxing']],
-  0:[['10:00','stretching'],['11:30','spinning']]
+  1:[['09:00','yoga'],['18:00','pt']],
+  2:[['09:00','kine'],['19:00','pt']],
+  3:[['12:00','yoga'],['17:00','kine'],['19:30','yoga']],
+  4:[['07:30','pt'],['16:00','kine']],
+  5:[['07:00','yoga'],['12:00','pt']],
+  6:[['10:00','yoga'],['11:30','pt']],
+  0:[['10:00','yoga'],['11:30','kine']]
 };
 var UUR_START=7, UUR_EINDE=21;
 
@@ -70,7 +67,7 @@ function slotsVoorDag(datum){
 // Gesimuleerde bezetting door andere leden + echte reservaties in deze browser.
 function bezetting(slot){
   var h=0;for(var i=0;i<slot.id.length;i++){h=(h*31+slot.id.charCodeAt(i))>>>0;}
-  var basis=h%Math.round(slot.les.max*0.85);
+  var basis=slot.les.max>1?h%Math.round(slot.les.max*0.85):0;
   var eigen=getBookings().filter(function(b){return b.slotId===slot.id;}).reduce(function(s,b){return s+b.plaatsen;},0);
   return Math.min(slot.les.max,basis+eigen);
 }
@@ -138,18 +135,15 @@ function mijnBookings(user){
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function initialen(naam){return naam.split(/\s+/).filter(Boolean).slice(0,2).map(function(w){return w[0].toUpperCase();}).join('');}
 function typeBadge(user){var t=getType(user.type);return '<span class="type-badge'+(t.pro?' pro':'')+'">'+t.icon+' '+esc(t.label)+'</span>';}
-function showToast(msg){var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show');},3200);}
 
 function renderNav(){
   var el=document.getElementById('navRight');if(!el)return;
   var u=currentUser();
-  var html='<a href="index.html" class="nav-link hide-sm">← Terug naar home</a>';
   if(u){
-    html+='<div class="user-chip"><div class="user-avatar">'+esc(initialen(u.naam))+'</div>'+
+    el.innerHTML='<div class="user-chip"><div class="user-avatar">'+esc(initialen(u.naam))+'</div>'+
       '<div class="user-meta"><div class="user-name">'+esc(u.naam)+'</div>'+typeBadge(u)+'</div></div>'+
-      '<button class="nav-cta ghost" onclick="logout()">Afmelden</button>';
+      '<button class="nav-pill ghost" onclick="logout()">Afmelden</button>';
   }else{
-    html+='<a class="nav-cta" href="login.html?next='+encodeURIComponent(huidigePagina())+'">Aanmelden</a>';
+    el.innerHTML='<a class="nav-pill" href="login.html?next='+encodeURIComponent(huidigePagina())+'">Aanmelden</a>';
   }
-  el.innerHTML=html;
 }
