@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les boeken – In de Living</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/boeken.css">
+<style>
+.week-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);background:var(--warm-white);border-radius:var(--radius) var(--radius) 0 0;flex-wrap:wrap;}
+.week-title{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:600;color:var(--brown);}
+.week-nav{display:flex;gap:0.5rem;align-items:center;}
+.kal-btn{height:34px;min-width:34px;padding:0 0.7rem;border-radius:8px;background:white;border:1px solid var(--border);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--text-mid);display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+.kal-btn:hover:not(:disabled){background:var(--cream);}
+.kal-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* Weekraster (desktop) */
+.rooster{display:grid;grid-template-columns:64px repeat(7,1fr);}
+.r-head{padding:0.7rem 0.4rem;text-align:center;border-bottom:1px solid var(--border);font-size:0.72rem;font-weight:500;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;}
+.r-head b{display:block;font-family:'Fraunces',serif;font-size:1.15rem;color:var(--brown);letter-spacing:0;text-transform:none;margin-top:2px;}
+.r-head.today b{display:flex;margin:2px auto 0;width:30px;height:30px;border-radius:50%;background:var(--amber);color:white;align-items:center;justify-content:center;font-size:0.95rem;}
+.r-uur{font-size:0.72rem;color:var(--text-muted);padding:6px 8px 0 0;text-align:right;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.r-cel{min-height:58px;padding:4px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.r-cel:nth-child(8n){border-right:none;}
+.slot{display:block;width:100%;text-align:left;border:none;border-left:3px solid var(--c);background:var(--bg);color:var(--fg);border-radius:6px;padding:5px 7px;margin-bottom:3px;font-family:'DM Sans',sans-serif;font-size:0.74rem;font-weight:500;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;line-height:1.3;}
+.slot:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 16px rgba(74,47,26,0.14);}
+.slot small{display:block;font-weight:400;opacity:0.85;font-size:0.68rem;}
+.slot:disabled{cursor:not-allowed;opacity:0.45;filter:grayscale(0.6);}
+.slot.mine{box-shadow:inset 0 0 0 1.5px var(--c);}
+.slot .tag{float:right;font-size:0.62rem;}
+.rooster-foot{padding:0.9rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;}
+.rooster-hint{font-size:0.78rem;color:var(--text-muted);}
+
+/* Dagweergave (mobiel) */
+.dag-lijst{display:none;padding:1rem;}
+.dag-pills{display:flex;gap:0.4rem;overflow-x:auto;padding-bottom:0.75rem;margin-bottom:0.5rem;}
+.dag-pill{flex:1 1 0;min-width:40px;border:1px solid var(--border);background:white;border-radius:12px;padding:0.45rem 0.2rem;text-align:center;font-family:'DM Sans',sans-serif;font-size:0.7rem;color:var(--text-muted);cursor:pointer;}
+.dag-pill b{display:block;font-family:'Fraunces',serif;font-size:1rem;color:var(--brown);}
+.dag-pill.active{background:var(--amber);border-color:var(--amber);color:white;}
+.dag-pill.active b{color:white;}
+.dag-lijst .slot{padding:0.85rem 1rem;font-size:0.9rem;margin-bottom:0.6rem;}
+.dag-lijst .slot small{font-size:0.78rem;}
+.leeg{padding:2rem 1rem;text-align:center;color:var(--text-muted);font-size:0.9rem;}
+
+/* Mijn reservaties */
+.mijn{margin-top:2.5rem;padding:1.75rem;}
+.mijn h3{font-family:'Fraunces',serif;font-size:1.3rem;color:var(--brown);margin-bottom:1rem;}
+.res-rij{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.9rem 0;border-top:1px solid var(--border);flex-wrap:wrap;}
+.res-rij:first-of-type{border-top:none;}
+.res-info{font-size:0.9rem;color:var(--text-mid);}
+.res-info b{color:var(--brown);}
+.status{font-size:0.72rem;font-weight:500;padding:3px 10px;border-radius:50px;}
+.status.wacht{background:rgba(245,201,122,0.35);color:var(--amber-dark);}
+.status.betaald{background:rgba(107,138,94,0.18);color:#3D6632;}
+.res-acties{display:flex;align-items:center;gap:0.6rem;}
+.res-acties a{font-size:0.82rem;color:var(--amber-dark);font-weight:500;text-decoration:none;}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(46,26,14,0.45);backdrop-filter:blur(3px);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem;}
+.modal-bg.open{display:flex;}
+.modal{background:white;border-radius:var(--radius);max-width:420px;width:100%;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.3);animation:pop 0.25s ease;}
+@keyframes pop{from{transform:translateY(12px);opacity:0;}to{transform:none;opacity:1;}}
+.modal-top{padding:1.5rem 1.5rem 1.25rem;background:var(--bg);border-bottom:3px solid var(--c);position:relative;}
+.modal-icon{font-size:2rem;}
+.modal-title{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;color:var(--brown);margin-top:0.35rem;}
+.modal-sub{color:var(--text-mid);font-size:0.9rem;margin-top:0.2rem;}
+.modal-close{position:absolute;top:0.9rem;right:0.9rem;width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.7);cursor:pointer;font-size:1.1rem;color:var(--text-mid);}
+.modal-body{padding:1.25rem 1.5rem 1.5rem;}
+.detail{display:flex;justify-content:space-between;font-size:0.88rem;padding:0.5rem 0;border-bottom:1px dashed var(--border);color:var(--text-mid);}
+.detail b{color:var(--brown);font-weight:500;}
+.cap-bar{height:6px;border-radius:50px;background:rgba(122,78,48,0.12);overflow:hidden;margin:1rem 0 0.4rem;}
+.cap-fill{height:100%;border-radius:50px;background:var(--c);}
+.cap-txt{font-size:0.78rem;color:var(--text-muted);margin-bottom:1.25rem;}
+.login-hint{font-size:0.8rem;color:var(--text-muted);text-align:center;margin-top:0.75rem;}
+
+@media(max-width:860px){
+  .rooster{display:none;}
+  .dag-lijst{display:block;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">In de <span>Living</span></a>
+  <div class="nav-right" id="navRight"></div>
+</nav>
+
+<main>
+  <header class="page-head">
+    <div class="page-head-inner">
+      <a href="index.html#kalender" class="back-link">← Terug naar het rooster</a>
+      <div class="page-eyebrow">Les boeken</div>
+      <h1 class="page-title">Kies jouw <em>uur</em> &amp; reserveer</h1>
+      <p class="page-desc">Klik op een les in het rooster om je plaats te reserveren. Je meldt je eerst aan, daarna kies je het aantal plaatsen en ga je verder naar betalen.</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="section-inner">
+      <div class="card">
+        <div class="week-bar">
+          <div class="week-title" id="weekTitle"></div>
+          <div class="week-nav">
+            <button class="kal-btn" id="prevWeek" onclick="wijzigWeek(-1)" aria-label="Vorige week">&#8249;</button>
+            <button class="kal-btn" onclick="naarVandaag()">Deze week</button>
+            <button class="kal-btn" id="nextWeek" onclick="wijzigWeek(1)" aria-label="Volgende week">&#8250;</button>
+          </div>
+        </div>
+        <div class="rooster" id="rooster"></div>
+        <div class="dag-lijst" id="dagLijst"></div>
+        <div class="rooster-foot">
+          <div class="legend" id="legend"></div>
+          <div class="rooster-hint">Grijze lessen zijn voorbij of volzet.</div>
+        </div>
+      </div>
+
+      <div class="card mijn" id="mijnWrap" style="display:none;">
+        <h3>Mijn reservaties</h3>
+        <div id="mijnLijst"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-bg" id="modal" onclick="if(event.target===this)sluitModal()">
+  <div class="modal" id="modalInhoud" role="dialog" aria-modal="true"></div>
+</div>
+
+<footer>
+  <span class="foot-logo">In de Living</span>
+  <div class="foot-links"><a href="index.html">Home</a><a href="index.html#kalender">Rooster</a><a href="index.html#lessen">Lessen</a><a href="index.html#contact">Contact</a></div>
+  <div>© 2025 In de Living · Sportstraat 14, 9000 Gent</div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script src="assets/boeken.js"></script>
+<script>
+var MAX_WEKEN_VOORUIT=4;
+var huidigeMaandag=mondayOf(new Date());
+var weekStart=huidigeMaandag;
+var gekozenDag=(new Date().getDay()+6)%7; // 0 = maandag
+var user=currentUser();
+
+function mijnSlotIds(){
+  if(!user)return {};
+  var m={};getBookings().forEach(function(b){if(b.userId===user.id)m[b.slotId]=b;});return m;
+}
+
+function slotKnop(slot,mijn){
+  var vrij=vrijePlaatsen(slot),voorbij=isVoorbij(slot),isMijn=!!mijn[slot.id];
+  var tag=isMijn?'<span class="tag">✓ Geboekt</span>':voorbij?'':vrij<=0?'<span class="tag">Vol</span>':vrij<=3?'<span class="tag">Nog '+vrij+'</span>':'';
+  return '<button class="slot les-'+slot.lesId+(isMijn?' mine':'')+'" '+(voorbij?'disabled':'')+
+    ' onclick="openSlot(\''+slot.id+'\')">'+tag+slot.les.icon+' '+esc(slot.les.naam)+
+    '<small>'+slot.tijd+' – '+slot.eind+' · '+esc(slot.les.trainer)+'</small></button>';
+}
+
+function render(){
+  var eind=addDays(weekStart,6);
+  document.getElementById('weekTitle').textContent='Week van '+weekStart.getDate()+' '+MAANDEN[weekStart.getMonth()]+' – '+eind.getDate()+' '+MAANDEN[eind.getMonth()]+' '+eind.getFullYear();
+  var weken=Math.round((weekStart-huidigeMaandag)/(7*864e5));
+  document.getElementById('prevWeek').disabled=weken<=0;
+  document.getElementById('nextWeek').disabled=weken>=MAX_WEKEN_VOORUIT;
+
+  var mijn=mijnSlotIds(), vandaag=isoDate(new Date());
+  var dagen=[0,1,2,3,4,5,6].map(function(i){return addDays(weekStart,i);});
+  var perDag=dagen.map(slotsVoorDag);
+
+  // Desktop: uren × dagen
+  var h='<div class="r-head"></div>'+dagen.map(function(d){
+    return '<div class="r-head'+(isoDate(d)===vandaag?' today':'')+'">'+DAGEN_KORT[d.getDay()]+'<b>'+d.getDate()+'</b></div>';
+  }).join('');
+  for(var u=UUR_START;u<=UUR_EINDE;u++){
+    h+='<div class="r-uur">'+pad(u)+':00</div>';
+    perDag.forEach(function(slots){
+      h+='<div class="r-cel">'+slots.filter(function(s){return +s.tijd.slice(0,2)===u;}).map(function(s){return slotKnop(s,mijn);}).join('')+'</div>';
+    });
+  }
+  document.getElementById('rooster').innerHTML=h;
+
+  // Mobiel: dag kiezen + lijst
+  var m='<div class="dag-pills">'+dagen.map(function(d,i){
+    return '<button class="dag-pill'+(i===gekozenDag?' active':'')+'" onclick="kiesDag('+i+')">'+DAGEN_KORT[d.getDay()]+'<b>'+d.getDate()+'</b></button>';
+  }).join('')+'</div>';
+  var lijst=perDag[gekozenDag];
+  m+=lijst.length?lijst.map(function(s){return slotKnop(s,mijn);}).join(''):'<div class="leeg">Geen lessen op deze dag.</div>';
+  document.getElementById('dagLijst').innerHTML=m;
+
+  renderMijn();
+}
+
+function renderMijn(){
+  var wrap=document.getElementById('mijnWrap');
+  if(!user){wrap.style.display='none';return;}
+  var lijst=mijnBookings(user).filter(function(b){return !isVoorbij(b.slot);});
+  wrap.style.display='block';
+  document.getElementById('mijnLijst').innerHTML=lijst.length?lijst.map(function(b){
+    var s=b.slot;var betaald=b.status==='betaald';
+    return '<div class="res-rij"><div class="res-info"><b>'+s.les.icon+' '+esc(s.les.naam)+'</b> · '+fmtDatum(s.datum)+' om '+s.tijd+
+      ' · '+b.plaatsen+' plaats'+(b.plaatsen>1?'en':'')+(b.voorWie?' · voor '+esc(b.voorWie):'')+'</div>'+
+      '<div class="res-acties"><span class="status '+(betaald?'betaald':'wacht')+'">'+(betaald?'Betaald':'Wacht op betaling')+'</span>'+
+      (betaald?'':'<a href="betalen.html?booking='+b.id+'">Betalen →</a>')+'</div></div>';
+  }).join(''):'<div class="res-info">Je hebt nog geen komende reservaties. Klik op een les in het rooster!</div>';
+}
+
+function openSlot(id){
+  var s=parseSlot(id);if(!s)return;
+  var bez=bezetting(s),vrij=s.les.max-bez,pct=Math.round(bez/s.les.max*100);
+  var mijn=mijnSlotIds()[id];
+  var knop;
+  if(mijn){knop='<a class="btn btn-outline btn-block" href="'+(mijn.status==='betaald'?'boeken.html':'betalen.html?booking='+mijn.id)+'">'+(mijn.status==='betaald'?'✓ Je bent ingeschreven':'Je reservatie afronden →')+'</a>';}
+  else if(vrij<=0){knop='<button class="btn btn-primary btn-block" disabled>Volzet</button>';}
+  else{knop='<button class="btn btn-primary btn-block" onclick="reserveer(\''+id+'\')">Reserveer dit uur →</button>'+
+    (user?'':'<div class="login-hint">Je wordt eerst gevraagd om je aan te melden.</div>');}
+  document.getElementById('modalInhoud').className='modal les-'+s.lesId;
+  document.getElementById('modalInhoud').innerHTML=
+    '<div class="modal-top"><button class="modal-close" onclick="sluitModal()" aria-label="Sluiten">✕</button>'+
+    '<div class="modal-icon">'+s.les.icon+'</div><div class="modal-title">'+esc(s.les.naam)+'</div>'+
+    '<div class="modal-sub">'+fmtDatum(s.datum)+' · '+s.tijd+' – '+s.eind+'</div></div>'+
+    '<div class="modal-body">'+
+    '<div class="detail"><span>Trainer</span><b>'+esc(s.les.trainer)+'</b></div>'+
+    '<div class="detail"><span>Duur</span><b>'+s.les.duur+' min</b></div>'+
+    '<div class="detail"><span>Prijs per plaats</span><b>'+fmtEuro(s.les.prijs)+'</b></div>'+
+    '<div class="cap-bar"><div class="cap-fill" style="width:'+pct+'%"></div></div>'+
+    '<div class="cap-txt">'+bez+' / '+s.les.max+' plaatsen bezet · '+(vrij>0?'nog '+vrij+' vrij':'volzet')+'</div>'+
+    knop+'</div>';
+  document.getElementById('modal').classList.add('open');
+}
+function sluitModal(){document.getElementById('modal').classList.remove('open');}
+
+// Controle: eerst aanmelden, daarna naar het reserveerscherm.
+function reserveer(id){
+  var doel='reserveren.html?slot='+encodeURIComponent(id);
+  location.href=currentUser()?doel:'login.html?next='+encodeURIComponent(doel);
+}
+
+function wijzigWeek(n){weekStart=addDays(weekStart,7*n);gekozenDag=0;render();}
+function naarVandaag(){weekStart=huidigeMaandag;gekozenDag=(new Date().getDay()+6)%7;render();}
+function kiesDag(i){gekozenDag=i;render();}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')sluitModal();});
+
+document.getElementById('legend').innerHTML=Object.keys(LESSEN).map(function(k){
+  return '<div class="legend-dot les-'+k+'"><div class="legend-pip"></div>'+esc(LESSEN[k].naam)+'</div>';
+}).join('');
+renderNav();
+render();
+</script>
+</body>
+</html>
