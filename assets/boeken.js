@@ -99,6 +99,12 @@ var DAGEN_KORT=['Zo','Ma','Di','Wo','Do','Vr','Za'];
 var MAANDEN=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 
 /* ── OPSLAG ── */
+// Gegevens staan onder 'lvr_…'. Oudere versies gebruikten 'living_…': die worden één keer overgezet.
+(function(){try{['users','session','bookings'].forEach(function(k){
+  var oud=localStorage.getItem('living_'+k);if(oud===null)return;
+  if(localStorage.getItem('lvr_'+k)===null)localStorage.setItem('lvr_'+k,oud);
+  localStorage.removeItem('living_'+k);
+});}catch(e){}})();
 function load(key,def){try{var v=localStorage.getItem(key);return v?JSON.parse(v):def;}catch(e){return def;}}
 function save(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
@@ -186,13 +192,14 @@ function isVoorbij(slot){return slot.start.getTime()<Date.now();}
 function isTeLaat(slot){return slot.start.getTime()-Date.now()<REGELS.boekenTotMinVooraf*60000;}
 
 /* ── ACCOUNTS & SESSIE ── */
-function getUsers(){return load('living_users',[]);}
+function getUsers(){return load('lvr_users',[]);}
 function currentUser(){
-  var s=load('living_session',null);if(!s)return null;
+  var s=load('lvr_session',null);if(!s)return null;
   return getUsers().find(function(u){return u.id===s.userId;})||null;
 }
 function hashPw(pw){
   // SHA-256 waar de browser het toelaat; anders een eenvoudige fallback.
+  // Het voorvoegsel 'living:' blijft bewust staan: anders werken bestaande wachtwoorden niet meer.
   if(window.crypto&&crypto.subtle&&window.TextEncoder){
     return crypto.subtle.digest('SHA-256',new TextEncoder().encode('living:'+pw)).then(function(buf){
       return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
@@ -207,7 +214,7 @@ function registreer(naam,email,type,pw){
   if(users.some(function(u){return u.email===email;}))return Promise.reject('Er bestaat al een account met dit e-mailadres.');
   return hashPw(pw).then(function(hash){
     var u={id:uid(),naam:naam.trim(),email:email,type:getType(type).id,pw:hash,aangemaakt:new Date().toISOString()};
-    users.push(u);save('living_users',users);save('living_session',{userId:u.id});
+    users.push(u);save('lvr_users',users);save('lvr_session',{userId:u.id});
     return u;
   });
 }
@@ -217,10 +224,10 @@ function login(email,pw){
   if(!u)return Promise.reject('E-mailadres of wachtwoord klopt niet.');
   return hashPw(pw).then(function(hash){
     if(hash!==u.pw)throw 'E-mailadres of wachtwoord klopt niet.';
-    save('living_session',{userId:u.id});return u;
+    save('lvr_session',{userId:u.id});return u;
   });
 }
-function logout(){try{localStorage.removeItem('living_session');}catch(e){}location.href='boeken.html';}
+function logout(){try{localStorage.removeItem('lvr_session');}catch(e){}location.href='boeken.html';}
 
 // Alleen interne pagina's toelaten als doorverwijzing (geen open redirect).
 function veiligeNext(next){return /^[a-z]+\.html(\?[\w=&%.:-]*)?$/.test(next||'')?next:'boeken.html';}
@@ -236,9 +243,9 @@ function requireLogin(next){
 // Onbetaalde reservaties vervallen na REGELS.betaaltermijnMin minuten.
 function vervaltOm(b){return new Date(b.aangemaakt).getTime()+REGELS.betaaltermijnMin*60000;}
 function getBookings(){
-  var alle=load('living_bookings',[]),nu=Date.now();
+  var alle=load('lvr_bookings',[]),nu=Date.now();
   var geldig=alle.filter(function(b){return !(b.status==='wacht-op-betaling'&&vervaltOm(b)<=nu);});
-  if(geldig.length!==alle.length)save('living_bookings',geldig);
+  if(geldig.length!==alle.length)save('lvr_bookings',geldig);
   return geldig;
 }
 function isBevestigd(b){return b.status==='betaald'||b.status==='bevestigd';}
@@ -264,7 +271,7 @@ function waAnnuleerLink(b,slot){
   return 'https://wa.me/'+REGELS.whatsapp+'?text='+encodeURIComponent(t);
 }
 function fmtUren(u){return (Math.round(u*100)/100).toString().replace('.',',')+' uur';}
-function saveBookings(b){save('living_bookings',b);}
+function saveBookings(b){save('lvr_bookings',b);}
 function mijnBookings(user){
   return getBookings().filter(function(b){return b.userId===user.id;})
     .map(function(b){return Object.assign({},b,{slot:parseSlot(b.slotId)});})
