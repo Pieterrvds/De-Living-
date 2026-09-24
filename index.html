@@ -225,6 +225,7 @@ nav.solid .hamburger span{background:var(--espresso);}
 .kal-leg{padding:1rem 2rem;display:flex;gap:1.5rem;flex-wrap:wrap;background:var(--beige);border-top:1px solid var(--border);}
 .kl{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--espresso2);}
 .kp{width:10px;height:10px;border-radius:3px;}
+.kp.yoga{background:rgba(90,122,74,.4);}.kp.kine{background:rgba(184,134,42,.4);}.kp.pt{background:rgba(192,120,120,.4);}
 
 /* ═══════════════════════ LESSEN ═══════════════════════ */
 #lessen{background:var(--vanilla);}
@@ -506,11 +507,7 @@ footer::before{content:'';position:absolute;top:-60px;left:50%;transform:transla
         </div>
       </div>
       <div class="kal-grid" id="kalGrid"></div>
-      <div class="kal-leg">
-        <div class="kl"><div class="kp" style="background:rgba(90,122,74,.4);"></div>Yoga</div>
-        <div class="kl"><div class="kp" style="background:rgba(184,134,42,.4);"></div>Kinesitherapie</div>
-        <div class="kl"><div class="kp" style="background:rgba(192,120,120,.4);"></div>Personal Training</div>
-      </div>
+      <div class="kal-leg" id="kalLeg"></div>
     </div>
   </div>
 </section>
@@ -667,6 +664,7 @@ footer::before{content:'';position:absolute;top:-60px;left:50%;transform:transla
 </footer>
 <div class="toast" id="toast"></div>
 
+<script src="assets/boeken.js"></script>
 <script>
 /* ══ CUSTOM CURSOR ══ */
 var cur=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
@@ -851,15 +849,11 @@ function animCount(el){
 var calDate=new Date();
 var dagN=['Ma','Di','Wo','Do','Vr','Za','Zo'];
 var maandN=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
-var rooster={
-  1:[{t:'yoga',l:'🧘 Yoga 09:00'},{t:'pt',l:'💪 PT 18:00'}],
-  2:[{t:'kine',l:'💆 Kine 09:00'},{t:'pt',l:'💪 PT 19:00'}],
-  3:[{t:'yoga',l:'🧘 Yoga 12:00'},{t:'kine',l:'💆 Kine 17:00'},{t:'yoga',l:'🧘 Yoga 19:30'}],
-  4:[{t:'pt',l:'💪 PT 07:30'},{t:'kine',l:'💆 Kine 16:00'}],
-  5:[{t:'yoga',l:'🧘 Yoga 07:00'},{t:'pt',l:'💪 PT 12:00'}],
-  6:[{t:'yoga',l:'🧘 Yoga 10:00'},{t:'pt',l:'💪 PT 11:30'}],
-  0:[{t:'yoga',l:'🧘 Yoga 10:00'},{t:'kine',l:'💆 Kine 11:30'}]
-};
+// Het rooster komt uit assets/boeken.js (ROOSTER en LESSEN), zodat het maar op één plek staat.
+var rooster={};
+Object.keys(ROOSTER).forEach(function(dow){
+  rooster[dow]=ROOSTER[dow].map(function(r){var les=LESSEN[r[1]];return {t:r[1],l:les.icon+' '+(les.kort||les.naam)+' '+r[0]};});
+});
 function renderKal(){
   var y=calDate.getFullYear(),m=calDate.getMonth();
   document.getElementById('kalTitle').textContent=maandN[m]+' '+y;
@@ -900,6 +894,9 @@ function showToast(msg){
   setTimeout(function(){t.classList.remove('show');},3500);
 }
 
+document.getElementById('kalLeg').innerHTML=Object.keys(LESSEN).map(function(k){
+  return '<div class="kl"><div class="kp '+k+'"></div>'+LESSEN[k].naam+'</div>';
+}).join('');
 renderKal();
 </script>
 </body>

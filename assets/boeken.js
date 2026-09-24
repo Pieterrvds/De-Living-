@@ -3,11 +3,13 @@
    worden in de browser (localStorage) bewaard. Dit is een werkend prototype,
    geen echte beveiliging: koppel later een backend voor echte accounts. */
 
-/* ── LESSEN & ROOSTER ── (prijzen zijn voorlopige voorbeeldprijzen) */
+/* ── LESSEN & ROOSTER ── (prijzen zijn voorlopige voorbeeldprijzen)
+   Dit is de enige plek waar het rooster staat: index.html en boeken.html lezen het hier.
+   'kort' is de korte naam in de maandkalender op de hoofdpagina. */
 var LESSEN={
-  yoga:{naam:'Yoga',icon:'🧘',duur:60,trainer:'Gwen Deryck',max:16,prijs:15,soort:'Groepsles'},
-  kine:{naam:'Kinesitherapie',icon:'💆',duur:45,trainer:'Onze kinesist',max:1,prijs:40,soort:'Individuele begeleiding'},
-  pt:{naam:'Personal Training',icon:'💪',duur:60,trainer:'Je coach',max:1,prijs:50,soort:'1-op-1 training'}
+  yoga:{naam:'Yoga',kort:'Yoga',icon:'🧘',duur:60,trainer:'Gwen Deryck',max:16,prijs:15,soort:'Groepsles'},
+  kine:{naam:'Kinesitherapie',kort:'Kine',icon:'💆',duur:45,trainer:'Onze kinesist',max:1,prijs:40,soort:'Individuele begeleiding'},
+  pt:{naam:'Personal Training',kort:'PT',icon:'💪',duur:60,trainer:'Je coach',max:1,prijs:50,soort:'1-op-1 training'}
 };
 // Weekdag (0 = zondag … 6 = zaterdag) → lessen. Zelfde rooster als op index.html.
 var ROOSTER={
