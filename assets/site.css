@@ -127,6 +127,7 @@ nav.solid .hamburger span{background:var(--espresso);}
 .les-kine{--c:#B8862A;--bg:rgba(184,134,42,.13);--fg:#946A1C;}
 .les-pt{--c:#C07878;--bg:rgba(192,120,120,.14);--fg:#A45E5E;}
 .les-zaal{--c:#9B6E35;--bg:rgba(155,110,53,.12);--fg:#7A5426;}
+.les-intern{--c:#5C3314;--bg:rgba(92,51,20,.1);--fg:#5C3314;}
 .legend{display:flex;flex-wrap:wrap;gap:1.25rem;}
 .legend-dot{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--espresso2);}
 .legend-pip{width:10px;height:10px;border-radius:3px;background:var(--c);opacity:.7;}

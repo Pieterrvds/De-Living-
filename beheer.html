@@ -47,6 +47,7 @@ select.knop{padding-right:.6rem;}
 .status.wacht{background:var(--rose-pale);color:var(--rose-d);}
 .status.bevestigd{background:rgba(184,134,42,.14);color:#946A1C;}
 .status.betaald{background:var(--sage-pale);color:var(--sage);}
+.status.intern{background:rgba(92,51,20,.1);color:var(--espresso2);}
 .bedrag{font-weight:800;color:var(--espresso);min-width:70px;text-align:right;}
 .leeg{padding:2.5rem;text-align:center;color:var(--muted);font-family:'Playfair Display',serif;font-style:italic;}
 .lid{display:grid;grid-template-columns:minmax(0,1.3fr) 210px minmax(0,1fr);gap:1rem;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--border);}
@@ -112,18 +113,18 @@ function laadWeek(){
 }
 function wijzigWeek(n){weekStart=n===0?mondayOf(new Date()):addDays(weekStart,7*n);laadWeek().then(render).catch(fout);}
 function zichtbaar(){return boekingen.filter(function(b){return filter==='alle'||b.status===filter;});}
-function lesInfo(b){var s=parseSlot(b.slotId);var lesId=b.slotId.split('_')[1];var les=lesId==='zaal'?ZAAL:LESSEN[lesId]||{naam:lesId,icon:'•'};return {les:les,tijd:b.slotId.slice(11,16),datum:new Date(b.slotId.slice(0,10)+'T00:00'),s:s};}
+function lesInfo(b){var s=parseSlot(b.slotId);var lesId=b.slotId.split('_')[1];var les=b.status==='intern'?{naam:b.activiteit,icon:activiteitIcon(b.activiteit)}:lesId==='zaal'?ZAAL:LESSEN[lesId]||{naam:lesId,icon:'•'};return {les:les,tijd:b.slotId.slice(11,16),datum:new Date(b.slotId.slice(0,10)+'T00:00'),s:s};}
 
 function paneelReservaties(){
   var eind=addDays(weekStart,6),lijst=zichtbaar();
   var som=function(f){return lijst.reduce(function(n,b){return n+f(b);},0);};
-  var zaalUren=som(function(b){return /_zaal$/.test(b.slotId)?b.duur/60:0;});
+  var zaalUren=som(function(b){return /_zaal$/.test(b.slotId)&&b.status!=='intern'?b.duur/60:0;});
   var ontvangen=som(function(b){return b.status==='betaald'?b.bedrag:0;});
   var open=som(function(b){return b.status!=='betaald'?b.bedrag:0;});
   var h='<div class="balk"><div class="balk-l"><button class="knop rond" onclick="wijzigWeek(-1)" aria-label="Vorige week">‹</button>'+
     '<button class="knop" onclick="wijzigWeek(0)">Deze week</button><button class="knop rond" onclick="wijzigWeek(1)" aria-label="Volgende week">›</button>'+
     '<span class="week-titel">'+weekStart.getDate()+' '+MAANDEN[weekStart.getMonth()]+' – '+eind.getDate()+' '+MAANDEN[eind.getMonth()]+' '+eind.getFullYear()+'</span></div>'+
-    '<div class="balk-r"><select class="knop" onchange="filter=this.value;render()">'+[['alle','Alle statussen'],['wacht-op-betaling','Wacht op betaling'],['bevestigd','Betalen aan de bar'],['betaald','Betaald']].map(function(o){
+    '<div class="balk-r"><select class="knop" onchange="filter=this.value;render()">'+[['alle','Alle statussen'],['wacht-op-betaling','Wacht op betaling'],['bevestigd','Betalen aan de bar'],['betaald','Betaald'],['intern','Ingepland (eigen)']].map(function(o){
       return '<option value="'+o[0]+'"'+(filter===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'+
     '<button class="knop" onclick="exportCsv()">⬇️ CSV</button><button class="knop" onclick="laadWeek().then(render).catch(fout)">↻ Vernieuwen</button></div></div>'+
     '<div class="kpis"><div class="card kpi"><b>'+lijst.length+'</b><span>Reservaties</span></div><div class="card kpi"><b>'+fmtUren(zaalUren).replace(' uur','u')+'</b><span>Zaalhuur</span></div>'+
@@ -134,13 +135,13 @@ function paneelReservaties(){
     var d=new Date(dag+'T00:00');
     h+='<div class="dag"><div class="dag-kop">'+fmtDatum(d)+'</div><div class="card">'+perDag[dag].map(function(b){
       var i=lesInfo(b),p=b.profiel||{};
-      var st=b.status==='betaald'?'betaald':b.status==='bevestigd'?'bevestigd':'wacht';
+      var st=b.status==='intern'?'intern':b.status==='betaald'?'betaald':b.status==='bevestigd'?'bevestigd':'wacht';
       return '<div class="rij"><div class="uur">'+i.tijd+' – '+eindTijd(i.tijd,b.duur)+'</div>'+
         '<div class="wat">'+i.les.icon+' '+esc(i.les.naam)+(b.voorWie?'<small>voor '+esc(b.voorWie)+'</small>':'')+'</div>'+
         '<div class="wie">'+esc(p.naam||'?')+' '+(p.type?typeBadge(p):'')+'<small>'+esc(p.email||'')+(b.opmerking?' · “'+esc(b.opmerking)+'”':'')+'</small></div>'+
         '<div class="acties"><span class="status '+st+'">'+statusLabel(b)+'</span><span class="bedrag">'+fmtEuro(b.bedrag)+'</span>'+
-        (b.status!=='betaald'?'<button class="knop groen" onclick="zetBetaald(\''+b.id+'\')">✓ Betaald</button>':'')+
-        '<button class="knop rood" onclick="annuleer(\''+b.id+'\')">Annuleren</button></div></div>';
+        (b.status!=='betaald'&&b.status!=='intern'?'<button class="knop groen" onclick="zetBetaald(\''+b.id+'\')">✓ Betaald</button>':'')+
+        '<button class="knop rood" onclick="annuleer(\''+b.id+'\')">'+(b.status==='intern'?'Verwijderen':'Annuleren')+'</button></div></div>';
     }).join('')+'</div></div>';
   });
   return h;

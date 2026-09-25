@@ -40,11 +40,18 @@ create table if not exists public.boekingen (
   opmerking  text not null default '',
   bedrag     numeric(8,2) not null default 0,
   status     text not null default 'wacht-op-betaling'
-             check (status in ('wacht-op-betaling','bevestigd','betaald')),
+             check (status in ('wacht-op-betaling','bevestigd','betaald','intern')),
   aangemaakt timestamptz not null default now()
 );
 create index if not exists boekingen_start_idx on public.boekingen(start);
 create index if not exists boekingen_user_idx  on public.boekingen(user_id);
+
+-- Uitbreiding: door de beheerder ingeplande activiteiten in de zaal (status 'intern').
+-- Veilig bij opnieuw uitvoeren op een bestaande database.
+alter table public.boekingen add column if not exists activiteit text not null default '';
+alter table public.boekingen drop constraint if exists boekingen_status_check;
+alter table public.boekingen add constraint boekingen_status_check
+  check (status in ('wacht-op-betaling','bevestigd','betaald','intern'));
 
 -- ── HULPFUNCTIES ───────────────────────────────────────────────────────
 -- 'HH:MM' → minuten
@@ -119,6 +126,39 @@ begin
   select * into p from profielen where id = new.user_id;
   if p.id is null then raise exception 'Profiel niet gevonden.'; end if;
   if new.user_id is distinct from auth.uid() then raise exception 'Je kan enkel voor jezelf reserveren.'; end if;
+
+  -- ── Door de beheerder ingeplande activiteit (geen betaling, geen weeklimiet,
+  --    ook buiten de openingsuren; wel geen overlap met lessen of zaalhuur) ──
+  if new.status = 'intern' then
+    if not is_admin() then raise exception 'Enkel de beheerder kan activiteiten inplannen.'; end if;
+    if new.les <> 'zaal' then raise exception 'Ongeldige activiteit.'; end if;
+    new.activiteit := left(btrim(coalesce(new.activiteit, '')), 60);
+    if new.activiteit = '' then raise exception 'Kies een activiteit.'; end if;
+    duur := round(extract(epoch from (new.eind - new.start)) / 60)::int;
+    if duur < 15 or duur > 480 or duur % 15 <> 0 then raise exception 'Kies een duur tussen 15 minuten en 8 uur.'; end if;
+    if new.start <= now() then raise exception 'Dit tijdstip is al voorbij.'; end if;
+    lokaal := new.start at time zone 'Europe/Brussels';
+    dow    := extract(dow from lokaal)::int;
+    van    := extract(hour from lokaal)::int * 60 + extract(minute from lokaal)::int;
+    tot    := van + duur;
+    if tot > 1440 then raise exception 'Een activiteit moet op dezelfde dag eindigen.'; end if;
+    for x in select * from jsonb_array_elements(coalesce(c->'rooster'->(dow::text), '[]'::jsonb)) loop
+      s := hm(x->>0);
+      e := s + (c->'lessen'->(x->>1)->>'duur')::int;
+      if s < tot and e > van then raise exception 'De zaal is dan niet vrij: er is een les.'; end if;
+    end loop;
+    new.eind := new.start + make_interval(mins => duur);
+    if exists (select 1 from boekingen b
+                where b.les = 'zaal' and b.start < new.eind and b.eind > new.start and telt(b)) then
+      raise exception 'De zaal is dan al bezet.';
+    end if;
+    new.bedrag     := 0;
+    new.aangemaakt := now();
+    new.opmerking  := left(coalesce(new.opmerking, ''), 500);
+    new.voor_wie   := left(coalesce(new.voor_wie, ''), 200);
+    return new;
+  end if;
+  new.activiteit := '';
 
   -- vervallen onbetaalde reservaties opruimen
   delete from boekingen
@@ -201,7 +241,8 @@ begin
   wk := date_trunc('week', lokaal) at time zone 'Europe/Brussels';
   select coalesce(sum(extract(epoch from (b.eind - b.start)) / 3600), 0) into uren
     from boekingen b
-   where b.user_id = new.user_id and b.start >= wk and b.start < wk + interval '7 days' and telt(b);
+   where b.user_id = new.user_id and b.start >= wk and b.start < wk + interval '7 days' and telt(b)
+     and b.status <> 'intern';   -- ingeplande activiteiten van de beheerder tellen niet mee
   if uren + duur / 60.0 > (r->>'maxUrenPerWeek')::numeric + 0.001 then
     raise exception 'Je weeklimiet van % uur is bereikt.', r->>'maxUrenPerWeek';
   end if;
@@ -320,5 +361,5 @@ grant execute on function public.bezetting(timestamptz, timestamptz) to anon, au
 -- ── STARTWAARDEN ───────────────────────────────────────────────────────
 insert into public.beheerders (email) values ('pieterv-d-s@hotmail.com') on conflict do nothing;
 
-insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":16,"prijs":15},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40},"pt":{"naam":"Personal Training","duur":60,"max":1,"prijs":50}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","pt"]],"2":[["09:00","kine"],["19:00","pt"]],"3":[["12:00","yoga"],["17:00","kine"],["19:30","yoga"]],"4":[["07:30","pt"],["16:00","kine"]],"5":[["07:00","yoga"],["12:00","pt"]],"6":[["10:00","yoga"],["11:30","pt"]]},"openingsuren":{"0":["09:00","18:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["09:00","18:00"]},"gesloten":{"0":[["13:00","24:00"]],"1":[["19:00","24:00"]],"4":[["19:00","24:00"]]},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20},"types":{"lid":{"pro":false,"zaal":false},"personal-trainer":{"pro":true,"zaal":true},"kinesist":{"pro":true,"zaal":true},"dietist":{"pro":true,"zaal":false},"lesgever":{"pro":true,"zaal":true}}}'::jsonb)
+insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":16,"prijs":15},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40},"pt":{"naam":"Personal Training","duur":60,"max":1,"prijs":60}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","pt"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","pt"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","pt"]]},"openingsuren":{"0":["09:00","18:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["09:00","18:00"]},"gesloten":{"0":[["13:00","24:00"]],"1":[["19:00","24:00"]],"4":[["19:00","24:00"]]},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20},"types":{"lid":{"pro":false,"zaal":false},"personal-trainer":{"pro":true,"zaal":true},"kinesist":{"pro":true,"zaal":true},"dietist":{"pro":true,"zaal":false},"lesgever":{"pro":true,"zaal":true}}}'::jsonb)
 on conflict (id) do nothing;

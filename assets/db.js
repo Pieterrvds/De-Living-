@@ -73,7 +73,7 @@ async function logout(){if(sb)await sb.auth.signOut();location.href='boeken.html
 function naarBoeking(r){
   var s=new Date(r.start).getTime(),e=new Date(r.eind).getTime();
   return {id:r.id,slotId:slotIdVan(s,r.les),userId:r.user_id,plaatsen:1,duur:Math.round((e-s)/60000),
-    voorWie:r.voor_wie||'',opmerking:r.opmerking||'',bedrag:+r.bedrag,status:r.status,aangemaakt:r.aangemaakt,
+    voorWie:r.voor_wie||'',opmerking:r.opmerking||'',bedrag:+r.bedrag,status:r.status,aangemaakt:r.aangemaakt,activiteit:r.activiteit||'',
     profiel:r.profielen||null};
 }
 // Bezetting (van iedereen, enkel aantallen) in een periode
@@ -95,6 +95,15 @@ DB.maakBoeking=async function(slot,duur,voorWie,opmerking){
   var start=slot.start,eind=new Date(start.getTime()+duur*60000);
   var r=await sb.from('boekingen').insert({user_id:DB.user.id,les:slot.lesId,start:start.toISOString(),eind:eind.toISOString(),
     voor_wie:voorWie||'',opmerking:opmerking||''}).select().single();
+  if(r.error)throw nlFout(r.error);
+  return naarBoeking(r.data);
+};
+// Beheerder: eigen activiteit in de zaal inplannen (geen betaling)
+DB.planActiviteit=async function(start,duur,activiteit,klanten,notitie){
+  if(!sb)throw GEEN_VERBINDING;
+  var eind=new Date(start.getTime()+duur*60000);
+  var r=await sb.from('boekingen').insert({user_id:DB.user.id,les:'zaal',status:'intern',start:start.toISOString(),eind:eind.toISOString(),
+    activiteit:activiteit,voor_wie:klanten||'',opmerking:notitie||''}).select().single();
   if(r.error)throw nlFout(r.error);
   return naarBoeking(r.data);
 };

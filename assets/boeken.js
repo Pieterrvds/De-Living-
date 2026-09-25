@@ -96,6 +96,17 @@ function getType(id){return TYPES.find(function(t){return t.id===id;})||TYPES[0]
 function isGoedgekeurdePro(user){return !!(user&&getType(user.type).pro&&user.goedgekeurd);}
 function magZaalHuren(user){return !!(user&&getType(user.type).zaal&&user.goedgekeurd);}
 function wachtOpGoedkeuring(user){return !!(user&&getType(user.type).pro&&!user.goedgekeurd);}
+// De beheerder (eigenaar) kan de zaal altijd gebruiken voor eigen activiteiten, zonder betaling.
+function magInplannen(user){return !!(user&&user.isAdmin);}
+
+/* ── ACTIVITEITEN ── keuzelijst bij 'Inplannen' door de beheerder */
+var ACTIVITEITEN=[
+  {naam:'PT-sessie',icon:'💪'},{naam:'Kinesitherapie',icon:'💆'},{naam:'Yoga (privé of groep)',icon:'🧘'},
+  {naam:'Groepstraining / bootcamp',icon:'🏋️'},{naam:'Pilates',icon:'🤸'},{naam:'Stretching & mobiliteit',icon:'🌿'},
+  {naam:'Intake & meting',icon:'📋'},{naam:'Workshop / infosessie',icon:'💡'},{naam:'Evenement / privéfeest',icon:'🎉'},
+  {naam:'Foto- of filmopname',icon:'📸'},{naam:'Vergadering / overleg',icon:'🗣️'},{naam:'Onderhoud / schoonmaak',icon:'🧹'}
+];
+function activiteitIcon(naam){var a=ACTIVITEITEN.find(function(x){return x.naam===naam;});return a?a.icon:'🗓️';}
 
 var DAGEN=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
 var DAGEN_KORT=['Zo','Ma','Di','Wo','Do','Vr','Za'];
@@ -210,19 +221,20 @@ function getBookings(){
 }
 // 'YYYY-MM-DDTHH:MM_les' voor een tijdstip (lokale tijd)
 function slotIdVan(ms,les){var d=new Date(ms);return isoDate(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+'_'+les;}
-function isBevestigd(b){return b.status==='betaald'||b.status==='bevestigd';}
-function statusLabel(b){return b.status==='betaald'?'Betaald':b.status==='bevestigd'?'Bevestigd · betalen aan de bar':'Wacht op betaling';}
+function isBevestigd(b){return b.status==='betaald'||b.status==='bevestigd'||b.status==='intern';}
+function statusLabel(b){return b.status==='intern'?'Ingepland':b.status==='betaald'?'Betaald':b.status==='bevestigd'?'Bevestigd · betalen aan de bar':'Wacht op betaling';}
 function boekingDuur(b,slot){return b.duur||(slot||parseSlot(b.slotId)).les.duur;}
 function boekingEind(b,slot){slot=slot||parseSlot(b.slotId);return eindTijd(slot.tijd,boekingDuur(b,slot));}
 // Geboekte uren van een persoon in de week (ma–zo) van een datum.
 function urenInWeek(user,datum){
   var ma=mondayOf(datum).getTime(),zo=ma+7*864e5;
-  return getBookings().filter(function(b){return b.userId===user.id;}).reduce(function(som,b){
+  return getBookings().filter(function(b){return b.userId===user.id&&b.status!=='intern';}).reduce(function(som,b){
     var s=parseSlot(b.slotId);if(!s)return som;
     var t=s.datum.getTime();return t>=ma&&t<zo?som+boekingDuur(b,s)/60:som;
   },0);
 }
 function magZelfAnnuleren(b,slot){
+  if(b.status==='intern')return true;
   slot=slot||parseSlot(b.slotId);
   return !isBevestigd(b)||slot.start.getTime()-Date.now()>=REGELS.annulerenTotUurVooraf*3600000;
 }
@@ -234,7 +246,7 @@ function waAnnuleerLink(b,slot){
 function fmtUren(u){return (Math.round(u*100)/100).toString().replace('.',',')+' uur';}
 function mijnBookings(user){
   return getBookings().filter(function(b){return b.userId===user.id;})
-    .map(function(b){return Object.assign({},b,{slot:parseSlot(b.slotId)});})
+    .map(function(b){return Object.assign({},b,{slot:b.status==='intern'?activiteitSlot(b):parseSlot(b.slotId)});})
     .filter(function(b){return b.slot;})
     .sort(function(a,b){return a.slot.start-b.slot.start;});
 }
@@ -251,6 +263,25 @@ function configVoorDatabase(){
     zaal:{prijs:ZAAL.prijs},
     types:TYPES.reduce(function(r,t){r[t.id]={pro:!!t.pro,zaal:!!t.zaal};return r;},{})
   };
+}
+
+/* ── ACTIVITEITEN VAN DE BEHEERDER ── */
+// 'Slot'-vorm voor een ingeplande activiteit (kan op elk kwartier starten, ook buiten de openingsuren)
+function activiteitSlot(b){
+  var m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})_/.exec(b.slotId);
+  var datum=new Date(+m[1],+m[2]-1,+m[3]),t=m[4],p=t.split(':');
+  return {id:b.slotId,datum:datum,tijd:t,eind:eindTijd(t,b.duur),lesId:'zaal',start:new Date(datum.getFullYear(),datum.getMonth(),datum.getDate(),+p[0],+p[1]),
+    les:{naam:b.activiteit||'Activiteit',icon:activiteitIcon(b.activiteit),duur:b.duur,max:1,prijs:0,trainer:'La Vie en Rose',soort:'Ingepland door de beheerder'}};
+}
+// Welke duren (minuten) zijn vrij vanaf een tijdstip? Geen overlap met lessen of andere zaalgebruik;
+// openingsuren en sluitingen gelden niet voor de beheerder.
+function vrijeDurenBeheer(datum,van){
+  var r=[];
+  for(var d=30;d<=240;d+=30){
+    if(van+d>1440||!zaalVrijLes(datum,van,van+d)||zaalBoekingOp(datum,van,van+d))break;
+    r.push(d);
+  }
+  return r;
 }
 
 /* ── UI HELPERS ── */

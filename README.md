@@ -46,6 +46,9 @@ Accounts en reservaties staan in Supabase (project `asogwgjyurkcciaamhld`, regio
   geen overlap, vervallen na 5 minuten, zaalhuur enkel voor goedgekeurde professionals).
 - Leden zien enkel hun eigen reservaties; van anderen zien ze alleen *dat* een uur bezet is.
 - Beheerders staan in de tabel `beheerders` (e-mailadres).
+- De beheerder kan in het rooster op elk vrij moment een eigen activiteit **inplannen**
+  (status `intern`: geen betaling, geen weeklimiet, ook buiten de openingsuren; wel geen
+  overlap met lessen of zaalhuur). Trainers zien dan "Zaal bezet", leden zien niets.
 
 **Rooster of regels gewijzigd in `assets/boeken.js`?** Open `beheer.html` → Instellingen →
 *Rooster naar database sturen*, zodat de server dezelfde regels gebruikt.

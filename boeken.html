@@ -53,6 +53,18 @@
 .r-cel.gesloten{background:repeating-linear-gradient(135deg,rgba(61,32,7,.035) 0 8px,rgba(61,32,7,.075) 8px 16px);}
 .r-cel.gesloten:hover{background:repeating-linear-gradient(135deg,rgba(61,32,7,.035) 0 8px,rgba(61,32,7,.075) 8px 16px);}
 .gesloten-lbl{font-size:.7rem;font-weight:800;letter-spacing:.06em;color:var(--muted);padding:6px 4px;}
+/* Inplannen door de beheerder */
+.slot.inplan{background:transparent;border:1.5px dashed rgba(92,51,20,.3);border-left:1.5px dashed rgba(92,51,20,.3);color:var(--espresso2);font-weight:700;opacity:.16;animation:none;}
+.r-cel:hover .slot.inplan,.slot.inplan:focus-visible{opacity:1;}
+.slot.inplan:hover{background:rgba(92,51,20,.07);border-style:solid;opacity:1;}
+.r-cel.gesloten .slot.inplan{opacity:0;}
+.r-cel.gesloten:hover .slot.inplan{opacity:.9;}
+.dag-plan{display:block;width:100%;margin-bottom:.8rem;padding:.85rem 1.1rem;border-radius:14px;border:1.5px dashed rgba(92,51,20,.35);background:transparent;font-family:'Nunito',sans-serif;font-weight:800;font-size:.92rem;color:var(--espresso2);cursor:pointer;}
+.plan-form .fg{margin-bottom:.85rem;}
+.plan-form .fg select,.plan-form .fg input,.plan-form .fg textarea{font-size:.95rem;padding:.65rem .9rem;}
+.plan-rij{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.plan-fout{color:#A04545;font-size:.86rem;font-weight:700;min-height:1.1em;margin:.25rem 0 .6rem;}
+.modal{max-height:92vh;overflow-y:auto;}
 .dag-gesloten{padding:.85rem 1.1rem;margin-bottom:.65rem;border-radius:14px;font-weight:800;font-size:.9rem;color:var(--muted);background:repeating-linear-gradient(135deg,rgba(61,32,7,.035) 0 8px,rgba(61,32,7,.075) 8px 16px);}
 .legend-dot.gesloten .legend-pip{background:repeating-linear-gradient(135deg,rgba(61,32,7,.15) 0 3px,rgba(61,32,7,.35) 3px 6px);opacity:1;}
 .zaal-hint{margin-bottom:1.5rem;display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;}
@@ -201,7 +213,7 @@ function render(){
   var mijn=mijnSlotIds(), vandaag=isoDate(new Date()), n=0;
   var dagen=[0,1,2,3,4,5,6].map(function(i){return addDays(weekStart,i);});
   var perDag=dagen.map(slotsVoorDag);
-  var zaal=magZaalHuren(user);
+  var plan=magInplannen(user),zaal=magZaalHuren(user)&&!plan;
 
   // Desktop: uren × dagen
   var h='<div class="r-head"></div>'+dagen.map(function(d){
@@ -211,9 +223,9 @@ function render(){
     h+='<div class="r-uur">'+pad(u)+':00</div>';
     perDag.forEach(function(slots,di){
       var dicht=isGesloten(dagen[di],u*60,u*60+60),eerste=dicht&&(u===UUR_START||!isGesloten(dagen[di],(u-1)*60,u*60));
-      if(dicht){h+='<div class="r-cel gesloten">'+(eerste?'<div class="gesloten-lbl">🔒 Gesloten</div>':'')+'</div>';return;}
+      if(dicht){h+='<div class="r-cel gesloten">'+(eerste?'<div class="gesloten-lbl">🔒 Gesloten</div>':'')+(plan?beheerCel(dagen[di],u):'')+'</div>';return;}
       h+='<div class="r-cel">'+slots.filter(function(s){return +s.tijd.slice(0,2)===u;}).map(function(s){return slotKnop(s,mijn,n++);}).join('')+
-        (zaal?zaalKnop(zaalSlot(dagen[di],u),mijn,0):'')+'</div>';
+        (plan?beheerCel(dagen[di],u):zaal?zaalKnop(zaalSlot(dagen[di],u),mijn,0):'')+'</div>';
     });
   }
   document.getElementById('rooster').innerHTML=h;
@@ -223,6 +235,9 @@ function render(){
     return '<button class="dag-pill'+(i===gekozenDag?' active':'')+'" onclick="kiesDag('+i+')">'+DAGEN_KORT[d.getDay()]+'<b>'+d.getDate()+'</b></button>';
   }).join('')+'</div>';
   var items=perDag[gekozenDag].map(function(s){return {tijd:s.tijd,html:function(i){return slotKnop(s,mijn,i);}};});
+  if(plan){var dg=dagen[gekozenDag];
+    items.push({tijd:'00:00',html:function(){return '<button class="dag-plan" onclick="openInplannen(\''+isoDate(dg)+'\','+UUR_START*60+')">🗓️ + Activiteit inplannen op deze dag</button>';}});
+    zaalGebruikOp(dg,0,1440).forEach(function(z){items.push({tijd:z.tijd,html:function(){return zaalGebruikKnop(z);}});});}
   if(zaal)for(var zu=UUR_START;zu<=UUR_EINDE;zu++){(function(zs){if(zs)items.push({tijd:zs.tijd,html:function(i){return zaalKnop(zs,mijn,i);}});})(zaalSlot(dagen[gekozenDag],zu));}
   geslotenBlokken(dagen[gekozenDag]).forEach(function(g){
     var tekst=g[0]===UUR_START?'🔒 Gesloten tot '+pad(g[1])+':00':'🔒 Gesloten vanaf '+pad(g[0])+':00';
@@ -246,7 +261,7 @@ function renderMijn(){
   (lijst.length?lijst.map(function(b){
     var s=b.slot,ok=isBevestigd(b),actie;
     if(!ok)actie='<a href="betalen.html?booking='+b.id+'">Betalen →</a><button class="res-annuleer" onclick="annuleer(\''+b.id+'\')">Annuleren</button>';
-    else if(magZelfAnnuleren(b,s))actie='<button class="res-annuleer" onclick="annuleer(\''+b.id+'\')">Annuleren</button>';
+    else if(magZelfAnnuleren(b,s))actie='<button class="res-annuleer" onclick="annuleer(\''+b.id+'\')">'+(b.status==='intern'?'Verwijderen':'Annuleren')+'</button>';
     else actie='<a href="'+waAnnuleerLink(b,s)+'" target="_blank" rel="noopener" title="Minder dan '+REGELS.annulerenTotUurVooraf+' uur op voorhand">Annuleren via WhatsApp ↗</a>';
     return '<div class="res-rij"><div class="res-info"><b>'+s.les.icon+' '+esc(s.les.naam)+'</b> · '+fmtDatum(s.datum)+' · '+s.tijd+' – '+boekingEind(b,s)+
       (b.voorWie?' · voor '+esc(b.voorWie):'')+'</div>'+
@@ -260,9 +275,95 @@ function annuleer(id){
   if(!confirm('Wil je deze reservatie annuleren?'))return;
   DB.annuleer(id).then(function(){showToast('Reservatie geannuleerd');}).catch(function(e){showToast(e);}).then(herlaad);
 }
+/* ── INPLANNEN DOOR DE BEHEERDER ── */
+// Zaalgebruik (eigen activiteiten + zaalhuur door trainers) dat [van, tot) overlapt
+function zaalGebruikOp(dag,van,tot){
+  var d0=new Date(dag.getFullYear(),dag.getMonth(),dag.getDate()).getTime(),r=[];
+  CACHE.bezet.forEach(function(z){
+    if(z.les!=='zaal')return;var s=(z.start-d0)/60000,e=(z.eind-d0)/60000;if(!(s<tot&&e>van))return;
+    var eigen=z.mijn&&CACHE.mijn.find(function(b){return b.status==='intern'&&new Date(b.slotId.slice(0,16)).getTime()===z.start;});
+    var ander=(CACHE.alle||[]).find(function(b){return /_zaal$/.test(b.slotId)&&new Date(b.slotId.slice(0,16)).getTime()===z.start;});
+    r.push({tijd:pad(Math.floor(s/60))+':'+pad(s%60),eind:pad(Math.floor(e/60))+':'+pad(e%60),eigen:eigen,ander:ander});
+  });
+  return r;
+}
+function zaalGebruikKnop(z){
+  if(z.eigen)return '<button class="slot les-intern" onclick="openActiviteit(\''+z.eigen.id+'\')">'+activiteitIcon(z.eigen.activiteit)+' '+esc(z.eigen.activiteit)+
+    '<small>'+z.tijd+' – '+z.eind+(z.eigen.voorWie?' · '+esc(z.eigen.voorWie):'')+'</small></button>';
+  var p=z.ander&&z.ander.profiel;
+  return '<button class="slot les-zaal" disabled>🏠 '+(p&&p.naam?esc(p.naam):'Zaal gehuurd')+'<small>'+z.tijd+' – '+z.eind+(z.ander&&z.ander.voorWie?' · '+esc(z.ander.voorWie):'')+'</small></button>';
+}
+// Vrije starttijden (per kwartier) op een dag
+function vrijeStarts(dag,vanaf,tot){
+  var r=[];for(var m=vanaf;m<tot;m+=15){var t=new Date(dag.getFullYear(),dag.getMonth(),dag.getDate(),0,m).getTime();
+    if(t>Date.now()&&vrijeDurenBeheer(dag,m).length)r.push(m);}return r;
+}
+function beheerCel(dag,u){
+  var h=zaalGebruikOp(dag,u*60,u*60+60).map(zaalGebruikKnop).join('');
+  var starts=vrijeStarts(dag,u*60,u*60+60);
+  if(starts.length)h+='<button class="slot inplan" onclick="openInplannen(\''+isoDate(dag)+'\','+starts[0]+')">+ Inplannen<small>vanaf '+pad(Math.floor(starts[0]/60))+':'+pad(starts[0]%60)+'</small></button>';
+  return h;
+}
+var planDag=null;
+function openInplannen(dagIso,van){
+  planDag=new Date(dagIso+'T00:00');
+  var starts=vrijeStarts(planDag,UUR_START*60,(UUR_EINDE+1)*60);
+  if(!starts.length){showToast('Geen vrij moment meer op deze dag.');return;}
+  var gekozen=starts.indexOf(van)>=0?van:(starts.find(function(m){return m>=van;})||starts[0]);
+  var el=document.getElementById('modalInhoud');el.className='modal les-intern';
+  el.innerHTML='<div class="modal-top"><button class="modal-close" onclick="sluitModal()" aria-label="Sluiten">✕</button>'+
+    '<div class="modal-icon">🗓️</div><div class="modal-soort">Zaal · enkel voor de beheerder</div><div class="modal-title">Activiteit inplannen</div>'+
+    '<div class="modal-sub">'+fmtDatum(planDag)+'</div></div>'+
+    '<form class="modal-body plan-form" onsubmit="bevestigPlan(event)">'+
+    '<div class="fg"><label for="p-act">Activiteit</label><select id="p-act" onchange="document.getElementById(\'p-andere\').style.display=this.value===\'andere\'?\'block\':\'none\'">'+
+      ACTIVITEITEN.map(function(a){return '<option value="'+esc(a.naam)+'">'+a.icon+' '+esc(a.naam)+'</option>';}).join('')+'<option value="andere">✏️ Andere…</option></select>'+
+      '<input id="p-andere" style="display:none;margin-top:.5rem;" maxlength="60" placeholder="Omschrijving van de activiteit"></div>'+
+    '<div class="plan-rij"><div class="fg"><label for="p-start">Start</label><select id="p-start" onchange="planDuren()">'+
+      starts.map(function(m){return '<option value="'+m+'"'+(m===gekozen?' selected':'')+'>'+pad(Math.floor(m/60))+':'+pad(m%60)+'</option>';}).join('')+'</select></div>'+
+    '<div class="fg"><label for="p-duur">Duur</label><select id="p-duur"></select></div></div>'+
+    '<div class="fg"><label for="p-klant">Klant(en)</label><input id="p-klant" maxlength="200" placeholder="bv. Sarah Janssens, Tom Peeters"></div>'+
+    '<div class="fg"><label for="p-notitie">Notitie (optioneel)</label><textarea id="p-notitie" rows="2" maxlength="500" placeholder="Materiaal, afspraken, …"></textarea></div>'+
+    '<div class="plan-fout" id="p-fout"></div>'+
+    '<button class="btn btn-primary btn-block" type="submit" id="p-knop">🗓️ Inplannen</button>'+
+    '<div class="login-hint">Geen betaling nodig. Enkel jij ziet de details; trainers zien "Zaal bezet".</div></form>';
+  planDuren();document.getElementById('modal').classList.add('open');
+}
+function planDuren(){
+  var m=+document.getElementById('p-start').value,sel=document.getElementById('p-duur');
+  sel.innerHTML=vrijeDurenBeheer(planDag,m).map(function(d){return '<option value="'+d+'"'+(d===60?' selected':'')+'>'+fmtUren(d/60)+' (tot '+eindTijd(pad(Math.floor(m/60))+':'+pad(m%60),d)+')</option>';}).join('');
+}
+function bevestigPlan(e){
+  e.preventDefault();
+  var act=document.getElementById('p-act').value,fout=document.getElementById('p-fout');fout.textContent='';
+  if(act==='andere'){act=document.getElementById('p-andere').value.trim();if(!act){fout.textContent='Geef een omschrijving van de activiteit.';return;}}
+  var m=+document.getElementById('p-start').value,duur=+document.getElementById('p-duur').value;
+  var start=new Date(planDag.getFullYear(),planDag.getMonth(),planDag.getDate(),0,m);
+  var k=document.getElementById('p-knop');k.disabled=true;k.textContent='Even geduld…';
+  DB.planActiviteit(start,duur,act,document.getElementById('p-klant').value.trim(),document.getElementById('p-notitie').value.trim())
+    .then(function(){sluitModal();showToast('✓ Ingepland: '+act);return herlaad();})
+    .catch(function(msg){fout.textContent=msg;k.disabled=false;k.textContent='🗓️ Inplannen';});
+}
+function openActiviteit(id){
+  var b=CACHE.mijn.find(function(x){return x.id===id;});if(!b)return;
+  var s=activiteitSlot(b),el=document.getElementById('modalInhoud');el.className='modal les-intern';
+  el.innerHTML='<div class="modal-top"><button class="modal-close" onclick="sluitModal()" aria-label="Sluiten">✕</button>'+
+    '<div class="modal-icon">'+s.les.icon+'</div><div class="modal-soort">Ingepland door de beheerder</div><div class="modal-title">'+esc(b.activiteit)+'</div>'+
+    '<div class="modal-sub">'+fmtDatum(s.datum)+' · '+s.tijd+' – '+s.eind+'</div></div><div class="modal-body">'+
+    '<div class="detail"><span>Klant(en)</span><b>'+(esc(b.voorWie)||'—')+'</b></div>'+
+    '<div class="detail"><span>Duur</span><b>'+fmtUren(b.duur/60)+'</b></div>'+
+    (b.opmerking?'<div class="detail"><span>Notitie</span><b>'+esc(b.opmerking)+'</b></div>':'')+
+    '<button class="btn btn-outline btn-block" style="margin-top:1.3rem;" onclick="verwijderActiviteit(\''+b.id+'\')">🗑️ Verwijderen</button></div>';
+  document.getElementById('modal').classList.add('open');
+}
+function verwijderActiviteit(id){
+  if(!confirm('Deze activiteit verwijderen?'))return;
+  DB.annuleer(id).then(function(){sluitModal();showToast('Activiteit verwijderd');}).catch(function(e){showToast(e);}).then(herlaad);
+}
+
 // Bezetting van de getoonde week en eigen reservaties opnieuw ophalen uit de database
 function herlaad(){
-  return Promise.all([DB.laadBezetting(weekStart,addDays(weekStart,7)),DB.laadMijn()])
+  return Promise.all([DB.laadBezetting(weekStart,addDays(weekStart,7)),DB.laadMijn(),
+      magInplannen(user)?DB.admin.boekingen(weekStart,addDays(weekStart,7)).then(function(d){CACHE.alle=d;}):null])
     .catch(function(e){showToast('⚠️ '+e);}).then(render);
 }
 
@@ -311,13 +412,14 @@ klaar(function(u){
 user=u;
 document.getElementById('legend').innerHTML=Object.keys(LESSEN).map(function(k){
   return '<div class="legend-dot les-'+k+'"><div class="legend-pip"></div>'+esc(LESSEN[k].naam)+'</div>';
-}).join('')+(magZaalHuren(user)?'<div class="legend-dot les-zaal"><div class="legend-pip"></div>Zaal huren</div>':'')+'<div class="legend-dot gesloten"><div class="legend-pip"></div>Gesloten</div>';
+}).join('')+(magInplannen(user)?'<div class="legend-dot les-intern"><div class="legend-pip"></div>Ingepland (beheer)</div><div class="legend-dot les-zaal"><div class="legend-pip"></div>Zaalhuur</div>':magZaalHuren(user)?'<div class="legend-dot les-zaal"><div class="legend-pip"></div>Zaal huren</div>':'')+'<div class="legend-dot gesloten"><div class="legend-pip"></div>Gesloten</div>';
 
 // Uitleg over zaalhuur voor professionals
 (function(){
   var el=document.getElementById('zaalHint'),html='';
   if(!user)html='🏠 <span>Ben je <b>personal trainer, kinesist of lesgever</b>? <a href="login.html?next=boeken.html">Meld je aan</a> om een vrij uur in de zaal te huren voor je eigen klanten.</span>';
   else if(wachtOpGoedkeuring(user))html='⏳ <span>Je account als <b>'+esc(getType(user.type).label.toLowerCase())+'</b> wacht op goedkeuring door La Vie en Rose. Tot dan kan je lessen boeken zoals elk lid; daarna kan je ook de zaal huren.</span>';
+  else if(magInplannen(user))html='🗓️ <span>Als beheerder kan je op elk vrij moment een <b>activiteit inplannen</b> in de zaal, ook buiten de openingsuren en zonder betaling. Klik op <b>+ Inplannen</b> in het rooster (op smartphone bovenaan de dag).</span>';
   else if(magZaalHuren(user))html='🏠 <span>Als '+esc(getType(user.type).label.toLowerCase())+' kan je elk vrij uur <b>de zaal huren</b> ('+fmtEuro(ZAAL.prijs)+'/uur, 1 tot 2 uur). Klik op <b>+ Zaal huren</b> in het rooster.</span>';
   if(html){el.innerHTML=html;el.style.display='flex';}
 })();
