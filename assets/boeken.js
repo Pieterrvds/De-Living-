@@ -9,16 +9,16 @@
 var LESSEN={
   yoga:{naam:'Yoga',kort:'Yoga',icon:'🧘',duur:60,trainer:'Gwen Deryck',max:16,prijs:15,soort:'Groepsles'},
   kine:{naam:'Kinesitherapie',kort:'Kine',icon:'💆',duur:45,trainer:'Onze kinesist',max:1,prijs:40,soort:'Individuele begeleiding'},
-  pt:{naam:'Personal Training',kort:'PT',icon:'💪',duur:60,trainer:'Je coach',max:1,prijs:50,soort:'1-op-1 training'}
+  pt:{naam:'Personal Training',kort:'PT',icon:'💪',duur:60,trainer:'Pieter',max:1,prijs:60,soort:'1-op-1 training'}
 };
 // Weekdag (0 = zondag … 6 = zaterdag) → lessen. Zelfde rooster als op index.html.
 var ROOSTER={
-  1:[['09:00','yoga'],['18:00','pt']],
-  2:[['09:00','kine'],['19:00','pt']],
-  3:[['12:00','yoga'],['17:00','kine'],['19:30','yoga']],
-  4:[['07:30','pt'],['16:00','kine']],
-  5:[['07:00','yoga'],['12:00','pt']],
-  6:[['10:00','yoga'],['11:30','pt']],
+  1:[['09:00','yoga'],['18:00','pt']],                           // PT: maandag 18–19u (Pieter)
+  2:[['09:00','kine']],
+  3:[['12:00','yoga'],['17:00','kine'],['18:00','pt'],['19:30','yoga']],   // PT: woensdag 18–19u
+  4:[['16:00','kine']],
+  5:[['07:00','yoga']],
+  6:[['10:00','yoga'],['16:00','pt']],                           // PT: zaterdag 16–17u
   0:[['10:00','yoga'],['11:30','kine']]
 };
 var UUR_START=7, UUR_EINDE=21;
