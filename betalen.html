@@ -8,10 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700;800&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/boeken.js"></script>
-<script>
-  // Toegangscontrole: niet aangemeld → eerst naar de aanmeldpagina.
-  var user=requireLogin();
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+<script src="assets/db.js"></script>
 <style>
 .pay-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:2rem;align-items:start;}
 .pay-card{padding:2.25rem;}
@@ -90,7 +88,7 @@ function toon(html){document.getElementById('inhoud').innerHTML=html;reveal();}
 var klok=null,wasOpen=false;
 function render(){
   // Alleen eigen reservaties tonen (getBookings laat vervallen reservaties al weg).
-  booking=getBookings().find(function(b){return b.id===bookingId&&b.userId===user.id;});
+  booking=getBookings().find(function(b){return b.id===bookingId;});
   slot=booking&&parseSlot(booking.slotId);
   clearInterval(klok);
   if(!booking||!slot){
@@ -140,20 +138,31 @@ function updateKnop(){
 function betaal(){
   if(!getBookings().some(function(b){return b.id===booking.id;}))return render();
   if(gekozen()==='bar'){
-    var all=getBookings();all.forEach(function(b){if(b.id===booking.id)b.status='bevestigd';});saveBookings(all);
-    showToast('✓ Bevestigd! Je betaalt aan de bar. 🌹');render();return;
+    var k=document.getElementById('betaalKnop');k.disabled=true;k.textContent='Even geduld…';
+    DB.bevestigBar(booking.id)
+      .then(function(){showToast('✓ Bevestigd! Je betaalt aan de bar. 🌹');})
+      .catch(function(e){showToast(e);})
+      .then(DB.laadMijn).then(render);
+    return;
   }
   // TODO: hier komt later de koppeling met de betaalprovider (bv. Mollie of Stripe).
   showToast('💡 Online betalen is nog niet actief. Kies "Betalen aan de bar".');
 }
 function annuleer(){
   if(!confirm('Wil je deze reservatie annuleren?'))return;
-  clearInterval(klok);annuleerBoeking(booking.id);
-  showToast('Reservatie geannuleerd');
-  setTimeout(function(){location.href='boeken.html';},700);
+  clearInterval(klok);
+  DB.annuleer(booking.id)
+    .then(function(){showToast('Reservatie geannuleerd');setTimeout(function(){location.href='boeken.html';},700);})
+    .catch(function(e){showToast(e);});
 }
 
-if(user){renderNav();render();}
+// Toegangscontrole: niet aangemeld → eerst naar de aanmeldpagina.
+var user=null;
+klaar(function(u){
+  user=u;if(!requireLogin())return;
+  renderNav();
+  DB.laadMijn().then(render).catch(function(e){toon('<div class="card fout-card"><h2 class="card-title">Geen verbinding</h2><p>'+esc(e)+'</p></div>');});
+});
 </script>
 </body>
 </html>

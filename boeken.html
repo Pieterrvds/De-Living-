@@ -108,6 +108,8 @@
 <body>
 <script src="assets/site.js"></script>
 <script src="assets/boeken.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+<script src="assets/db.js"></script>
 
 <header class="page-hero" style="--ph-img:url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1800&q=85');">
   <div class="ph-bg"></div><div class="ph-mid"></div>
@@ -138,7 +140,7 @@
             <button class="kal-nb rond" id="nextWeek" onclick="wijzigWeek(1)" aria-label="Volgende week">&#8250;</button>
           </div>
         </div>
-        <div class="rooster" id="rooster"></div>
+        <div class="rooster" id="rooster"><div style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--muted);">Rooster laden…</div></div>
         <div class="dag-lijst" id="dagLijst"></div>
         <div class="rooster-foot">
           <div class="legend" id="legend"></div>
@@ -164,7 +166,7 @@ var MAX_WEKEN_VOORUIT=4;
 var huidigeMaandag=mondayOf(new Date());
 var weekStart=huidigeMaandag;
 var gekozenDag=(new Date().getDay()+6)%7; // 0 = maandag
-var user=currentUser();
+var user=null;   // ingevuld zodra de sessie geladen is (klaar)
 
 function mijnSlotIds(){
   if(!user)return {};
@@ -183,7 +185,7 @@ function slotKnop(slot,mijn,i){
 function zaalKnop(slot,mijn,i){
   if(!slot)return '';
   var v=naarMin(slot.tijd),b=zaalBoekingOp(slot.datum,v,v+60);
-  if(b&&user&&b.userId===user.id)return '<button class="slot les-zaal mine" onclick="openSlot(\''+b.slotId+'\')"><span class="tag">✓</span>🏠 Zaal gehuurd<small>'+b.slotId.slice(11,16)+' – '+boekingEind(b)+'</small></button>';
+  if(b&&b.mijn)return '<button class="slot les-zaal mine" onclick="openSlot(\''+b.slotId+'\')"><span class="tag">✓</span>🏠 Zaal gehuurd<small>'+b.slotId.slice(11,16)+' – '+boekingEind(b)+'</small></button>';
   if(b)return '<button class="slot les-zaal" disabled>🏠 Zaal bezet<small>'+slot.tijd+' – '+slot.eind+'</small></button>';
   if(isTeLaat(slot))return '';
   return '<button class="slot les-zaal zaal-vrij" onclick="openSlot(\''+slot.id+'\')">+ Zaal huren<small>'+slot.tijd+' – '+slot.eind+'</small></button>';
@@ -253,10 +255,15 @@ function renderMijn(){
   '<div class="res-regels">Zelf annuleren kan tot '+REGELS.annulerenTotUurVooraf+' uur op voorhand, daarna via WhatsApp. Onbetaalde reservaties vervallen na '+REGELS.betaaltermijnMin+' minuten.</div>';
 }
 function annuleer(id){
-  var b=getBookings().find(function(x){return x.id===id;});if(!b)return render();
+  var b=getBookings().find(function(x){return x.id===id;});if(!b)return herlaad();
   if(isBevestigd(b)&&!magZelfAnnuleren(b)){showToast('Annuleren kan nu enkel nog via WhatsApp.');return render();}
   if(!confirm('Wil je deze reservatie annuleren?'))return;
-  annuleerBoeking(id);showToast('Reservatie geannuleerd');render();
+  DB.annuleer(id).then(function(){showToast('Reservatie geannuleerd');}).catch(function(e){showToast(e);}).then(herlaad);
+}
+// Bezetting van de getoonde week en eigen reservaties opnieuw ophalen uit de database
+function herlaad(){
+  return Promise.all([DB.laadBezetting(weekStart,addDays(weekStart,7)),DB.laadMijn()])
+    .catch(function(e){showToast('⚠️ '+e);}).then(render);
 }
 
 function openSlot(id){
@@ -293,11 +300,15 @@ function reserveer(id){
   location.href=currentUser()?doel:'login.html?next='+encodeURIComponent(doel);
 }
 
-function wijzigWeek(n){weekStart=addDays(weekStart,7*n);gekozenDag=0;render();}
-function naarVandaag(){weekStart=huidigeMaandag;gekozenDag=(new Date().getDay()+6)%7;render();}
+function wijzigWeek(n){weekStart=addDays(weekStart,7*n);gekozenDag=0;herlaad();}
+function naarVandaag(){weekStart=huidigeMaandag;gekozenDag=(new Date().getDay()+6)%7;herlaad();}
+// Terug naar dit tabblad? Dan de bezetting verversen.
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&window.DB)herlaad();});
 function kiesDag(i){gekozenDag=i;render();}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')sluitModal();});
 
+klaar(function(u){
+user=u;
 document.getElementById('legend').innerHTML=Object.keys(LESSEN).map(function(k){
   return '<div class="legend-dot les-'+k+'"><div class="legend-pip"></div>'+esc(LESSEN[k].naam)+'</div>';
 }).join('')+(magZaalHuren(user)?'<div class="legend-dot les-zaal"><div class="legend-pip"></div>Zaal huren</div>':'')+'<div class="legend-dot gesloten"><div class="legend-pip"></div>Gesloten</div>';
@@ -306,11 +317,13 @@ document.getElementById('legend').innerHTML=Object.keys(LESSEN).map(function(k){
 (function(){
   var el=document.getElementById('zaalHint'),html='';
   if(!user)html='🏠 <span>Ben je <b>personal trainer, kinesist of lesgever</b>? <a href="login.html?next=boeken.html">Meld je aan</a> om een vrij uur in de zaal te huren voor je eigen klanten.</span>';
+  else if(wachtOpGoedkeuring(user))html='⏳ <span>Je account als <b>'+esc(getType(user.type).label.toLowerCase())+'</b> wacht op goedkeuring door La Vie en Rose. Tot dan kan je lessen boeken zoals elk lid; daarna kan je ook de zaal huren.</span>';
   else if(magZaalHuren(user))html='🏠 <span>Als '+esc(getType(user.type).label.toLowerCase())+' kan je elk vrij uur <b>de zaal huren</b> ('+fmtEuro(ZAAL.prijs)+'/uur, 1 tot 2 uur). Klik op <b>+ Zaal huren</b> in het rooster.</span>';
   if(html){el.innerHTML=html;el.style.display='flex';}
 })();
 renderNav();
-render();
+herlaad();
+});
 </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 /* La Vie en Rose – gedeelde logica voor het boekingssysteem.
-   LET OP: de site heeft (nog) geen server. Accounts, sessie en reservaties
-   worden in de browser (localStorage) bewaard. Dit is een werkend prototype,
-   geen echte beveiliging: koppel later een backend voor echte accounts. */
+   Bovenaan staan alle instellingen (lessen, rooster, openingsuren, regels).
+   Accounts en reservaties staan in de database (Supabase): zie assets/db.js.
+   Dit bestand werkt ook zonder db.js (de hoofdpagina gebruikt enkel het rooster). */
 
 /* ── LESSEN & ROOSTER ── (prijzen zijn voorlopige voorbeeldprijzen)
    Dit is de enige plek waar het rooster staat: index.html en boeken.html lezen het hier.
@@ -92,22 +92,18 @@ var TYPES=[
   {id:'lesgever',label:'Lesgever',icon:'📣',pro:true,zaal:true}
 ];
 function getType(id){return TYPES.find(function(t){return t.id===id;})||TYPES[0];}
-function magZaalHuren(user){return !!(user&&getType(user.type).zaal);}
+// Professionals krijgen hun extra rechten pas na goedkeuring door de beheerder.
+function isGoedgekeurdePro(user){return !!(user&&getType(user.type).pro&&user.goedgekeurd);}
+function magZaalHuren(user){return !!(user&&getType(user.type).zaal&&user.goedgekeurd);}
+function wachtOpGoedkeuring(user){return !!(user&&getType(user.type).pro&&!user.goedgekeurd);}
 
 var DAGEN=['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
 var DAGEN_KORT=['Zo','Ma','Di','Wo','Do','Vr','Za'];
 var MAANDEN=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 
-/* ── OPSLAG ── */
-// Gegevens staan onder 'lvr_…'. Oudere versies gebruikten 'living_…': die worden één keer overgezet.
-(function(){try{['users','session','bookings'].forEach(function(k){
-  var oud=localStorage.getItem('living_'+k);if(oud===null)return;
-  if(localStorage.getItem('lvr_'+k)===null)localStorage.setItem('lvr_'+k,oud);
-  localStorage.removeItem('living_'+k);
-});}catch(e){}})();
-function load(key,def){try{var v=localStorage.getItem(key);return v?JSON.parse(v):def;}catch(e){return def;}}
-function save(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+/* ── GEGEVENS UIT DE DATABASE ── (gevuld door assets/db.js)
+   bezet: bezetting van alle leden (enkel aantallen) · mijn: eigen reservaties */
+var CACHE={bezet:[],mijn:[]};
 
 /* ── DATUM & SLOTS ── */
 function pad(n){return(n<10?'0':'')+n;}
@@ -147,14 +143,15 @@ function zaalVrij(datum,uur){
   });
 }
 function zaalSlot(datum,uur){return zaalVrij(datum,uur)?parseSlot(slotId(datum,pad(uur)+':00','zaal')):null;}
-// Zaalreservatie die [van, tot) (minuten) op die dag overlapt, of null.
+// Zaalhuur (van wie dan ook) die [van, tot) (minuten) op die dag overlapt, of null.
 function zaalBoekingOp(datum,van,tot){
-  var dag=isoDate(datum);
-  return getBookings().find(function(b){
-    if(b.slotId.slice(0,10)!==dag||!/_zaal$/.test(b.slotId))return false;
-    var s=naarMin(b.slotId.slice(11,16)),e=s+(b.duur||60);
+  var dag0=new Date(datum.getFullYear(),datum.getMonth(),datum.getDate()).getTime();
+  var r=CACHE.bezet.find(function(b){
+    if(b.les!=='zaal')return false;
+    var s=(b.start-dag0)/60000,e=(b.eind-dag0)/60000;
     return s<tot&&e>van;
-  })||null;
+  });
+  return r?{slotId:slotIdVan(r.start,'zaal'),duur:Math.round((r.eind-r.start)/60000),mijn:r.mijn}:null;
 }
 // Welke duren (minuten) kan de zaal vanaf dit uur gehuurd worden?
 function zaalDurenVanaf(datum,uur){
@@ -178,56 +175,20 @@ function lessenPerWeek(){
 function slotsVoorDag(datum){
   return (ROOSTER[datum.getDay()]||[]).map(function(r){return parseSlot(slotId(datum,r[0],r[1]));}).filter(Boolean);
 }
-// Gesimuleerde bezetting door andere leden + echte reservaties in deze browser.
+// Bezetting van een les of zaaluur volgens de database.
 function bezetting(slot){
-  var h=0;for(var i=0;i<slot.id.length;i++){h=(h*31+slot.id.charCodeAt(i))>>>0;}
-  var basis=slot.les.max>1?h%Math.round(slot.les.max*0.85):0;
   if(slot.lesId==='zaal'){var v=naarMin(slot.tijd);return zaalBoekingOp(slot.datum,v,v+60)?1:0;}
-  var eigen=getBookings().filter(function(b){return b.slotId===slot.id;}).reduce(function(s,b){return s+b.plaatsen;},0);
-  return Math.min(slot.les.max,basis+eigen);
+  var t=slot.start.getTime();
+  return Math.min(slot.les.max,CACHE.bezet.reduce(function(n,b){return b.les===slot.lesId&&b.start===t?n+b.aantal:n;},0));
 }
 function vrijePlaatsen(slot){return slot.les.max-bezetting(slot);}
 function isVoorbij(slot){return slot.start.getTime()<Date.now();}
 // Te laat om nog te boeken (minder dan REGELS.boekenTotMinVooraf voor de start)?
 function isTeLaat(slot){return slot.start.getTime()-Date.now()<REGELS.boekenTotMinVooraf*60000;}
 
-/* ── ACCOUNTS & SESSIE ── */
-function getUsers(){return load('lvr_users',[]);}
-function currentUser(){
-  var s=load('lvr_session',null);if(!s)return null;
-  return getUsers().find(function(u){return u.id===s.userId;})||null;
-}
-function hashPw(pw){
-  // SHA-256 waar de browser het toelaat; anders een eenvoudige fallback.
-  // Het voorvoegsel 'living:' blijft bewust staan: anders werken bestaande wachtwoorden niet meer.
-  if(window.crypto&&crypto.subtle&&window.TextEncoder){
-    return crypto.subtle.digest('SHA-256',new TextEncoder().encode('living:'+pw)).then(function(buf){
-      return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
-    });
-  }
-  var h=5381;for(var i=0;i<pw.length;i++){h=((h<<5)+h+pw.charCodeAt(i))>>>0;}
-  return Promise.resolve('d'+h.toString(16));
-}
-function registreer(naam,email,type,pw){
-  email=email.trim().toLowerCase();
-  var users=getUsers();
-  if(users.some(function(u){return u.email===email;}))return Promise.reject('Er bestaat al een account met dit e-mailadres.');
-  return hashPw(pw).then(function(hash){
-    var u={id:uid(),naam:naam.trim(),email:email,type:getType(type).id,pw:hash,aangemaakt:new Date().toISOString()};
-    users.push(u);save('lvr_users',users);save('lvr_session',{userId:u.id});
-    return u;
-  });
-}
-function login(email,pw){
-  email=email.trim().toLowerCase();
-  var u=getUsers().find(function(x){return x.email===email;});
-  if(!u)return Promise.reject('E-mailadres of wachtwoord klopt niet.');
-  return hashPw(pw).then(function(hash){
-    if(hash!==u.pw)throw 'E-mailadres of wachtwoord klopt niet.';
-    save('lvr_session',{userId:u.id});return u;
-  });
-}
-function logout(){try{localStorage.removeItem('lvr_session');}catch(e){}location.href='boeken.html';}
+/* ── ACCOUNT ── */
+// Ingelogde gebruiker (profiel uit de database) of null. Gevuld door assets/db.js.
+function currentUser(){return (window.DB&&DB.user)||null;}
 
 // Alleen interne pagina's toelaten als doorverwijzing (geen open redirect).
 function veiligeNext(next){return /^[a-z]+\.html(\?[\w=&%.:-]*)?$/.test(next||'')?next:'boeken.html';}
@@ -242,12 +203,13 @@ function requireLogin(next){
 /* ── RESERVATIES ── */
 // Onbetaalde reservaties vervallen na REGELS.betaaltermijnMin minuten.
 function vervaltOm(b){return new Date(b.aangemaakt).getTime()+REGELS.betaaltermijnMin*60000;}
+// Eigen reservaties (vervallen onbetaalde reservaties tellen niet meer mee).
 function getBookings(){
-  var alle=load('lvr_bookings',[]),nu=Date.now();
-  var geldig=alle.filter(function(b){return !(b.status==='wacht-op-betaling'&&vervaltOm(b)<=nu);});
-  if(geldig.length!==alle.length)save('lvr_bookings',geldig);
-  return geldig;
+  var nu=Date.now();
+  return CACHE.mijn.filter(function(b){return !(b.status==='wacht-op-betaling'&&vervaltOm(b)<=nu);});
 }
+// 'YYYY-MM-DDTHH:MM_les' voor een tijdstip (lokale tijd)
+function slotIdVan(ms,les){var d=new Date(ms);return isoDate(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+'_'+les;}
 function isBevestigd(b){return b.status==='betaald'||b.status==='bevestigd';}
 function statusLabel(b){return b.status==='betaald'?'Betaald':b.status==='bevestigd'?'Bevestigd · betalen aan de bar':'Wacht op betaling';}
 function boekingDuur(b,slot){return b.duur||(slot||parseSlot(b.slotId)).les.duur;}
@@ -264,19 +226,31 @@ function magZelfAnnuleren(b,slot){
   slot=slot||parseSlot(b.slotId);
   return !isBevestigd(b)||slot.start.getTime()-Date.now()>=REGELS.annulerenTotUurVooraf*3600000;
 }
-function annuleerBoeking(id){saveBookings(getBookings().filter(function(b){return b.id!==id;}));}
 function waAnnuleerLink(b,slot){
   slot=slot||parseSlot(b.slotId);
   var t='Hallo! Ik wil graag mijn reservatie annuleren: '+slot.les.naam+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.';
   return 'https://wa.me/'+REGELS.whatsapp+'?text='+encodeURIComponent(t);
 }
 function fmtUren(u){return (Math.round(u*100)/100).toString().replace('.',',')+' uur';}
-function saveBookings(b){save('lvr_bookings',b);}
 function mijnBookings(user){
   return getBookings().filter(function(b){return b.userId===user.id;})
     .map(function(b){return Object.assign({},b,{slot:parseSlot(b.slotId)});})
     .filter(function(b){return b.slot;})
     .sort(function(a,b){return a.slot.start-b.slot.start;});
+}
+
+// Instellingen voor de database (zelfde vorm als in supabase/schema.sql).
+// De beheerpagina stuurt dit naar de database, zodat de server dezelfde regels gebruikt.
+function configVoorDatabase(){
+  var m=function(o,f){var r={};Object.keys(o).forEach(function(k){r[k]=f(o[k],k);});return r;};
+  return {
+    lessen:m(LESSEN,function(l){return {naam:l.naam,duur:l.duur,max:l.max,prijs:l.prijs};}),
+    rooster:ROOSTER,openingsuren:OPENINGSUREN,gesloten:GESLOTEN,
+    regels:{betaaltermijnMin:REGELS.betaaltermijnMin,boekenTotMinVooraf:REGELS.boekenTotMinVooraf,
+      annulerenTotUurVooraf:REGELS.annulerenTotUurVooraf,maxUrenPerWeek:REGELS.maxUrenPerWeek,zaalDuren:REGELS.zaalDuren},
+    zaal:{prijs:ZAAL.prijs},
+    types:TYPES.reduce(function(r,t){r[t.id]={pro:!!t.pro,zaal:!!t.zaal};return r;},{})
+  };
 }
 
 /* ── UI HELPERS ── */
@@ -287,8 +261,12 @@ function typeBadge(user){var t=getType(user.type);return '<span class="type-badg
 function renderNav(){
   var el=document.getElementById('navRight');if(!el)return;
   var u=currentUser();
+  var nav=document.getElementById('nav');if(nav)nav.classList.toggle('met-gebruiker',!!u);
+  var mob=document.getElementById('mobMenu');
+  if(mob&&u&&u.isAdmin&&!document.getElementById('mobBeheer'))mob.insertAdjacentHTML('afterbegin','<a href="beheer.html" id="mobBeheer">⚙️ Beheer</a>');
   if(u){
-    el.innerHTML='<div class="user-chip"><div class="user-avatar">'+esc(initialen(u.naam))+'</div>'+
+    el.innerHTML=(u.isAdmin?'<a class="nav-pill ghost nav-beheer" href="beheer.html">⚙️ Beheer</a>':'')+
+      '<div class="user-chip"><div class="user-avatar">'+esc(initialen(u.naam))+'</div>'+
       '<div class="user-meta"><div class="user-name">'+esc(u.naam)+'</div>'+typeBadge(u)+'</div></div>'+
       '<button class="nav-pill ghost" onclick="logout()">Afmelden</button>';
   }else{

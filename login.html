@@ -26,6 +26,9 @@
 .type-choice input:checked+label{border-color:var(--rose-d);background:var(--rose-pale);color:var(--rose-d);font-weight:800;box-shadow:0 4px 14px rgba(192,120,120,.18);}
 .type-choice input:focus-visible+label{outline:2px solid var(--rose-d);outline-offset:2px;}
 .switch-hint{text-align:center;font-size:.88rem;color:var(--muted);margin-top:1.1rem;}
+.pane-tekst{color:var(--espresso2);line-height:1.7;margin-bottom:1.25rem;}
+.bericht-ic{font-size:2.4rem;margin-bottom:.5rem;}
+.tabs.verborgen{display:none;}
 .switch-hint a{color:var(--rose-d);font-weight:800;cursor:pointer;text-decoration:none;}
 .side-title{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:700;font-style:italic;color:var(--espresso);line-height:1.15;margin-bottom:1rem;}
 .side-lead{color:var(--espresso2);line-height:1.85;font-size:1.02rem;margin-bottom:1.75rem;}
@@ -41,6 +44,8 @@
 <body>
 <script src="assets/site.js"></script>
 <script src="assets/boeken.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+<script src="assets/db.js"></script>
 
 <header class="page-hero" style="--ph-img:url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1800&q=85');">
   <div class="ph-bg"></div><div class="ph-mid"></div>
@@ -71,9 +76,36 @@
           <div class="fg"><label for="l-email">E-mail</label><input type="email" id="l-email" autocomplete="email" placeholder="jouw@email.be" required></div>
           <div class="fg"><label for="l-pw">Wachtwoord</label><input type="password" id="l-pw" autocomplete="current-password" required></div>
           <div class="form-error" id="l-fout"></div>
-          <button class="btn btn-primary btn-block" type="submit">Aanmelden 🌹</button>
-          <div class="switch-hint">Nog geen account? <a onclick="toonTab('registreer')">Maak er een aan</a></div>
+          <button class="btn btn-primary btn-block" type="submit" id="l-knop">Aanmelden 🌹</button>
+          <div class="switch-hint"><a onclick="toonPane('vergeten')">Wachtwoord vergeten?</a></div>
+          <div class="switch-hint" style="margin-top:.4rem;">Nog geen account? <a onclick="toonTab('registreer')">Maak er een aan</a></div>
         </form>
+
+        <form class="pane" id="pane-vergeten" onsubmit="doeVergeten(event)">
+          <h2 class="card-title">Wachtwoord vergeten</h2>
+          <p class="pane-tekst">Vul je e-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.</p>
+          <div class="fg"><label for="v-email">E-mail</label><input type="email" id="v-email" autocomplete="email" placeholder="jouw@email.be" required></div>
+          <div class="form-error" id="v-fout"></div>
+          <button class="btn btn-primary btn-block" type="submit" id="v-knop">Stuur de link</button>
+          <div class="switch-hint"><a onclick="toonTab('login')">← Terug naar aanmelden</a></div>
+        </form>
+
+        <form class="pane" id="pane-herstel" onsubmit="doeHerstel(event)">
+          <h2 class="card-title">Kies een nieuw wachtwoord</h2>
+          <div class="form-row">
+            <div class="fg"><label for="h-pw">Nieuw wachtwoord</label><input type="password" id="h-pw" autocomplete="new-password" minlength="6" required></div>
+            <div class="fg"><label for="h-pw2">Herhaal</label><input type="password" id="h-pw2" autocomplete="new-password" minlength="6" required></div>
+          </div>
+          <div class="form-error" id="h-fout"></div>
+          <button class="btn btn-primary btn-block" type="submit">Wachtwoord opslaan</button>
+        </form>
+
+        <div class="pane" id="pane-bericht">
+          <div class="bericht-ic">✉️</div>
+          <h2 class="card-title" id="b-titel">Bijna klaar!</h2>
+          <p class="pane-tekst" id="b-tekst"></p>
+          <div class="switch-hint"><a onclick="toonTab('login')">← Naar aanmelden</a></div>
+        </div>
 
         <form class="pane" id="pane-registreer" onsubmit="doeRegistreer(event)">
           <div class="fg"><label for="r-naam">Naam</label><input type="text" id="r-naam" autocomplete="name" placeholder="Voornaam Achternaam" required></div>
@@ -87,7 +119,7 @@
             <div class="fg"><label for="r-pw2">Herhaal wachtwoord</label><input type="password" id="r-pw2" autocomplete="new-password" minlength="6" required></div>
           </div>
           <div class="form-error" id="r-fout"></div>
-          <button class="btn btn-primary btn-block" type="submit">Account maken &amp; verder</button>
+          <button class="btn btn-primary btn-block" type="submit" id="r-knop">Account maken &amp; verder</button>
           <div class="switch-hint">Al een account? <a onclick="toonTab('login')">Meld je aan</a></div>
         </form>
       </div>
@@ -95,7 +127,7 @@
       <div class="sr right">
         <p class="eyebrow">Voor iedereen</p>
         <h2 class="side-title">Sporters, therapeuten<br>&amp; coaches</h2>
-        <p class="side-lead">Bij het aanmaken van je account kies je welk type gebruiker je bent. Personal trainers, kinesisten en andere professionals kunnen een uur ook boeken voor hun klant.</p>
+        <p class="side-lead">Bij het aanmaken van je account kies je welk type gebruiker je bent. Professionals worden eerst door La Vie en Rose goedgekeurd; daarna kunnen ze ook boeken voor hun klant en (trainers, kinesisten, lesgevers) de zaal huren.</p>
         <div class="type-list" id="typeLijst"></div>
         <div class="notice sage">🌿 Je eerste les is altijd gratis. Vragen? Stuur ons een berichtje via de <a href="index.html#contact">contactpagina</a>.</div>
       </div>
@@ -105,47 +137,77 @@
 
 <script>
 var next=veiligeNext(new URLSearchParams(location.search).get('next'));
+var herstel=new URLSearchParams(location.search).get('herstel')==='1';
 
-// Al aangemeld? Meteen door.
-if(currentUser())location.replace(next);
 if(next.indexOf('reserveren.html')===0){
   document.getElementById('introTekst').textContent='Je staat op het punt een uur te reserveren. Meld je eerst aan of maak een account, daarna ga je meteen verder.';
 }
-
 document.getElementById('typeKeuzes').innerHTML=TYPES.map(function(t,i){
   return '<div class="type-choice"><input type="radio" name="type" id="type-'+t.id+'" value="'+t.id+'"'+(i===0?' checked':'')+'>'+
     '<label for="type-'+t.id+'">'+t.icon+' '+esc(t.label)+'</label></div>';
 }).join('');
 document.getElementById('typeLijst').innerHTML=TYPES.map(function(t){
-  return '<div class="type-item"><span class="ic">'+t.icon+'</span><span>'+esc(t.label)+'<small>'+(t.pro?'Boek voor jezelf of voor een klant':'Boek je eigen lessen')+'</small></span></div>';
+  return '<div class="type-item"><span class="ic">'+t.icon+'</span><span>'+esc(t.label)+'<small>'+(t.pro?'Na goedkeuring: boek ook voor een klant'+(t.zaal?' en huur de zaal':''):'Boek je eigen lessen')+'</small></span></div>';
 }).join('');
 
+function toonPane(naam){
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('active',p.id==='pane-'+naam);});
+  document.getElementById('tabs').classList.toggle('verborgen',naam!=='login'&&naam!=='registreer');
+}
 function toonTab(t){
   document.getElementById('tabs').classList.toggle('reg',t==='registreer');
-  ['login','registreer'].forEach(function(x){
-    document.getElementById('tab-'+x).classList.toggle('active',x===t);
-    document.getElementById('pane-'+x).classList.toggle('active',x===t);
-  });
+  ['login','registreer'].forEach(function(x){document.getElementById('tab-'+x).classList.toggle('active',x===t);});
+  toonPane(t);
 }
+function bezig(knop,aan,tekst){var k=document.getElementById(knop);if(!k)return;if(aan){k.dataset.t=k.textContent;k.textContent=tekst||'Even geduld…';k.disabled=true;}else{k.textContent=k.dataset.t||k.textContent;k.disabled=false;}}
+function bericht(titel,tekst){document.getElementById('b-titel').textContent=titel;document.getElementById('b-tekst').innerHTML=tekst;toonPane('bericht');}
 
 function doeLogin(e){
   e.preventDefault();
-  var fout=document.getElementById('l-fout');fout.textContent='';
-  login(document.getElementById('l-email').value,document.getElementById('l-pw').value)
+  var fout=document.getElementById('l-fout');fout.textContent='';bezig('l-knop',true);
+  DB.login(document.getElementById('l-email').value,document.getElementById('l-pw').value)
     .then(function(u){showToast('Welkom terug, '+u.naam.split(' ')[0]+'! 🌹');setTimeout(function(){location.href=next;},500);})
-    .catch(function(msg){fout.textContent=msg;});
+    .catch(function(msg){fout.textContent=msg;bezig('l-knop',false);});
 }
-
 function doeRegistreer(e){
   e.preventDefault();
   var fout=document.getElementById('r-fout');fout.textContent='';
   var pw=document.getElementById('r-pw').value;
   if(pw!==document.getElementById('r-pw2').value){fout.textContent='De wachtwoorden komen niet overeen.';return;}
-  var type=(document.querySelector('input[name=type]:checked')||{}).value;
-  registreer(document.getElementById('r-naam').value,document.getElementById('r-email').value,type,pw)
-    .then(function(u){showToast('Welkom bij La Vie en Rose, '+u.naam.split(' ')[0]+'! 🌹');setTimeout(function(){location.href=next;},600);})
+  var type=(document.querySelector('input[name=type]:checked')||{}).value,naam=document.getElementById('r-naam').value,mail=document.getElementById('r-email').value;
+  bezig('r-knop',true);
+  DB.registreer(naam,mail,type,pw,'login.html?next='+encodeURIComponent(next))
+    .then(function(r){
+      bezig('r-knop',false);
+      var pro=getType(type).pro?'<br><br>Je koos <b>'+esc(getType(type).label.toLowerCase())+'</b>: La Vie en Rose keurt je account nog goed. Tot dan kan je lessen boeken zoals elk lid.':'';
+      if(r.bevestigen){bericht('Bevestig je e-mailadres','We stuurden een e-mail naar <b>'+esc(mail.trim())+'</b>. Klik op de link in die mail om je account te activeren; daarna ben je meteen aangemeld.'+pro);return;}
+      showToast('Welkom bij La Vie en Rose, '+naam.trim().split(' ')[0]+'! 🌹');
+      if(pro){bericht('Welkom!','Je account is aangemaakt.'+pro+'<br><br><a class="btn btn-primary" href="'+next+'">Verder</a>');return;}
+      setTimeout(function(){location.href=next;},600);
+    })
+    .catch(function(msg){fout.textContent=msg;bezig('r-knop',false);});
+}
+function doeVergeten(e){
+  e.preventDefault();
+  var fout=document.getElementById('v-fout');fout.textContent='';bezig('v-knop',true);
+  var mail=document.getElementById('v-email').value;
+  DB.wachtwoordVergeten(mail)
+    .then(function(){bericht('Kijk in je mailbox','Als er een account bestaat voor <b>'+esc(mail.trim())+'</b>, kreeg je een e-mail met een link om een nieuw wachtwoord te kiezen.');})
+    .catch(function(msg){fout.textContent=msg;bezig('v-knop',false);});
+}
+function doeHerstel(e){
+  e.preventDefault();
+  var fout=document.getElementById('h-fout');fout.textContent='';
+  var pw=document.getElementById('h-pw').value;
+  if(pw!==document.getElementById('h-pw2').value){fout.textContent='De wachtwoorden komen niet overeen.';return;}
+  DB.nieuwWachtwoord(pw).then(function(){showToast('✓ Je wachtwoord is aangepast');setTimeout(function(){location.href='boeken.html';},700);})
     .catch(function(msg){fout.textContent=msg;});
 }
+
+klaar(function(u){
+  if(herstel||DB.herstel){if(u){toonPane('herstel');return;}bericht('Link verlopen','Deze link om je wachtwoord te herstellen is niet meer geldig. Vraag een nieuwe aan via "Wachtwoord vergeten?".');return;}
+  if(u)location.replace(next);   // al aangemeld (bv. na de bevestigingslink) → meteen door
+});
 </script>
 </body>
 </html>

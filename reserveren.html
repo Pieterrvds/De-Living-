@@ -8,10 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700;800&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/boeken.js"></script>
-<script>
-  // Toegangscontrole: niet aangemeld → eerst naar de aanmeldpagina.
-  var user=requireLogin();
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+<script src="assets/db.js"></script>
 <style>
 .res-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:2rem;align-items:start;}
 .res-card{padding:2.25rem;}
@@ -77,7 +75,7 @@
 
 <script>
 var slot=parseSlot(new URLSearchParams(location.search).get('slot'));
-var type=user?getType(user.type):null;
+var user=null,type=null;   // ingevuld zodra de sessie geladen is
 var duur=slot?slot.les.duur:60;   // gekozen duur in minuten (enkel te kiezen bij zaalhuur)
 
 function stappen(n){
@@ -100,7 +98,7 @@ function render(){
   if(!slot){foutScherm('Dit uur bestaat niet','We vinden dit uur niet terug in het rooster. Kies een uur in het rooster om te reserveren.');return;}
   if(isVoorbij(slot)){foutScherm('Dit uur is al voorbij','Kies een ander uur in het rooster.');return;}
   if(isTeLaat(slot)){foutScherm('Te laat om nog te boeken','Boeken kan tot '+REGELS.boekenTotMinVooraf+' minuten voor de start. Kies een later uur in het rooster.');return;}
-  if(isZaal()&&!magZaalHuren(user)){foutScherm('Zaalhuur is voor professionals','De zaal huren kan alleen als personal trainer, kinesist of lesgever. Kies een les in het rooster om te reserveren.');return;}
+  if(isZaal()&&!magZaalHuren(user)){foutScherm('Zaalhuur is voor professionals',wachtOpGoedkeuring(user)?'Je account wacht nog op goedkeuring door La Vie en Rose. Daarna kan je de zaal huren.':'De zaal huren kan alleen als goedgekeurde personal trainer, kinesist of lesgever. Kies een les in het rooster om te reserveren.');return;}
   var bestaand=getBookings().find(function(b){return b.userId===user.id&&b.slotId===slot.id;});
   if(bestaand){
     foutScherm('Je hebt dit uur al gereserveerd',esc(slot.les.naam)+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.',
@@ -135,7 +133,7 @@ function render(){
       }).join('')+'</div></div>';
   }
   // Elke deelnemer boekt zelf: 'voor een klant' enkel bij 1-op-1 sessies en zaalhuur
-  if(type.pro&&slot.les.max===1){
+  if(isGoedgekeurdePro(user)&&slot.les.max===1){
     html+='<div class="fg"><label>Voor wie boek je?</label><div class="voor-keuze">'+
       '<label><input type="radio" name="voor" value="zelf" checked onchange="toggleKlant()"> Voor mezelf</label>'+
       '<label><input type="radio" name="voor" value="klant" onchange="toggleKlant()"> Voor een klant</label></div>'+
@@ -183,14 +181,22 @@ function bevestig(e){
   if(isTeLaat(slot)){fout.textContent='Boeken kan tot '+REGELS.boekenTotMinVooraf+' minuten voor de start.';return;}
   if(vrijePlaatsen(slot)<=0||(isZaal()&&zaalDurenVanaf(slot.datum,+slot.tijd.slice(0,2)).indexOf(duur)<0)){fout.textContent='Dit uur is intussen niet meer vrij.';return;}
   if(duur/60>resterendeUren()+1e-9){fout.textContent='Hiermee kom je boven de '+REGELS.maxUrenPerWeek+' uur per week.';return;}
-  var b={id:uid(),slotId:slot.id,userId:user.id,plaatsen:1,duur:duur,voorWie:voorWie,
-    opmerking:document.getElementById('opm').value.trim(),bedrag:prijs(),
-    status:'wacht-op-betaling',aangemaakt:new Date().toISOString()};
-  var all=getBookings();all.push(b);saveBookings(all);
-  location.href='betalen.html?booking='+b.id;
+  // De database controleert alle regels opnieuw en berekent de prijs
+  var knop=document.querySelector('aside .btn');knop.disabled=true;knop.textContent='Even geduld…';
+  DB.maakBoeking(slot,duur,voorWie,document.getElementById('opm').value.trim())
+    .then(function(b){location.href='betalen.html?booking='+b.id;})
+    .catch(function(msg){fout.textContent=msg;knop.disabled=false;knop.textContent='Verder naar betalen →';});
 }
 
-if(user){renderNav();render();}
+// Toegangscontrole: niet aangemeld → eerst naar de aanmeldpagina.
+klaar(function(u){
+  user=u;if(!requireLogin())return;
+  type=getType(user.type);renderNav();
+  if(!slot)return render();
+  var dag=new Date(slot.datum);
+  Promise.all([DB.laadBezetting(dag,addDays(dag,1)),DB.laadMijn()])
+    .then(render).catch(function(e){foutScherm('Geen verbinding',esc(e));});
+});
 </script>
 </body>
 </html>

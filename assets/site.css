@@ -162,6 +162,10 @@ footer::before{content:'';position:absolute;top:-60px;left:50%;transform:transla
 
 /* ═══════════ RESPONSIVE ═══════════ */
 @media(max-width:1000px){.nav-links{display:none;}.hamburger{display:flex;}}
+/* Aangemeld: naam, afmelden (en beheer) nemen plaats in → eerder het hamburgermenu */
+@media(max-width:1280px){nav.met-gebruiker .nav-links{display:none;}nav.met-gebruiker .hamburger{display:flex;}nav.met-gebruiker .nav-right{margin-left:auto;}}
+@media(max-width:900px){.nav-beheer{display:none!important;}}
+.nav-links a{white-space:nowrap;}
 @media(max-width:900px){
   nav{padding:0 1.25rem;gap:.75rem;}
   .nav-right{margin-left:auto;}

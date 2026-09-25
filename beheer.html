@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Beheer – La Vie en Rose</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700;800&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+.page-hero{padding:8.5rem 2rem 4.5rem;}
+.tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.75rem;}
+.tab{border:1.5px solid var(--border);background:var(--vanilla);color:var(--espresso2);font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:800;padding:.65rem 1.3rem;border-radius:50px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:.5rem;}
+.tab:hover{border-color:var(--rose-d);color:var(--rose-d);}
+.tab.actief{background:var(--rose-d);border-color:var(--rose-d);color:white;box-shadow:0 4px 16px rgba(192,120,120,.35);}
+.teller{background:var(--gold);color:white;border-radius:50px;font-size:.7rem;padding:1px 8px;}
+.tab.actief .teller{background:white;color:var(--rose-d);}
+.paneel{display:none;}
+.paneel.actief{display:block;animation:in .35s cubic-bezier(.22,1,.36,1);}
+@keyframes in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.balk{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem;}
+.balk-l,.balk-r{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;}
+.week-titel{font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:1.15rem;color:var(--espresso);}
+.knop{height:38px;padding:0 1rem;border-radius:50px;border:1.5px solid var(--border);background:var(--vanilla);font-family:'Nunito',sans-serif;font-size:.84rem;font-weight:800;color:var(--espresso2);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem;text-decoration:none;}
+.knop:hover:not(:disabled){border-color:var(--rose-d);color:var(--rose-d);}
+.knop.rond{width:38px;padding:0;justify-content:center;font-size:1.1rem;}
+.knop.groen{background:var(--sage);border-color:var(--sage);color:white;}
+.knop.groen:hover{background:var(--espresso2);border-color:var(--espresso2);color:white;}
+.knop.rood:hover{background:#A04545;border-color:#A04545;color:white;}
+.knop:disabled{opacity:.4;cursor:not-allowed;}
+select.knop{padding-right:.6rem;}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;}
+.kpi{padding:1.1rem 1.25rem;}
+.kpi b{display:block;font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--rose-d);line-height:1.1;}
+.kpi span{font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.04em;}
+.dag{margin-bottom:1.25rem;}
+.dag-kop{font-size:.72rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--rose-d);margin:0 0 .5rem .25rem;}
+.rij{display:grid;grid-template-columns:110px 1.1fr 1.4fr auto;gap:1rem;align-items:center;padding:.9rem 1.25rem;border-bottom:1px solid var(--border);}
+.rij:last-child{border-bottom:none;}
+.rij .uur{font-weight:800;color:var(--espresso);}
+.rij .wat{font-weight:700;color:var(--espresso);}
+.rij .wie{font-size:.9rem;color:var(--espresso2);line-height:1.45;}
+.rij .wie small,.rij .wat small{display:block;color:var(--muted);font-size:.78rem;font-weight:600;}
+.rij .acties{display:flex;align-items:center;gap:.5rem;justify-content:flex-end;flex-wrap:wrap;}
+.status{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:50px;white-space:nowrap;}
+.status.wacht{background:var(--rose-pale);color:var(--rose-d);}
+.status.bevestigd{background:rgba(184,134,42,.14);color:#946A1C;}
+.status.betaald{background:var(--sage-pale);color:var(--sage);}
+.bedrag{font-weight:800;color:var(--espresso);min-width:70px;text-align:right;}
+.leeg{padding:2.5rem;text-align:center;color:var(--muted);font-family:'Playfair Display',serif;font-style:italic;}
+.lid{display:grid;grid-template-columns:minmax(0,1.3fr) 210px minmax(0,1fr);gap:1rem;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--border);}
+.lid:last-child{border-bottom:none;}
+.lid.wacht{background:rgba(251,240,238,.6);}
+.lid .nm{font-weight:800;color:var(--espresso);}
+.lid .em{font-size:.84rem;color:var(--muted);}
+.lid .acties{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+.zoek{height:38px;border-radius:50px;border:1.5px solid var(--border);background:var(--vanilla);padding:0 1rem;font-family:'Nunito',sans-serif;font-size:.9rem;min-width:220px;outline:none;}
+.zoek:focus{border-color:var(--rose-d);}
+.inst{padding:2rem;}
+.inst p{color:var(--espresso2);line-height:1.7;margin-bottom:1rem;}
+.inst pre{background:var(--cream);border-radius:14px;padding:1rem;font-size:.78rem;overflow:auto;max-height:260px;margin:1rem 0;}
+.geen-toegang{padding:3rem 2.5rem;text-align:center;max-width:540px;margin:0 auto;}
+.geen-toegang p{color:var(--espresso2);margin-bottom:1.5rem;line-height:1.7;}
+@media(max-width:900px){
+  .kpis{grid-template-columns:1fr 1fr;}
+  .rij{grid-template-columns:1fr;gap:.35rem;}
+  .rij .acties{justify-content:flex-start;}
+  .lid{grid-template-columns:1fr;}
+  .lid .acties{justify-content:flex-start;}
+}
+</style>
+</head>
+<body>
+<script src="assets/site.js"></script>
+<script src="assets/boeken.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+<script src="assets/db.js"></script>
+
+<header class="page-hero">
+  <div class="ph-bg"></div><div class="ph-mid"></div>
+  <div class="ph-inner">
+    <div class="ph-badge"><div class="badge-dot"></div>Enkel voor de beheerder</div>
+    <h1 class="ph-title"><span class="ph-word" style="animation-delay:.3s;">Beheer</span></h1>
+  </div>
+</header>
+<div class="morph-divider"><svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path id="wavePath" d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#FDF8EE"/></svg></div>
+
+<main>
+  <section class="sec">
+    <div class="inner" id="inhoud"><div class="leeg">Laden…</div></div>
+  </section>
+</main>
+
+<script>
+var weekStart=mondayOf(new Date()),filter='alle',boekingen=[],profielen=[],zoekterm='';
+
+function tabs(actief){
+  var wacht=profielen.filter(wachtOpGoedkeuring).length;
+  return '<div class="tabs">'+[['res','📅 Reservaties'],['leden','👥 Leden'+(wacht?' <span class="teller">'+wacht+'</span>':'')],['inst','⚙️ Instellingen']].map(function(t){
+    return '<button class="tab'+(t[0]===actief?' actief':'')+'" onclick="toonTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>';
+}
+var huidigeTab='res';
+function toonTab(t){huidigeTab=t;render();}
+
+/* ── RESERVATIES ── */
+function laadWeek(){
+  return DB.admin.boekingen(weekStart,addDays(weekStart,7)).then(function(d){
+    var nu=Date.now();   // vervallen onbetaalde reservaties niet tonen
+    boekingen=d.filter(function(b){return !(b.status==='wacht-op-betaling'&&vervaltOm(b)<=nu);});
+  });
+}
+function wijzigWeek(n){weekStart=n===0?mondayOf(new Date()):addDays(weekStart,7*n);laadWeek().then(render).catch(fout);}
+function zichtbaar(){return boekingen.filter(function(b){return filter==='alle'||b.status===filter;});}
+function lesInfo(b){var s=parseSlot(b.slotId);var lesId=b.slotId.split('_')[1];var les=lesId==='zaal'?ZAAL:LESSEN[lesId]||{naam:lesId,icon:'•'};return {les:les,tijd:b.slotId.slice(11,16),datum:new Date(b.slotId.slice(0,10)+'T00:00'),s:s};}
+
+function paneelReservaties(){
+  var eind=addDays(weekStart,6),lijst=zichtbaar();
+  var som=function(f){return lijst.reduce(function(n,b){return n+f(b);},0);};
+  var zaalUren=som(function(b){return /_zaal$/.test(b.slotId)?b.duur/60:0;});
+  var ontvangen=som(function(b){return b.status==='betaald'?b.bedrag:0;});
+  var open=som(function(b){return b.status!=='betaald'?b.bedrag:0;});
+  var h='<div class="balk"><div class="balk-l"><button class="knop rond" onclick="wijzigWeek(-1)" aria-label="Vorige week">‹</button>'+
+    '<button class="knop" onclick="wijzigWeek(0)">Deze week</button><button class="knop rond" onclick="wijzigWeek(1)" aria-label="Volgende week">›</button>'+
+    '<span class="week-titel">'+weekStart.getDate()+' '+MAANDEN[weekStart.getMonth()]+' – '+eind.getDate()+' '+MAANDEN[eind.getMonth()]+' '+eind.getFullYear()+'</span></div>'+
+    '<div class="balk-r"><select class="knop" onchange="filter=this.value;render()">'+[['alle','Alle statussen'],['wacht-op-betaling','Wacht op betaling'],['bevestigd','Betalen aan de bar'],['betaald','Betaald']].map(function(o){
+      return '<option value="'+o[0]+'"'+(filter===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'+
+    '<button class="knop" onclick="exportCsv()">⬇️ CSV</button><button class="knop" onclick="laadWeek().then(render).catch(fout)">↻ Vernieuwen</button></div></div>'+
+    '<div class="kpis"><div class="card kpi"><b>'+lijst.length+'</b><span>Reservaties</span></div><div class="card kpi"><b>'+fmtUren(zaalUren).replace(' uur','u')+'</b><span>Zaalhuur</span></div>'+
+    '<div class="card kpi"><b>'+fmtEuro(ontvangen)+'</b><span>Betaald</span></div><div class="card kpi"><b>'+fmtEuro(open)+'</b><span>Nog te ontvangen</span></div></div>';
+  if(!lijst.length)return h+'<div class="card leeg">Geen reservaties in deze week.</div>';
+  var perDag={};lijst.forEach(function(b){(perDag[b.slotId.slice(0,10)]=perDag[b.slotId.slice(0,10)]||[]).push(b);});
+  Object.keys(perDag).sort().forEach(function(dag){
+    var d=new Date(dag+'T00:00');
+    h+='<div class="dag"><div class="dag-kop">'+fmtDatum(d)+'</div><div class="card">'+perDag[dag].map(function(b){
+      var i=lesInfo(b),p=b.profiel||{};
+      var st=b.status==='betaald'?'betaald':b.status==='bevestigd'?'bevestigd':'wacht';
+      return '<div class="rij"><div class="uur">'+i.tijd+' – '+eindTijd(i.tijd,b.duur)+'</div>'+
+        '<div class="wat">'+i.les.icon+' '+esc(i.les.naam)+(b.voorWie?'<small>voor '+esc(b.voorWie)+'</small>':'')+'</div>'+
+        '<div class="wie">'+esc(p.naam||'?')+' '+(p.type?typeBadge(p):'')+'<small>'+esc(p.email||'')+(b.opmerking?' · “'+esc(b.opmerking)+'”':'')+'</small></div>'+
+        '<div class="acties"><span class="status '+st+'">'+statusLabel(b)+'</span><span class="bedrag">'+fmtEuro(b.bedrag)+'</span>'+
+        (b.status!=='betaald'?'<button class="knop groen" onclick="zetBetaald(\''+b.id+'\')">✓ Betaald</button>':'')+
+        '<button class="knop rood" onclick="annuleer(\''+b.id+'\')">Annuleren</button></div></div>';
+    }).join('')+'</div></div>';
+  });
+  return h;
+}
+function zetBetaald(id){DB.admin.zetStatus(id,'betaald').then(function(){showToast('✓ Gemarkeerd als betaald');}).then(laadWeek).then(render).catch(fout);}
+function annuleer(id){
+  var b=boekingen.find(function(x){return x.id===id;});if(!b)return;
+  var i=lesInfo(b);
+  if(!confirm('Reservatie annuleren?\n\n'+i.les.naam+' · '+fmtDatum(i.datum)+' '+i.tijd+'\n'+((b.profiel||{}).naam||'')))return;
+  DB.admin.annuleer(id).then(function(){showToast('Reservatie geannuleerd');}).then(laadWeek).then(render).catch(fout);
+}
+function exportCsv(){
+  var q=function(v){v=String(v==null?'':v);return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  var rijen=[['Datum','Van','Tot','Wat','Naam','E-mail','Type','Voor','Opmerking','Status','Bedrag']];
+  zichtbaar().forEach(function(b){var i=lesInfo(b),p=b.profiel||{};
+    rijen.push([b.slotId.slice(0,10),i.tijd,eindTijd(i.tijd,b.duur),i.les.naam,p.naam,p.email,p.type?getType(p.type).label:'',b.voorWie,b.opmerking,statusLabel(b),b.bedrag.toFixed(2).replace('.',',')]);});
+  var blob=new Blob(['﻿'+rijen.map(function(r){return r.map(q).join(';');}).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='reservaties-'+isoDate(weekStart)+'.csv';a.click();
+}
+
+/* ── LEDEN ── */
+function paneelLeden(){
+  var wacht=profielen.filter(wachtOpGoedkeuring);
+  var lijst=profielen.filter(function(p){var z=zoekterm.toLowerCase();return !z||(p.naam+' '+p.email).toLowerCase().indexOf(z)>=0;})
+    .sort(function(a,b){return wachtOpGoedkeuring(b)-wachtOpGoedkeuring(a);});
+  var h='<div class="balk"><div class="balk-l"><input class="zoek" placeholder="Zoek op naam of e-mail…" value="'+esc(zoekterm)+'" oninput="zoekterm=this.value;tekenLeden()"></div>'+
+    '<div class="balk-r"><span class="week-titel">'+profielen.length+' accounts'+(wacht.length?' · '+wacht.length+' wachten op goedkeuring':'')+'</span></div></div>';
+  return h+'<div class="card" id="ledenLijst">'+ledenHtml(lijst)+'</div>';
+}
+function ledenHtml(lijst){
+  if(!lijst.length)return '<div class="leeg">Geen accounts gevonden.</div>';
+  return lijst.map(function(p){
+    var t=getType(p.type),ik=DB.user&&p.id===DB.user.id;
+    return '<div class="lid'+(wachtOpGoedkeuring(p)?' wacht':'')+'"><div><div class="nm">'+esc(p.naam||'(geen naam)')+(ik?' <small>(jij)</small>':'')+'</div><div class="em">'+esc(p.email)+' · sinds '+new Date(p.aangemaakt).toLocaleDateString('nl-BE')+'</div></div>'+
+      '<div><select class="knop" onchange="wijzigType(\''+p.id+'\',this.value)">'+TYPES.map(function(x){return '<option value="'+x.id+'"'+(x.id===p.type?' selected':'')+'>'+x.icon+' '+esc(x.label)+'</option>';}).join('')+'</select></div>'+
+      '<div class="acties">'+(t.pro?(p.goedgekeurd?'<span class="status betaald">Goedgekeurd</span><button class="knop" onclick="keurGoed(\''+p.id+'\',false)">Intrekken</button>':'<span class="status wacht">Wacht op goedkeuring</span><button class="knop groen" onclick="keurGoed(\''+p.id+'\',true)">✓ Goedkeuren</button>'):'<span class="status bevestigd">Lid</span>')+
+      (ik?'':'<button class="knop rood" onclick="verwijderLid(\''+p.id+'\')">Verwijderen</button>')+'</div></div>';
+  }).join('');
+}
+function tekenLeden(){var z=zoekterm.toLowerCase();document.getElementById('ledenLijst').innerHTML=ledenHtml(profielen.filter(function(p){return !z||(p.naam+' '+p.email).toLowerCase().indexOf(z)>=0;}));}
+function laadLeden(){return DB.admin.profielen().then(function(d){profielen=d;});}
+function keurGoed(id,ja){DB.admin.wijzigProfiel(id,{goedgekeurd:ja}).then(function(){showToast(ja?'✓ Goedgekeurd':'Goedkeuring ingetrokken');}).then(laadLeden).then(render).catch(fout);}
+function wijzigType(id,type){DB.admin.wijzigProfiel(id,{type:type,goedgekeurd:!getType(type).pro}).then(function(){showToast('Type aangepast');}).then(laadLeden).then(render).catch(fout);}
+function verwijderLid(id){
+  var p=profielen.find(function(x){return x.id===id;});
+  if(!confirm('Account van '+(p.naam||p.email)+' volledig verwijderen?\nOok alle reservaties van dit account worden verwijderd. Dit kan niet ongedaan gemaakt worden.'))return;
+  DB.admin.verwijderGebruiker(id).then(function(){showToast('Account verwijderd');}).then(laadLeden).then(render).catch(fout);
+}
+
+/* ── INSTELLINGEN ── */
+var dbInst=null;
+function paneelInstellingen(){
+  var hier=configVoorDatabase(),gelijk=dbInst&&JSON.stringify(sorteer(dbInst.config))===JSON.stringify(sorteer(hier));
+  return '<div class="card inst"><h2 class="card-title">Rooster en regels</h2>'+
+    '<p>Het rooster, de lessen, openingsuren en boekingsregels pas je aan in <b>assets/boeken.js</b>. De database gebruikt een kopie om alle regels op de server te controleren. Na een wijziging stuur je die kopie hier door.</p>'+
+    (gelijk?'<div class="notice sage">✓ De database gebruikt hetzelfde rooster en dezelfde regels als de website'+(dbInst?' (bijgewerkt op '+new Date(dbInst.bijgewerkt).toLocaleString('nl-BE')+')':'')+'.</div>'
+      :'<div class="notice">⚠️ Het rooster of de regels in <b>boeken.js</b> verschillen van die in de database. Boekingen kunnen daardoor geweigerd worden. Stuur ze door:</div>')+
+    '<div style="margin-top:1.25rem;display:flex;gap:.6rem;flex-wrap:wrap;"><button class="knop groen" onclick="stuurInstellingen()"'+(gelijk?' disabled':'')+'>⬆️ Rooster naar database sturen</button>'+
+    '<button class="knop" onclick="document.getElementById(\'cfg\').style.display=\'block\'">Toon details</button></div>'+
+    '<pre id="cfg" style="display:none;">'+esc(JSON.stringify(hier,null,1))+'</pre></div>';
+}
+function sorteer(o){if(Array.isArray(o))return o.map(sorteer);if(o&&typeof o==='object'){var r={};Object.keys(o).sort().forEach(function(k){r[k]=sorteer(o[k]);});return r;}return o;}
+function laadInst(){return DB.admin.instellingen().then(function(d){dbInst=d;});}
+function stuurInstellingen(){DB.admin.zetInstellingen(configVoorDatabase()).then(function(){showToast('✓ Rooster en regels bijgewerkt');}).then(laadInst).then(render).catch(fout);}
+
+/* ── ALGEMEEN ── */
+function fout(e){showToast('⚠️ '+e);}
+function render(){
+  var inh=huidigeTab==='res'?paneelReservaties():huidigeTab==='leden'?paneelLeden():paneelInstellingen();
+  document.getElementById('inhoud').innerHTML=tabs(huidigeTab)+'<div class="paneel actief">'+inh+'</div>';
+}
+
+klaar(function(u){
+  if(!requireLogin())return;
+  renderNav();
+  if(!u.isAdmin){
+    document.getElementById('inhoud').innerHTML='<div class="card geen-toegang"><h2 class="card-title">Geen toegang</h2><p>Deze pagina is enkel voor de beheerder van La Vie en Rose.</p><a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>';
+    return;
+  }
+  Promise.all([laadWeek(),laadLeden(),laadInst()]).then(function(){
+    if(profielen.some(wachtOpGoedkeuring))showToast('👥 Er '+(profielen.filter(wachtOpGoedkeuring).length===1?'wacht 1 professional':'wachten '+profielen.filter(wachtOpGoedkeuring).length+' professionals')+' op goedkeuring');
+    render();
+  }).catch(fout);
+});
+</script>
+</body>
+</html>
