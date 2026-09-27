@@ -66,6 +66,21 @@ DB.nieuwWachtwoord=async function(pw){
   var r=await sb.auth.updateUser({password:pw});
   if(r.error)throw nlFout(r.error);
 };
+// Eigen naam wijzigen (de database laat een lid enkel de naam aanpassen)
+DB.wijzigNaam=async function(naam){
+  if(!sb)throw GEEN_VERBINDING;
+  var r=await sb.from('profielen').update({naam:naam.trim()}).eq('id',DB.user.id).select().maybeSingle();
+  if(r.error)throw nlFout(r.error);
+  if(!r.data)throw 'Je naam kon niet gewijzigd worden.';
+  DB.user=Object.assign({},DB.user,r.data);return DB.user;
+};
+// Wachtwoord wijzigen: eerst het huidige wachtwoord controleren
+DB.wijzigWachtwoord=async function(huidig,nieuw){
+  if(!sb)throw GEEN_VERBINDING;
+  var c=await sb.auth.signInWithPassword({email:DB.user.email,password:huidig});
+  if(c.error)throw /Invalid login credentials/i.test(c.error.message)?'Je huidige wachtwoord klopt niet.':nlFout(c.error);
+  await DB.nieuwWachtwoord(nieuw);
+};
 async function logout(){if(sb)await sb.auth.signOut();location.href='boeken.html';}
 
 /* ── RESERVATIES ── */

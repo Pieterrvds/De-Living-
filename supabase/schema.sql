@@ -275,11 +275,16 @@ drop trigger if exists controleer_gewijzigde_boeking on public.boekingen;
 create trigger controleer_gewijzigde_boeking before update on public.boekingen
   for each row execute function public.controleer_wijziging();
 
--- Profielen: de beheerder kan enkel type en goedkeuring wijzigen
+-- Profielen: een lid kan enkel de eigen naam wijzigen; de beheerder ook type en goedkeuring
 create or replace function public.controleer_profiel() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  if not is_admin() then raise exception 'Niet toegestaan.'; end if;
+  if not is_admin() then
+    if old.id is distinct from auth.uid() then raise exception 'Niet toegestaan.'; end if;
+    new.type := old.type; new.goedgekeurd := old.goedgekeurd;
+  end if;
+  new.naam := left(btrim(coalesce(new.naam, '')), 80);
+  if new.naam = '' then raise exception 'Vul je naam in.'; end if;
   if not coalesce(cfg()->'types' ? new.type, false) then raise exception 'Onbekend type.'; end if;
   new.id := old.id; new.email := old.email; new.aangemaakt := old.aangemaakt;
   return new;
@@ -307,6 +312,9 @@ create policy "eigen profiel of beheerder" on public.profielen for select
 drop policy if exists "beheerder wijzigt profielen" on public.profielen;
 create policy "beheerder wijzigt profielen" on public.profielen for update
   using (is_admin()) with check (is_admin());
+drop policy if exists "eigen naam wijzigen" on public.profielen;
+create policy "eigen naam wijzigen" on public.profielen for update
+  using (id = auth.uid()) with check (id = auth.uid());
 
 drop policy if exists "eigen reservaties of beheerder" on public.boekingen;
 create policy "eigen reservaties of beheerder" on public.boekingen for select

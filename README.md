@@ -12,6 +12,7 @@ met online lessen boeken en zaalhuur voor professionals.
 | `login.html` | Aanmelden en account maken (met type persoon) |
 | `reserveren.html` | Reservatie bevestigen (enkel na aanmelden) |
 | `betalen.html` | Betaalpagina (online betalen nog niet actief; betalen aan de bar bevestigt) |
+| `account.html` | Mijn account: gegevens, naam/wachtwoord wijzigen, komende en voorbije reservaties (klik op je initialen) |
 | `beheer.html` | Beheerpagina: reservaties, leden goedkeuren, rooster naar database sturen |
 | `fotos.html` | Fotogalerij (`Gallery.html` stuurt door naar deze pagina) |
 
@@ -45,6 +46,7 @@ Accounts en reservaties staan in Supabase (project `asogwgjyurkcciaamhld`, regio
 - De server controleert zelf alle regels (openingsuren, 1 uur op voorhand, 10 uur per week,
   geen overlap, vervallen na 5 minuten, zaalhuur enkel voor goedgekeurde professionals).
 - Leden zien enkel hun eigen reservaties; van anderen zien ze alleen *dat* een uur bezet is.
+- Leden kunnen enkel hun eigen naam wijzigen; type en goedkeuring wijzigt enkel de beheerder.
 - Beheerders staan in de tabel `beheerders` (e-mailadres).
 - De beheerder kan in het rooster op elk vrij moment een eigen activiteit **inplannen**
   (status `intern`: geen betaling, geen weeklimiet, ook buiten de openingsuren; wel geen

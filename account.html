@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mijn account – La Vie en Rose</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700;800&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/boeken.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+<script src="assets/db.js"></script>
+<style>
+.acc-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr);gap:2rem;align-items:start;}
+.profiel{padding:2rem;position:sticky;top:96px;}
+.p-kop{display:flex;align-items:center;gap:1rem;margin-bottom:1.3rem;}
+.p-avatar{width:72px;height:72px;border-radius:50%;background:var(--rose);color:var(--espresso);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.5rem;flex-shrink:0;box-shadow:0 6px 22px rgba(61,32,7,.18);}
+.p-naam{font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:1.45rem;color:var(--espresso);line-height:1.2;overflow-wrap:anywhere;}
+.p-mail{font-size:.88rem;color:var(--muted);margin:.15rem 0 .4rem;overflow-wrap:anywhere;}
+.p-rij{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem;color:var(--espresso2);padding:.55rem 0;border-top:1px dashed var(--border);}
+.p-rij b{color:var(--espresso);text-align:right;}
+.p-blok{margin-top:1rem;border-top:1px solid var(--border);padding-top:.9rem;}
+.p-blok summary{cursor:pointer;font-weight:800;font-size:.92rem;color:var(--espresso2);list-style:none;display:flex;justify-content:space-between;align-items:center;}
+.p-blok summary::-webkit-details-marker{display:none;}
+.p-blok summary::after{content:'+';font-size:1.2rem;color:var(--rose-d);transition:transform .25s;}
+.p-blok[open] summary::after{transform:rotate(45deg);}
+.p-blok summary:hover{color:var(--rose-d);}
+.p-blok form{margin-top:1rem;}
+.p-blok .fg input{font-size:.95rem;padding:.65rem .9rem;}
+.p-fout{font-size:.85rem;font-weight:700;min-height:1.1em;margin:-.3rem 0 .7rem;color:#A04545;}
+.p-knoppen{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.4rem;}
+.p-knoppen .btn{flex:1;padding:.8rem 1rem;}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;}
+.kpi{padding:1.2rem 1.3rem;}
+.kpi-getal{font-family:'Playfair Display',serif;font-weight:700;font-size:1.8rem;color:var(--rose-d);line-height:1.1;}
+.kpi-label{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:.3rem;}
+.meter{height:6px;border-radius:50px;background:rgba(61,32,7,.08);overflow:hidden;margin-top:.6rem;}
+.meter i{display:block;height:100%;border-radius:50px;background:var(--rose-d);}
+.res-kaart{padding:2rem;}
+.res-kop{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.2rem;}
+.res-kop .card-title{margin:0;}
+.schakel{display:flex;background:var(--cream);border:1px solid var(--border);border-radius:50px;padding:4px;}
+.schakel button{border:none;background:none;padding:.5rem 1.1rem;border-radius:50px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;color:var(--espresso2);cursor:pointer;transition:background .25s,color .25s;}
+.schakel button.actief{background:var(--rose-d);color:white;}
+.res-voorbij .res-info{opacity:.75;}
+.res-regels a{color:var(--rose-d);font-weight:700;}
+.leeg-res{padding:1.5rem 0;text-align:center;color:var(--muted);font-family:'Playfair Display',serif;font-style:italic;}
+.leeg-res .btn{margin-top:1rem;font-style:normal;}
+@media(max-width:900px){.acc-grid{grid-template-columns:1fr;}.profiel{position:static;order:2;}.profiel,.res-kaart{padding:1.5rem;}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr 1fr;}.kpis .kpi:last-child{grid-column:span 2;}}
+</style>
+</head>
+<body>
+<script src="assets/site.js"></script>
+
+<header class="page-hero" style="--ph-img:url('https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1800&q=80');">
+  <div class="ph-bg"></div><div class="ph-mid"></div>
+  <div class="ph-inner">
+    <a href="boeken.html" class="back-link">← Terug naar het rooster</a><br>
+    <div class="ph-badge"><div class="badge-dot"></div>Jouw gegevens en reservaties</div>
+    <h1 class="ph-title">
+      <span class="ph-word" style="animation-delay:.3s;">Mijn</span>
+      <span class="ph-word script" style="animation-delay:.45s;">account</span>
+    </h1>
+  </div>
+</header>
+<div class="morph-divider"><svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path id="wavePath" d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#FDF8EE"/></svg></div>
+
+<main>
+  <section class="sec">
+    <div class="blob" style="width:420px;height:420px;top:-60px;right:-160px;background:rgba(232,164,160,.14);"></div>
+    <div class="inner" id="inhoud"></div>
+  </section>
+</main>
+
+<script>
+var user=null,tab='komend';
+
+function statusProfiel(u){
+  if(u.isAdmin)return '⚙️ Beheerder';
+  var t=getType(u.type);
+  if(!t.pro)return 'Lid';
+  return u.goedgekeurd?'✓ Goedgekeurd':'⏳ Wacht op goedkeuring';
+}
+function fmtLidSinds(iso){var d=new Date(iso);return d.getDate()+' '+MAANDEN[d.getMonth()]+' '+d.getFullYear();}
+
+function render(){
+  var alle=mijnBookings(user);
+  var komend=alle.filter(function(b){return !isVoorbij(b.slot);});
+  var voorbij=alle.filter(function(b){return isVoorbij(b.slot);}).reverse();
+  var week=urenInWeek(user,new Date());
+  var besteed=alle.filter(function(b){return b.status==='betaald'||b.status==='bevestigd';}).reduce(function(s,b){return s+(b.bedrag||0);},0);
+
+  var profiel='<aside class="card profiel sr left">'+
+    '<div class="p-kop"><div class="p-avatar">'+esc(initialen(user.naam))+'</div><div>'+
+      '<div class="p-naam">'+esc(user.naam)+'</div><div class="p-mail">'+esc(user.email)+'</div>'+typeBadge(user)+'</div></div>'+
+    '<div class="p-rij"><span>Status</span><b>'+statusProfiel(user)+'</b></div>'+
+    '<div class="p-rij"><span>Lid sinds</span><b>'+fmtLidSinds(user.aangemaakt)+'</b></div>'+
+    (wachtOpGoedkeuring(user)?'<div class="notice" style="margin-top:1rem;">Je account als '+esc(getType(user.type).label.toLowerCase())+' wacht nog op goedkeuring door La Vie en Rose. Daarna kan je o.a. voor klanten boeken'+(getType(user.type).zaal?' en de zaal huren':'')+'.</div>':'')+
+    '<details class="p-blok"><summary>Naam wijzigen</summary><form onsubmit="bewaarNaam(event)">'+
+      '<div class="fg"><label for="a-naam">Naam</label><input id="a-naam" maxlength="80" required value="'+esc(user.naam)+'" autocomplete="name"></div>'+
+      '<div class="p-fout" id="naamFout"></div><button class="btn btn-primary btn-block" id="naamKnop">Bewaren</button></form></details>'+
+    '<details class="p-blok"><summary>Wachtwoord wijzigen</summary><form onsubmit="bewaarWachtwoord(event)">'+
+      '<div class="fg"><label for="a-oud">Huidig wachtwoord</label><input type="password" id="a-oud" required autocomplete="current-password"></div>'+
+      '<div class="fg"><label for="a-nieuw">Nieuw wachtwoord</label><input type="password" id="a-nieuw" required minlength="6" autocomplete="new-password"></div>'+
+      '<div class="fg"><label for="a-herhaal">Herhaal nieuw wachtwoord</label><input type="password" id="a-herhaal" required minlength="6" autocomplete="new-password"></div>'+
+      '<div class="p-fout" id="pwFout"></div><button class="btn btn-primary btn-block" id="pwKnop">Wachtwoord wijzigen</button></form></details>'+
+    '<div class="p-knoppen">'+(user.isAdmin?'<a class="btn btn-outline" href="beheer.html">⚙️ Beheer</a>':'')+
+      '<button class="btn btn-outline" onclick="logout()">Afmelden</button></div>'+
+    '<p class="res-regels">E-mailadres wijzigen of je account laten verwijderen? Stuur ons een <a href="https://wa.me/'+REGELS.whatsapp+'" target="_blank" rel="noopener">WhatsApp-bericht</a>.</p>'+
+  '</aside>';
+
+  var kpis='<div class="kpis">'+
+    '<div class="card kpi sr up"><div class="kpi-getal">'+komend.length+'</div><div class="kpi-label">Komende reservaties</div></div>'+
+    '<div class="card kpi sr up"><div class="kpi-getal">'+fmtUren(week).replace(' uur','')+'<small style="font-size:.9rem;color:var(--muted);"> / '+REGELS.maxUrenPerWeek+' u</small></div><div class="kpi-label">Geboekt deze week</div>'+
+      '<div class="meter"><i style="width:'+Math.min(100,week/REGELS.maxUrenPerWeek*100)+'%"></i></div></div>'+
+    '<div class="card kpi sr up"><div class="kpi-getal">'+fmtEuro(besteed)+'</div><div class="kpi-label">Totaal geboekt</div></div>'+
+  '</div>';
+
+  var lijst=tab==='komend'?komend:voorbij;
+  var res='<div class="card res-kaart sr up"><div class="res-kop"><h2 class="card-title">Mijn reservaties</h2>'+
+    '<div class="schakel" role="tablist">'+
+      '<button role="tab" aria-selected="'+(tab==='komend')+'" class="'+(tab==='komend'?'actief':'')+'" onclick="kiesTab(\'komend\')">Komend ('+komend.length+')</button>'+
+      '<button role="tab" aria-selected="'+(tab==='voorbij')+'" class="'+(tab==='voorbij'?'actief':'')+'" onclick="kiesTab(\'voorbij\')">Voorbij ('+voorbij.length+')</button>'+
+    '</div></div>'+
+    '<div class="'+(tab==='voorbij'?'res-voorbij':'')+'">'+
+    (lijst.length?lijst.map(function(b){return reservatieRij(b,'annuleer');}).join('')
+      :'<div class="leeg-res">'+(tab==='komend'?'Je hebt nog geen komende reservaties.<br><a class="btn btn-primary" href="boeken.html">🌹 Les boeken</a>':'Nog geen voorbije reservaties.')+'</div>')+
+    '</div><div class="res-regels">Zelf annuleren kan tot '+REGELS.annulerenTotUurVooraf+' uur op voorhand, daarna via WhatsApp. Onbetaalde reservaties vervallen na '+REGELS.betaaltermijnMin+' minuten.</div></div>';
+
+  document.getElementById('inhoud').innerHTML='<div class="acc-grid">'+profiel+'<div>'+kpis+res+'</div></div>';
+  reveal();
+}
+function kiesTab(t){tab=t;render();}
+
+function annuleer(id){
+  var b=getBookings().find(function(x){return x.id===id;});if(!b)return herlaad();
+  if(isBevestigd(b)&&!magZelfAnnuleren(b)){showToast('Annuleren kan nu enkel nog via WhatsApp.');return render();}
+  if(!confirm(b.status==='intern'?'Deze activiteit verwijderen?':'Wil je deze reservatie annuleren?'))return;
+  DB.annuleer(id).then(function(){showToast(b.status==='intern'?'Activiteit verwijderd':'Reservatie geannuleerd');}).catch(function(e){showToast(e);}).then(herlaad);
+}
+function bewaarNaam(e){
+  e.preventDefault();
+  var naam=document.getElementById('a-naam').value.trim(),fout=document.getElementById('naamFout'),k=document.getElementById('naamKnop');
+  if(naam.length<2){fout.textContent='Vul je naam in.';return;}
+  k.disabled=true;k.textContent='Even geduld…';fout.textContent='';
+  DB.wijzigNaam(naam).then(function(u){user=u;renderNav();render();showToast('✓ Naam gewijzigd');})
+    .catch(function(m){fout.textContent=m;k.disabled=false;k.textContent='Bewaren';});
+}
+function bewaarWachtwoord(e){
+  e.preventDefault();
+  var oud=document.getElementById('a-oud').value,nw=document.getElementById('a-nieuw').value,hh=document.getElementById('a-herhaal').value;
+  var fout=document.getElementById('pwFout'),k=document.getElementById('pwKnop');
+  if(nw!==hh){fout.textContent='De nieuwe wachtwoorden zijn niet gelijk.';return;}
+  if(nw===oud){fout.textContent='Kies een ander wachtwoord dan je huidige.';return;}
+  k.disabled=true;k.textContent='Even geduld…';fout.textContent='';
+  DB.wijzigWachtwoord(oud,nw).then(function(){render();showToast('✓ Wachtwoord gewijzigd');})
+    .catch(function(m){fout.textContent=m;k.disabled=false;k.textContent='Wachtwoord wijzigen';});
+}
+function herlaad(){
+  return DB.laadMijn().then(render).catch(function(e){
+    document.getElementById('inhoud').innerHTML='<div class="card" style="padding:2.5rem;text-align:center;"><h2 class="card-title">Geen verbinding</h2><p>'+esc(e)+'</p></div>';
+  });
+}
+
+// Toegangscontrole: niet aangemeld → eerst naar de aanmeldpagina.
+klaar(function(u){
+  user=u;if(!requireLogin())return;
+  renderNav();herlaad();
+});
+</script>
+</body>
+</html>

@@ -251,6 +251,19 @@ function mijnBookings(user){
     .sort(function(a,b){return a.slot.start-b.slot.start;});
 }
 
+// Eén reservatie als rij (boeken.html en account.html). annuleerFn = naam van de functie op de pagina.
+function reservatieRij(b,annuleerFn){
+  var s=b.slot,ok=isBevestigd(b),actie='';
+  if(!isVoorbij(s)){
+    if(!ok)actie='<a href="betalen.html?booking='+b.id+'">Betalen →</a><button class="res-annuleer" onclick="'+annuleerFn+'(\''+b.id+'\')">Annuleren</button>';
+    else if(magZelfAnnuleren(b,s))actie='<button class="res-annuleer" onclick="'+annuleerFn+'(\''+b.id+'\')">'+(b.status==='intern'?'Verwijderen':'Annuleren')+'</button>';
+    else actie='<a href="'+waAnnuleerLink(b,s)+'" target="_blank" rel="noopener" title="Minder dan '+REGELS.annulerenTotUurVooraf+' uur op voorhand">Annuleren via WhatsApp ↗</a>';
+  }
+  return '<div class="res-rij"><div class="res-info"><b>'+s.les.icon+' '+esc(s.les.naam)+'</b> · '+fmtDatum(s.datum)+' · '+s.tijd+' – '+boekingEind(b,s)+
+    (b.voorWie?' · voor '+esc(b.voorWie):'')+(b.bedrag&&b.status!=='intern'?' · '+fmtEuro(b.bedrag):'')+'</div>'+
+    '<div class="res-acties"><span class="status '+(ok?'betaald':'wacht')+'">'+statusLabel(b)+'</span>'+actie+'</div></div>';
+}
+
 // Instellingen voor de database (zelfde vorm als in supabase/schema.sql).
 // De beheerpagina stuurt dit naar de database, zodat de server dezelfde regels gebruikt.
 function configVoorDatabase(){
@@ -294,11 +307,12 @@ function renderNav(){
   var u=currentUser();
   var nav=document.getElementById('nav');if(nav)nav.classList.toggle('met-gebruiker',!!u);
   var mob=document.getElementById('mobMenu');
+  if(mob&&u&&!document.getElementById('mobAccount'))mob.insertAdjacentHTML('afterbegin','<a href="account.html" id="mobAccount">👤 Mijn account</a>');
   if(mob&&u&&u.isAdmin&&!document.getElementById('mobBeheer'))mob.insertAdjacentHTML('afterbegin','<a href="beheer.html" id="mobBeheer">⚙️ Beheer</a>');
   if(u){
     el.innerHTML=(u.isAdmin?'<a class="nav-pill ghost nav-beheer" href="beheer.html">⚙️ Beheer</a>':'')+
-      '<div class="user-chip"><div class="user-avatar">'+esc(initialen(u.naam))+'</div>'+
-      '<div class="user-meta"><div class="user-name">'+esc(u.naam)+'</div>'+typeBadge(u)+'</div></div>'+
+      '<a class="user-chip" href="account.html" title="Mijn account en reservaties"><div class="user-avatar">'+esc(initialen(u.naam))+'</div>'+
+      '<div class="user-meta"><div class="user-name">'+esc(u.naam)+'</div>'+typeBadge(u)+'</div></a>'+
       '<button class="nav-pill ghost" onclick="logout()">Afmelden</button>';
   }else{
     el.innerHTML='<a class="nav-pill" href="login.html?next='+encodeURIComponent(huidigePagina())+'">Aanmelden</a>';

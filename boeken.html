@@ -73,20 +73,6 @@
 
 /* Mijn reservaties */
 .mijn{margin-top:2.5rem;padding:2rem;}
-.res-rij{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 0;border-top:1px solid var(--border);flex-wrap:wrap;}
-.res-rij:first-child{border-top:none;padding-top:0;}
-.res-info{font-size:.95rem;color:var(--espresso2);}
-.res-info b{color:var(--espresso);}
-.status{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 11px;border-radius:50px;}
-.status.wacht{background:var(--rose-pale);color:var(--rose-d);}
-.status.betaald{background:var(--sage-pale);color:var(--sage);}
-.res-acties{display:flex;align-items:center;gap:.8rem;}
-.res-acties a{font-size:.85rem;color:var(--rose-d);font-weight:800;text-decoration:none;}
-.res-annuleer{background:none;border:none;font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:800;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
-.res-annuleer:hover{color:var(--rose-d);}
-.uren-week{font-size:.88rem;color:var(--espresso2);margin:-.25rem 0 1rem;}
-.res-regels{margin-top:1.1rem;padding-top:1rem;border-top:1px dashed var(--border);font-size:.8rem;color:var(--muted);}
-.res-acties a:hover{color:var(--espresso);}
 
 /* Modal */
 .modal-bg{position:fixed;inset:0;background:rgba(61,32,7,.45);backdrop-filter:blur(4px);z-index:950;display:none;align-items:center;justify-content:center;padding:1rem;}
@@ -258,15 +244,7 @@ function renderMijn(){
   wrap.style.display='block';
   var week=urenInWeek(user,weekStart);
   document.getElementById('mijnLijst').innerHTML='<div class="uren-week">Deze roosterweek: <b>'+fmtUren(week)+'</b> van max. '+REGELS.maxUrenPerWeek+' uur geboekt</div>'+
-  (lijst.length?lijst.map(function(b){
-    var s=b.slot,ok=isBevestigd(b),actie;
-    if(!ok)actie='<a href="betalen.html?booking='+b.id+'">Betalen →</a><button class="res-annuleer" onclick="annuleer(\''+b.id+'\')">Annuleren</button>';
-    else if(magZelfAnnuleren(b,s))actie='<button class="res-annuleer" onclick="annuleer(\''+b.id+'\')">'+(b.status==='intern'?'Verwijderen':'Annuleren')+'</button>';
-    else actie='<a href="'+waAnnuleerLink(b,s)+'" target="_blank" rel="noopener" title="Minder dan '+REGELS.annulerenTotUurVooraf+' uur op voorhand">Annuleren via WhatsApp ↗</a>';
-    return '<div class="res-rij"><div class="res-info"><b>'+s.les.icon+' '+esc(s.les.naam)+'</b> · '+fmtDatum(s.datum)+' · '+s.tijd+' – '+boekingEind(b,s)+
-      (b.voorWie?' · voor '+esc(b.voorWie):'')+'</div>'+
-      '<div class="res-acties"><span class="status '+(ok?'betaald':'wacht')+'">'+statusLabel(b)+'</span>'+actie+'</div></div>';
-  }).join(''):'<div class="res-info">Je hebt nog geen komende reservaties. Klik op een uur in het rooster!</div>')+
+  (lijst.length?lijst.map(function(b){return reservatieRij(b,'annuleer');}).join(''):'<div class="res-info">Je hebt nog geen komende reservaties. Klik op een uur in het rooster!</div>')+
   '<div class="res-regels">Zelf annuleren kan tot '+REGELS.annulerenTotUurVooraf+' uur op voorhand, daarna via WhatsApp. Onbetaalde reservaties vervallen na '+REGELS.betaaltermijnMin+' minuten.</div>';
 }
 function annuleer(id){
