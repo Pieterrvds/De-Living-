@@ -134,6 +134,7 @@ gap:normal;}
 
 /* ═══════════════════════ CALENDAR ═══════════════════════ */
 #kalender{background:var(--cream);}
+.kal-webcal{color:var(--rose-d);font-weight:700;text-underline-offset:3px;}
 .kal-hdr{display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;margin-bottom:1.75rem;flex-wrap:wrap;}
 .boek-cta-wrap{display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap;margin-bottom:2rem;}
 .boek-cta{display:inline-flex;align-items:center;gap:10px;font-size:.95rem;font-weight:700;letter-spacing:.04em;background:var(--rose-d);color:white;padding:1.05rem 2.4rem;border-radius:50px;text-decoration:none;box-shadow:0 8px 32px rgba(192,120,120,.45);transition:background .2s,transform .18s,box-shadow .2s;position:relative;overflow:hidden;}
@@ -458,9 +459,9 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
     <div class="kal-hdr">
       <div>
         <p class="eyebrow sr">Planning</p>
-        <h2 class="sec-title sr d1">Wekelijks lesrooster</h2>
+        <h2 class="sec-title sr d1">Ons Lessenrooster</h2>
       </div>
-      <p class="sec-lead sr d2" style="max-width:360px;">Plan je week vooruit. Koppel ook je Google Calendar voor automatische updates.</p>
+      <p class="sec-lead sr d2" style="max-width:360px;">Plan je week vooruit. Zet het rooster in je Google Calendar: wijzigingen komen er vanzelf in. Ook voor <a href="webcal://pieterrvds.github.io/De-Living-/rooster.ics" class="kal-webcal">Apple of Outlook</a>.</p>
     </div>
     <div class="boek-cta-wrap sr d2">
       <a href="boeken.html" class="boek-cta">
@@ -473,7 +474,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
       <div class="kal-top">
         <div class="kal-m" id="kalTitle"></div>
         <div class="kal-nav">
-          <a href="https://calendar.google.com/calendar/r" target="_blank" class="kal-gcal">+ Google Calendar</a>
+          <a href="https://calendar.google.com/calendar/render?cid=webcal%3A%2F%2Fpieterrvds.github.io%2FDe-Living-%2Frooster.ics" target="_blank" rel="noopener" class="kal-gcal" title="Abonneer je op het lessenrooster in Google Calendar">+ Google Calendar</a>
           <button class="kal-nb" onclick="changeMonth(-1)">&#8249;</button>
           <button class="kal-nb" onclick="changeMonth(1)">&#8250;</button>
         </div>
@@ -669,7 +670,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
     <div class="con-grid">
       <div>
         <div class="con-item sr d1"><div class="con-icon">📍</div><div><div class="con-lbl">Adres</div><div class="con-val">Hoogstraat 40, 9308 Aalst</div></div></div>
-        <div class="con-item sr d2"><div class="con-icon">🕐</div><div><div class="con-lbl">Openingsuren</div><div class="con-val" id="openingsuren">Ma–Vr: 07:00 – 22:00<br>Za–Zo: 09:00 – 18:00</div><a href="https://calendar.google.com/calendar/r" target="_blank" class="con-gcal">↗ Actuele uren via Google Calendar</a></div></div>
+        <div class="con-item sr d2"><div class="con-icon">🕐</div><div><div class="con-lbl">Openingsuren</div><div class="con-val" id="openingsuren">Ma–Vr: 07:00 – 22:00<br>Za–Zo: 09:00 – 18:00</div><a href="https://calendar.google.com/calendar/render?cid=webcal%3A%2F%2Fpieterrvds.github.io%2FDe-Living-%2Frooster.ics" target="_blank" rel="noopener" class="con-gcal">↗ Lessenrooster in je Google Calendar</a></div></div>
         <div class="con-item sr d3"><div class="con-icon">📞</div><div><div class="con-lbl">Telefoon</div><div class="con-val"><a href="tel:+32471955489">+32 471 95 54 89</a></div></div></div>
         <div class="con-item sr d4"><div class="con-icon">✉️</div><div><div class="con-lbl">E-mail</div><div class="con-val"><a href="mailto:hallo@lavieenrose.be">hallo@lavieenrose.be</a></div></div></div>
         <div class="sr d4" style="font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--rose-d);margin-bottom:.7rem;">Volg ons</div>

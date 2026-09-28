@@ -29,6 +29,15 @@ Bijna alles staat bovenaan in **`assets/boeken.js`**:
 
 De hoofdpagina leest het rooster, de openingsuren en de cijfers ook uit dit bestand.
 
+## Agenda-abonnement (Google Calendar, Apple, Outlook)
+
+`rooster.ics` is het lessenrooster als agenda. De knop **+ Google Calendar** op de hoofdpagina
+abonneert bezoekers erop, zodat wijzigingen vanzelf in hun agenda komen (Google ververst
+ongeveer elke 12 tot 24 uur). Het bestand wordt gemaakt uit `assets/boeken.js`:
+
+- automatisch door GitHub Actions (`.github/workflows/agenda.yml`) bij elke wijziging op `main`;
+- of zelf: `node tools/maak-agenda.js`.
+
 ## Stijl
 
 - `assets/site.css`: gedeelde huisstijl (kleuren, lettertypes, menubalk, voettekst, formulieren)
