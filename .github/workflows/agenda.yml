@@ -1,9 +1,11 @@
-# Maakt rooster.ics (agenda-abonnement) opnieuw wanneer het rooster in assets/boeken.js wijzigt.
+# Maakt rooster.ics (agenda-abonnement) opnieuw uit het rooster in de database (Beheer → Rooster).
 name: Agenda bijwerken
 on:
   push:
     branches: [main]
     paths: ['assets/boeken.js', 'tools/maak-agenda.js']
+  schedule:
+    - cron: '17 */2 * * *'   # elke 2 uur: wijzigingen uit Beheer → Rooster overnemen
   workflow_dispatch:
 permissions:
   contents: write
@@ -22,5 +24,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add rooster.ics
-          git commit -m "Agenda bijgewerkt uit assets/boeken.js"
+          git commit -m "Agenda bijgewerkt uit het rooster"
           git push

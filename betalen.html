@@ -89,7 +89,7 @@ var klok=null,wasOpen=false;
 function render(){
   // Alleen eigen reservaties tonen (getBookings laat vervallen reservaties al weg).
   booking=getBookings().find(function(b){return b.id===bookingId;});
-  slot=booking&&parseSlot(booking.slotId);
+  slot=booking&&parseSlot(booking.slotId,true);
   clearInterval(klok);
   if(!booking||!slot){
     toon(wasOpen

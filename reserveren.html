@@ -74,9 +74,8 @@
 </main>
 
 <script>
-var slot=parseSlot(new URLSearchParams(location.search).get('slot'));
+var slot=null,duur=60;      // ingevuld zodra het rooster uit de database geladen is; duur = gekozen duur in minuten (enkel bij zaalhuur)
 var user=null,type=null;   // ingevuld zodra de sessie geladen is
-var duur=slot?slot.les.duur:60;   // gekozen duur in minuten (enkel te kiezen bij zaalhuur)
 
 function stappen(n){
   var s=['Uur kiezen','Aanmelden','Reserveren','Betalen'];
@@ -192,6 +191,7 @@ function bevestig(e){
 klaar(function(u){
   user=u;if(!requireLogin())return;
   type=getType(user.type);renderNav();
+  slot=parseSlot(new URLSearchParams(location.search).get('slot'));duur=slot?slot.les.duur:60;
   if(!slot)return render();
   var dag=new Date(slot.datum);
   Promise.all([DB.laadBezetting(dag,addDays(dag,1)),DB.laadMijn()])

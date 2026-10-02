@@ -3,15 +3,21 @@
    Accounts en reservaties staan in de database (Supabase): zie assets/db.js.
    Dit bestand werkt ook zonder db.js (de hoofdpagina gebruikt enkel het rooster). */
 
+/* ── DATABASE ── (Supabase) De 'publishable key' mag publiek zijn: de beveiliging zit in de
+   regels van de database (Row Level Security). */
+var SUPABASE_URL='https://asogwgjyurkcciaamhld.supabase.co';
+var SUPABASE_KEY='sb_publishable_baeXtXYJnKGuO265hWRkhw_iK4Q6NhO';
+
 /* ── LESSEN & ROOSTER ── (prijzen zijn voorlopige voorbeeldprijzen)
-   Dit is de enige plek waar het rooster staat: index.html en boeken.html lezen het hier.
    'kort' is de korte naam in de maandkalender op de hoofdpagina. */
 var LESSEN={
   yoga:{naam:'Yoga',kort:'Yoga',icon:'🧘',duur:60,trainer:'Gwen Deryck',max:16,prijs:15,soort:'Groepsles'},
   kine:{naam:'Kinesitherapie',kort:'Kine',icon:'💆',duur:45,trainer:'Onze kinesist',max:1,prijs:40,soort:'Individuele begeleiding'},
   pt:{naam:'Personal Training',kort:'PT',icon:'💪',duur:60,trainer:'Pieter',max:1,prijs:60,soort:'1-op-1 training'}
 };
-// Weekdag (0 = zondag … 6 = zaterdag) → lessen. Zelfde rooster als op index.html.
+// Weekdag (0 = zondag … 6 = zaterdag) → lessen.
+// Het echte rooster staat in de database en pas je aan in Beheer → Rooster (slepen met de muis).
+// Dit is enkel een reserve voor als de database even niet bereikbaar is.
 var ROOSTER={
   1:[['09:00','yoga'],['18:00','pt']],                           // PT: maandag 18–19u (Pieter)
   2:[['09:00','kine']],
@@ -22,6 +28,30 @@ var ROOSTER={
   0:[['10:00','yoga'],['11:30','kine']]
 };
 var UUR_START=7, UUR_EINDE=21;
+
+// Rooster vervangen (in de plaats, zodat alle functies het nieuwe rooster zien). Ongeldige lessen vallen weg.
+function zetRooster(r){
+  Object.keys(ROOSTER).forEach(function(k){delete ROOSTER[k];});
+  Object.keys(r||{}).forEach(function(k){
+    if(!/^[0-6]$/.test(k)||!Array.isArray(r[k]))return;
+    var l=r[k].filter(function(x){return Array.isArray(x)&&/^([01]\d|2[0-3]):[0-5]\d$/.test(x[0])&&LESSEN[x[1]];})
+      .map(function(x){return [x[0],x[1]];}).sort(function(a,b){return a[0]<b[0]?-1:a[0]>b[0]?1:0;});
+    if(l.length)ROOSTER[k]=l;
+  });
+}
+// Rooster uit de database halen (één keer per pagina). Lukt het niet, dan blijft het reserverooster staan.
+var _rooster=null;
+function laadRooster(){
+  if(_rooster)return _rooster;
+  var ctrl=window.AbortController?new AbortController():null;
+  var t=setTimeout(function(){if(ctrl)ctrl.abort();},5000);
+  _rooster=fetch(SUPABASE_URL+'/rest/v1/instellingen?select=config&id=eq.1',{headers:{apikey:SUPABASE_KEY},signal:ctrl&&ctrl.signal})
+    .then(function(r){if(!r.ok)throw r.status;return r.json();})
+    .then(function(d){if(d&&d[0]&&d[0].config&&d[0].config.rooster){zetRooster(d[0].config.rooster);return true;}return false;})
+    .catch(function(){return false;})
+    .then(function(ok){clearTimeout(t);return ok;});
+  return _rooster;
+}
 
 /* ── OPENINGSUREN ── Weekdag (0 = zondag … 6 = zaterdag) → [open, dicht].
    Buiten deze uren kan niemand boeken of huren. De tekst bij Contact op de
@@ -126,19 +156,21 @@ function fmtEuro(n){return '€ '+n.toFixed(2).replace('.',',');}
 function eindTijd(tijd,duur){var p=tijd.split(':');var m=+p[0]*60+ +p[1]+duur;return pad(Math.floor(m/60))+':'+pad(m%60);}
 
 function slotId(datum,tijd,lesId){return isoDate(datum)+'T'+tijd+'_'+lesId;}
-function parseSlot(id){
+// losjes = ook als het uur (niet meer) in het rooster staat, bv. voor een bestaande reservatie
+function parseSlot(id,losjes){
   var m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})_([a-z]+)$/.exec(id||'');
   if(!m)return null;
   var datum=new Date(+m[1],+m[2]-1,+m[3]);
   var tijd=m[4],lesId=m[5],les;
   if(lesId==='zaal'){
     var uur=+tijd.slice(0,2);
-    if(tijd.slice(3)!=='00'||uur<UUR_START||uur>UUR_EINDE||!zaalVrij(datum,uur))return null;
+    if(!losjes&&(tijd.slice(3)!=='00'||uur<UUR_START||uur>UUR_EINDE||!zaalVrij(datum,uur)))return null;
     les=ZAAL;
   }else{
     les=LESSEN[lesId];
-    if(!les||!(ROOSTER[datum.getDay()]||[]).some(function(r){return r[0]===tijd&&r[1]===lesId;}))return null;
-    if(isGesloten(datum,naarMin(tijd),naarMin(tijd)+les.duur))return null;
+    if(!les)return null;
+    if(!losjes&&!(ROOSTER[datum.getDay()]||[]).some(function(r){return r[0]===tijd&&r[1]===lesId;}))return null;
+    if(!losjes&&isGesloten(datum,naarMin(tijd),naarMin(tijd)+les.duur))return null;
   }
   var p=tijd.split(':');
   var start=new Date(datum.getFullYear(),datum.getMonth(),datum.getDate(),+p[0],+p[1]);
@@ -223,30 +255,30 @@ function getBookings(){
 function slotIdVan(ms,les){var d=new Date(ms);return isoDate(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+'_'+les;}
 function isBevestigd(b){return b.status==='betaald'||b.status==='bevestigd'||b.status==='intern';}
 function statusLabel(b){return b.status==='intern'?'Ingepland':b.status==='betaald'?'Betaald':b.status==='bevestigd'?'Bevestigd · betalen aan de bar':'Wacht op betaling';}
-function boekingDuur(b,slot){return b.duur||(slot||parseSlot(b.slotId)).les.duur;}
-function boekingEind(b,slot){slot=slot||parseSlot(b.slotId);return eindTijd(slot.tijd,boekingDuur(b,slot));}
+function boekingDuur(b,slot){return b.duur||(slot||parseSlot(b.slotId,true)).les.duur;}
+function boekingEind(b,slot){slot=slot||parseSlot(b.slotId,true);return eindTijd(slot.tijd,boekingDuur(b,slot));}
 // Geboekte uren van een persoon in de week (ma–zo) van een datum.
 function urenInWeek(user,datum){
   var ma=mondayOf(datum).getTime(),zo=ma+7*864e5;
   return getBookings().filter(function(b){return b.userId===user.id&&b.status!=='intern';}).reduce(function(som,b){
-    var s=parseSlot(b.slotId);if(!s)return som;
+    var s=parseSlot(b.slotId,true);if(!s)return som;
     var t=s.datum.getTime();return t>=ma&&t<zo?som+boekingDuur(b,s)/60:som;
   },0);
 }
 function magZelfAnnuleren(b,slot){
   if(b.status==='intern')return true;
-  slot=slot||parseSlot(b.slotId);
+  slot=slot||parseSlot(b.slotId,true);
   return !isBevestigd(b)||slot.start.getTime()-Date.now()>=REGELS.annulerenTotUurVooraf*3600000;
 }
 function waAnnuleerLink(b,slot){
-  slot=slot||parseSlot(b.slotId);
+  slot=slot||parseSlot(b.slotId,true);
   var t='Hallo! Ik wil graag mijn reservatie annuleren: '+slot.les.naam+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.';
   return 'https://wa.me/'+REGELS.whatsapp+'?text='+encodeURIComponent(t);
 }
 function fmtUren(u){return (Math.round(u*100)/100).toString().replace('.',',')+' uur';}
 function mijnBookings(user){
   return getBookings().filter(function(b){return b.userId===user.id;})
-    .map(function(b){return Object.assign({},b,{slot:b.status==='intern'?activiteitSlot(b):parseSlot(b.slotId)});})
+    .map(function(b){return Object.assign({},b,{slot:b.status==='intern'?activiteitSlot(b):parseSlot(b.slotId,true)});})
     .filter(function(b){return b.slot;})
     .sort(function(a,b){return a.slot.start-b.slot.start;});
 }
@@ -266,11 +298,12 @@ function reservatieRij(b,annuleerFn){
 
 // Instellingen voor de database (zelfde vorm als in supabase/schema.sql).
 // De beheerpagina stuurt dit naar de database, zodat de server dezelfde regels gebruikt.
-function configVoorDatabase(){
+// rooster: het rooster dat al in de database staat (dat beheer je in Beheer → Rooster, niet hier).
+function configVoorDatabase(rooster){
   var m=function(o,f){var r={};Object.keys(o).forEach(function(k){r[k]=f(o[k],k);});return r;};
   return {
     lessen:m(LESSEN,function(l){return {naam:l.naam,duur:l.duur,max:l.max,prijs:l.prijs};}),
-    rooster:ROOSTER,openingsuren:OPENINGSUREN,gesloten:GESLOTEN,
+    rooster:rooster||ROOSTER,openingsuren:OPENINGSUREN,gesloten:GESLOTEN,
     regels:{betaaltermijnMin:REGELS.betaaltermijnMin,boekenTotMinVooraf:REGELS.boekenTotMinVooraf,
       annulerenTotUurVooraf:REGELS.annulerenTotUurVooraf,maxUrenPerWeek:REGELS.maxUrenPerWeek,zaalDuren:REGELS.zaalDuren},
     zaal:{prijs:ZAAL.prijs},

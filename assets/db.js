@@ -1,10 +1,7 @@
 /* La Vie en Rose – verbinding met de database (Supabase).
    Accounts, profielen en reservaties staan in Supabase. Alle boekingsregels
    worden daar ook op de server gecontroleerd (zie supabase/schema.sql).
-   De 'publishable key' hieronder mag publiek zijn: de beveiliging zit in de
-   regels van de database (Row Level Security). */
-var SUPABASE_URL='https://asogwgjyurkcciaamhld.supabase.co';
-var SUPABASE_KEY='sb_publishable_baeXtXYJnKGuO265hWRkhw_iK4Q6NhO';
+   Het adres en de publishable key staan bovenaan in assets/boeken.js. */
 
 // Als de Supabase-bibliotheek niet kon laden (netwerkstoring), blijft de site bruikbaar met een melding.
 var sb=window.supabase?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
@@ -153,7 +150,8 @@ DB.admin={
 /* ── OPSTARTEN ── */
 // Laadt de sessie en roept daarna de pagina-code op: klaar(function(user){ … })
 var _klaar=(async function(){
-  try{await DB.laadProfiel();}catch(e){DB.user=null;}
+  // Rooster uit de database en het profiel tegelijk laden
+  await Promise.all([laadRooster(),DB.laadProfiel().catch(function(){DB.user=null;})]);
   if(sb)sb.auth.onAuthStateChange(function(ev){if(ev==='PASSWORD_RECOVERY')DB.herstel=true;});
   return DB.user;
 })();

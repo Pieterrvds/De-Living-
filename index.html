@@ -717,15 +717,21 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
 
 <script src="assets/boeken.js"></script>
 <script>
-/* ══ CIJFERS UIT HET ROOSTER ══ (assets/boeken.js) — vóór de teller-animatie invullen */
-(function(){
+/* ══ CIJFERS UIT HET ROOSTER ══ — vóór de teller-animatie invullen, en opnieuw zodra
+   het rooster uit de database binnen is (dat pas je aan in Beheer → Rooster). */
+function vulCijfers(){
   var bron={'disciplines':Object.keys(LESSEN).length,'lessen-per-week':lessenPerWeek(),'max-yoga':LESSEN.yoga.max};
   document.querySelectorAll('[data-bron]').forEach(function(el){
     var v=bron[el.getAttribute('data-bron')];if(v==null)return;
-    if(el.hasAttribute('data-target'))el.setAttribute('data-target',v);
+    if(el.hasAttribute('data-target')){
+      var oud=el.getAttribute('data-target');el.setAttribute('data-target',v);
+      // teller al (deels) afgelopen? dan meteen de juiste waarde tonen
+      if(el.classList.contains('stat-n')&&el.textContent!=='0'&&String(oud)!==String(v))el.textContent=v+(el.getAttribute('data-suffix')||'');
+    }
     if(!el.classList.contains('stat-n'))el.textContent=v;
   });
-})();
+}
+vulCijfers();
 
 /* ══ CUSTOM CURSOR ══ */
 var cur=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
@@ -910,12 +916,16 @@ function animCount(el){
 var calDate=new Date();
 var dagN=['Ma','Di','Wo','Do','Vr','Za','Zo'];
 var maandN=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
-// Het rooster komt uit assets/boeken.js (ROOSTER en LESSEN), zodat het maar op één plek staat.
+// Het rooster komt uit de database (Beheer → Rooster); assets/boeken.js heeft een reserve.
 var rooster={};
-Object.keys(ROOSTER).forEach(function(dow){
-  rooster[dow]=ROOSTER[dow].filter(function(r){return !weekdagGesloten(+dow,naarMin(r[0]),naarMin(r[0])+LESSEN[r[1]].duur);})
-    .map(function(r){var les=LESSEN[r[1]];return {t:r[1],l:les.icon+' '+(les.kort||les.naam)+' '+r[0]};});
-});
+function bouwRooster(){
+  rooster={};
+  Object.keys(ROOSTER).forEach(function(dow){
+    rooster[dow]=ROOSTER[dow].filter(function(r){return !weekdagGesloten(+dow,naarMin(r[0]),naarMin(r[0])+LESSEN[r[1]].duur);})
+      .map(function(r){var les=LESSEN[r[1]];return {t:r[1],l:les.icon+' '+(les.kort||les.naam)+' '+r[0]};});
+  });
+}
+bouwRooster();
 function renderKal(){
   var y=calDate.getFullYear(),m=calDate.getMonth();
   document.getElementById('kalTitle').textContent=maandN[m]+' '+y;
@@ -962,6 +972,8 @@ document.getElementById('kalLeg').innerHTML=Object.keys(LESSEN).map(function(k){
 // Openingsuren komen uit assets/boeken.js (OPENINGSUREN)
 document.getElementById('openingsuren').innerHTML=openingsurenTekst();
 renderKal();
+// Actueel rooster uit de database: kalender en cijfers opnieuw tekenen
+laadRooster().then(function(ok){if(ok){bouwRooster();renderKal();vulCijfers();}});
 
 /* ══ EVENEMENTEN: horizontaal scrollen ══ */
 (function(){

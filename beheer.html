@@ -62,6 +62,52 @@ select.knop{padding-right:.6rem;}
 .inst p{color:var(--espresso2);line-height:1.7;margin-bottom:1rem;}
 .inst pre{background:var(--cream);border-radius:14px;padding:1rem;font-size:.78rem;overflow:auto;max-height:260px;margin:1rem 0;}
 .geen-toegang{padding:3rem 2.5rem;text-align:center;max-width:540px;margin:0 auto;}
+/* Rooster-editor */
+.re-balk{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;}
+.re-palet{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+.re-palet>span{font-size:.8rem;font-weight:800;color:var(--muted);}
+.re-chip{border:1.5px dashed var(--c);background:var(--bg);color:var(--fg);border-radius:12px;padding:.45rem .8rem;font-family:'Nunito',sans-serif;font-weight:800;font-size:.84rem;cursor:grab;touch-action:none;user-select:none;}
+.re-chip small{font-weight:600;opacity:.8;margin-left:.25rem;}
+.re-chip:active{cursor:grabbing;}
+.re-status{font-size:.82rem;font-weight:800;color:var(--muted);}
+.re-status.open{color:var(--rose-d);}
+.re-hulp{font-size:.8rem;color:var(--muted);margin:-.25rem 0 1rem;line-height:1.6;}
+.re-wrap{overflow-x:auto;padding-bottom:.5rem;}
+.re-grid{display:grid;grid-template-columns:52px repeat(7,minmax(92px,1fr));min-width:760px;background:var(--vanilla);border:1px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:0 12px 48px var(--shadow);}
+.re-kop{padding:.7rem .4rem;text-align:center;font-weight:800;font-size:.82rem;color:var(--espresso);border-bottom:1px solid var(--border);border-left:1px solid var(--border);background:var(--cream);}
+.re-kop small{display:block;font-weight:700;font-size:.7rem;color:var(--muted);}
+.re-kop:first-child{border-left:none;}
+.re-as{position:relative;}
+.re-as div{position:absolute;right:6px;font-size:.7rem;font-weight:700;color:var(--muted);transform:translateY(-50%);}
+.re-kol{position:relative;border-left:1px solid var(--border);background-image:repeating-linear-gradient(to bottom,rgba(61,32,7,.09) 0 1px,transparent 1px 30px,rgba(61,32,7,.035) 30px 31px,transparent 31px 60px);}
+.re-dicht{position:absolute;left:0;right:0;background:repeating-linear-gradient(135deg,rgba(61,32,7,.04) 0 8px,rgba(61,32,7,.09) 8px 16px);pointer-events:none;display:flex;align-items:flex-start;justify-content:center;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:4px;overflow:hidden;}
+.re-blok{position:absolute;left:4px;right:4px;border:none;border-left:4px solid var(--c);border-radius:10px;background:var(--bg);color:var(--fg);text-align:left;padding:4px 7px;font-family:'Nunito',sans-serif;cursor:grab;touch-action:none;user-select:none;overflow:hidden;line-height:1.25;transition:box-shadow .15s,transform .15s;z-index:2;}
+.re-blok:hover{box-shadow:0 6px 18px rgba(61,32,7,.18);transform:translateY(-1px);}
+.re-blok:focus-visible,.re-blok.gekozen{outline:2px solid var(--espresso2);outline-offset:1px;}
+.re-blok b{display:block;font-size:.78rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.re-blok span{font-size:.72rem;font-weight:700;}
+.re-blok small{display:block;font-size:.68rem;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.re-blok.nieuw::after{content:'';position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--gold);}
+.re-blok.weg{opacity:.3;}
+.re-ghost{position:absolute;left:4px;right:4px;border-radius:10px;border:2px dashed var(--sage);background:rgba(90,122,74,.12);pointer-events:none;z-index:3;font-size:.72rem;font-weight:800;color:var(--sage);padding:3px 7px;}
+.re-ghost.fout{border-color:#A04545;background:rgba(160,69,69,.1);color:#A04545;}
+.re-prul{position:fixed;left:50%;bottom:24px;transform:translate(-50%,140%);background:var(--espresso);color:#FDF8EE;border-radius:50px;padding:1rem 1.8rem;font-weight:800;font-size:.9rem;box-shadow:0 12px 40px rgba(61,32,7,.35);transition:transform .25s cubic-bezier(.22,1,.36,1),background .2s,opacity .2s;z-index:960;pointer-events:none;opacity:0;}
+body.re-slepen .re-prul{transform:translate(-50%,0);opacity:1;}
+.re-prul.actief{background:#A04545;transform:translate(-50%,0) scale(1.08)!important;}
+body.re-slepen,body.re-slepen *{cursor:grabbing!important;}
+body.re-slepen .re-blok:hover{transform:none;box-shadow:none;}
+.modal-bg{position:fixed;inset:0;background:rgba(61,32,7,.45);backdrop-filter:blur(4px);z-index:950;display:none;align-items:center;justify-content:center;padding:1rem;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--vanilla);border-radius:24px;max-width:460px;width:100%;max-height:92vh;overflow-y:auto;padding:1.75rem;box-shadow:0 40px 100px rgba(61,32,7,.35);}
+.modal .card-title{margin-bottom:1rem;}
+.modal .fg select{font-size:.95rem;padding:.65rem .9rem;}
+.m-rij{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.m-fout{color:#A04545;font-size:.86rem;font-weight:700;min-height:1.2em;margin:.1rem 0 .8rem;}
+.m-knoppen{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:flex-end;}
+.m-lijst{max-height:280px;overflow:auto;margin:1rem 0;border:1px solid var(--border);border-radius:14px;}
+.m-lijst div{padding:.6rem .9rem;border-bottom:1px solid var(--border);font-size:.86rem;color:var(--espresso2);}
+.m-lijst div:last-child{border-bottom:none;}
+.m-lijst b{color:var(--espresso);}
 .geen-toegang p{color:var(--espresso2);margin-bottom:1.5rem;line-height:1.7;}
 @media(max-width:900px){
   .kpis{grid-template-columns:1fr 1fr;}
@@ -77,6 +123,9 @@ select.knop{padding-right:.6rem;}
 <script src="assets/boeken.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
 <script src="assets/db.js"></script>
+
+<div class="re-prul" id="prul">🗑️ Sleep hierheen om te verwijderen</div>
+<div class="modal-bg" id="modal" onclick="if(event.target===this)sluitModal()"><div class="modal" id="modalInhoud" role="dialog" aria-modal="true"></div></div>
 
 <header class="page-hero">
   <div class="ph-bg"></div><div class="ph-mid"></div>
@@ -98,7 +147,7 @@ var weekStart=mondayOf(new Date()),filter='alle',boekingen=[],profielen=[],zoekt
 
 function tabs(actief){
   var wacht=profielen.filter(wachtOpGoedkeuring).length;
-  return '<div class="tabs">'+[['res','📅 Reservaties'],['leden','👥 Leden'+(wacht?' <span class="teller">'+wacht+'</span>':'')],['inst','⚙️ Instellingen']].map(function(t){
+  return '<div class="tabs">'+[['res','📅 Reservaties'],['rooster','🗓️ Rooster'+(reAantalWijzigingen()?' <span class="teller">'+reAantalWijzigingen()+'</span>':'')],['leden','👥 Leden'+(wacht?' <span class="teller">'+wacht+'</span>':'')],['inst','⚙️ Instellingen']].map(function(t){
     return '<button class="tab'+(t[0]===actief?' actief':'')+'" onclick="toonTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>';
 }
 var huidigeTab='res';
@@ -191,27 +240,284 @@ function verwijderLid(id){
   DB.admin.verwijderGebruiker(id).then(function(){showToast('Account verwijderd');}).then(laadLeden).then(render).catch(fout);
 }
 
+/* ── ROOSTER ── weekrooster aanpassen met de muis (of vinger): slepen, toevoegen, verwijderen.
+   Wijzigingen blijven een ontwerp tot je op Publiceren klikt; dan gaan ze naar de database
+   en gebruiken de website, het boekingssysteem en de server meteen het nieuwe rooster. */
+var DAGVOLG=[1,2,3,4,5,6,0],RE_PPM=1,RE_SNAP=15;
+var RE_START=Math.min.apply(null,Object.keys(OPENINGSUREN).map(function(d){return naarMin(OPENINGSUREN[d][0]);}));
+var RE_EIND=Math.max.apply(null,Object.keys(OPENINGSUREN).map(function(d){return naarMin(OPENINGSUREN[d][1]);}));
+var reOrig=[],reWerk=[],reTerug=[],reVooruit=[],reVolg=0,reSleep=null,reGeenKlik=false;
+
+function tijdTekst(m){return pad(Math.floor(m/60))+':'+pad(m%60);}
+function reUitRooster(r){
+  var l=[];Object.keys(r||{}).forEach(function(d){(r[d]||[]).forEach(function(x){if(LESSEN[x[1]])l.push({uid:++reVolg,dow:+d,min:naarMin(x[0]),les:x[1]});});});
+  return l;
+}
+function reNaarRooster(l){
+  var r={};l.slice().sort(function(a,b){return a.min-b.min;}).forEach(function(x){(r[x.dow]=r[x.dow]||[]).push([tijdTekst(x.min),x.les]);});
+  return r;
+}
+function reLaad(rooster){reOrig=reUitRooster(rooster);reWerk=reOrig.map(function(x){return Object.assign({},x);});reTerug=[];reVooruit=[];}
+function reKopie(){return JSON.stringify(reWerk);}
+function reBewaarStap(){reTerug.push(reKopie());if(reTerug.length>100)reTerug.shift();reVooruit=[];}
+function reOngedaan(){if(!reTerug.length)return;reVooruit.push(reKopie());reWerk=JSON.parse(reTerug.pop());render();}
+function reOpnieuw(){if(!reVooruit.length)return;reTerug.push(reKopie());reWerk=JSON.parse(reVooruit.pop());render();}
+function reAlles(){if(!reAantalWijzigingen()||!confirm('Alle wijzigingen sinds de laatste publicatie wissen?'))return;reBewaarStap();reWerk=reOrig.map(function(x){return Object.assign({},x);});render();}
+// Wat is er anders dan het gepubliceerde rooster?
+function reVerschil(){
+  var o={};reOrig.forEach(function(x){o[x.uid]=x;});
+  var w={};reWerk.forEach(function(x){w[x.uid]=x;});
+  var nieuw=reWerk.filter(function(x){return !o[x.uid];}).length;
+  var weg=reOrig.filter(function(x){return !w[x.uid];}).length;
+  var anders=reWerk.filter(function(x){var a=o[x.uid];return a&&(a.dow!==x.dow||a.min!==x.min||a.les!==x.les);}).length;
+  return {nieuw:nieuw,weg:weg,anders:anders,totaal:nieuw+weg+anders};
+}
+function reAantalWijzigingen(){return reVerschil().totaal;}
+function reGewijzigd(x){var a=reOrig.find(function(o){return o.uid===x.uid;});return !a||a.dow!==x.dow||a.min!==x.min||a.les!==x.les;}
+
+// Kan les 'les' op dag 'dow' om 'min' staan? Geeft de reden terug als dat niet kan.
+function reProbleem(dow,min,les,uid){
+  var e=min+LESSEN[les].duur,o=OPENINGSUREN[dow];
+  if(!o||min<naarMin(o[0])||e>naarMin(o[1]))return 'Buiten de openingsuren ('+(o?o[0]+' – '+o[1]:'gesloten')+')';
+  if(weekdagGesloten(dow,min,e))return 'In een gesloten periode';
+  var x=reWerk.find(function(x){return x.uid!==uid&&x.dow===dow&&x.min<e&&x.min+LESSEN[x.les].duur>min;});
+  return x?'Overlapt met '+LESSEN[x.les].naam+' om '+tijdTekst(x.min):'';
+}
+
+function paneelRooster(){
+  if(!dbInst)return '<div class="card leeg">Het rooster kon niet geladen worden uit de database.</div>';
+  var v=reVerschil();
+  var h='<div class="re-balk"><div class="re-palet"><span>Sleep een les in de kalender:</span>'+Object.keys(LESSEN).map(function(k){
+      return '<button class="re-chip les-'+k+'" data-les="'+k+'" title="Sleep naar een dag en uur, of klik om toe te voegen">'+LESSEN[k].icon+' '+esc(LESSEN[k].kort||LESSEN[k].naam)+'<small>'+LESSEN[k].duur+' min</small></button>';}).join('')+'</div>'+
+    '<div class="balk-r"><span class="re-status'+(v.totaal?' open':'')+'">'+(v.totaal?v.totaal+' niet-gepubliceerde wijziging'+(v.totaal>1?'en':''):'✓ Gepubliceerd')+'</span>'+
+    '<button class="knop rond" onclick="reOngedaan()" title="Ongedaan maken (Ctrl+Z)" aria-label="Ongedaan maken"'+(reTerug.length?'':' disabled')+'>↶</button>'+
+    '<button class="knop rond" onclick="reOpnieuw()" title="Opnieuw (Ctrl+Y)" aria-label="Opnieuw"'+(reVooruit.length?'':' disabled')+'>↷</button>'+
+    '<button class="knop" onclick="reAlles()"'+(v.totaal?'':' disabled')+'>Terugzetten</button>'+
+    '<button class="knop groen" onclick="rePubliceer()"'+(v.totaal?'':' disabled')+'>💾 Publiceren</button></div></div>'+
+    '<p class="re-hulp">Sleep een les om ze te <b>verplaatsen</b> (per kwartier) · sleep naar 🗑️ of druk <b>Delete</b> om te <b>verwijderen</b> · <b>dubbelklik</b> op een leeg vak of klik op een les hierboven om <b>toe te voegen</b> · klik op een les om ze te <b>wijzigen</b>. '+
+    'Pas na <b>Publiceren</b> ziet iedereen het nieuwe rooster.</p>';
+  var hoogte=(RE_EIND-RE_START)*RE_PPM;
+  h+='<div class="re-wrap"><div class="re-grid"><div class="re-kop"></div>'+DAGVOLG.map(function(d){
+    var n=reWerk.filter(function(x){return x.dow===d;}).length;
+    return '<div class="re-kop">'+DAGEN[d]+'<small>'+(n?n+' les'+(n>1?'sen':''):'geen lessen')+'</small></div>';}).join('');
+  h+='<div class="re-as" style="height:'+hoogte+'px">';
+  for(var m=RE_START+60;m<RE_EIND;m+=60)h+='<div style="top:'+(m-RE_START)*RE_PPM+'px">'+tijdTekst(m)+'</div>';
+  h+='</div>'+DAGVOLG.map(function(d){
+    var c='<div class="re-kol" data-dow="'+d+'" style="height:'+hoogte+'px">',o=OPENINGSUREN[d];
+    var dicht=[];   // buiten de openingsuren en gesloten periodes
+    if(!o)dicht.push([RE_START,RE_EIND,'Gesloten']);
+    else{dicht.push([RE_START,naarMin(o[0]),'']);dicht.push([naarMin(o[1]),RE_EIND,'Dicht']);}
+    (GESLOTEN[d]||[]).forEach(function(g){dicht.push([naarMin(g[0]),Math.min(naarMin(g[1]),RE_EIND),'Gesloten']);});
+    dicht.forEach(function(g){var a=Math.max(g[0],RE_START),b=Math.min(g[1],RE_EIND);if(b>a)c+='<div class="re-dicht" style="top:'+(a-RE_START)*RE_PPM+'px;height:'+(b-a)*RE_PPM+'px">'+(b-a>=45?g[2]:'')+'</div>';});
+    reWerk.filter(function(x){return x.dow===d;}).forEach(function(x){
+      var l=LESSEN[x.les];
+      c+='<button class="re-blok les-'+x.les+(reGewijzigd(x)?' nieuw':'')+'" data-uid="'+x.uid+'" style="top:'+(x.min-RE_START)*RE_PPM+'px;height:'+l.duur*RE_PPM+'px" '+
+        'title="'+esc(l.naam+' · '+tijdTekst(x.min)+' – '+tijdTekst(x.min+l.duur)+' · '+l.trainer)+'" aria-label="'+esc(l.naam+' op '+DAGEN[d]+' om '+tijdTekst(x.min))+'">'+
+        '<b>'+l.icon+' '+esc(l.kort||l.naam)+'</b><span>'+tijdTekst(x.min)+' – '+tijdTekst(x.min+l.duur)+'</span><small>'+esc(l.trainer)+'</small></button>';
+    });
+    return c+'</div>';
+  }).join('')+'</div></div>';
+  return h;
+}
+
+/* Slepen met muis of vinger (pointer events) */
+function reKoppel(){
+  var grid=document.querySelector('.re-grid');if(!grid)return;
+  document.querySelectorAll('.re-blok,.re-chip').forEach(function(el){
+    el.addEventListener('pointerdown',reStart);
+    el.addEventListener('click',function(){
+      if(reGeenKlik){reGeenKlik=false;return;}
+      if(el.dataset.uid)reOpenBewerk(+el.dataset.uid);else reOpenNieuw(el.dataset.les);
+    });
+    if(el.dataset.uid)el.addEventListener('keydown',reToets);
+  });
+  document.querySelectorAll('.re-kol').forEach(function(k){
+    k.addEventListener('dblclick',function(e){
+      if(e.target!==k&&!e.target.classList.contains('re-dicht'))return;
+      var r=k.getBoundingClientRect(),min=RE_START+Math.floor((e.clientY-r.top)/RE_PPM/RE_SNAP)*RE_SNAP;
+      reOpenNieuw(null,+k.dataset.dow,min);
+    });
+  });
+}
+function reStart(e){
+  if(e.button!==0)return;
+  var el=e.currentTarget,uid=el.dataset.uid?+el.dataset.uid:null,x=uid&&reWerk.find(function(i){return i.uid===uid;});
+  var les=x?x.les:el.dataset.les;
+  var grijp=x?Math.max(0,(e.clientY-el.getBoundingClientRect().top)/RE_PPM):Math.min(15,LESSEN[les].duur/2);
+  reSleep={el:el,uid:uid,les:les,grijp:grijp,x0:e.clientX,y0:e.clientY,bezig:false,doel:null};
+  try{el.setPointerCapture(e.pointerId);}catch(_){}
+  el.addEventListener('pointermove',reBeweeg);
+  el.addEventListener('pointerup',reStop);
+  el.addEventListener('pointercancel',reStop);
+}
+function reBeweeg(e){
+  var s=reSleep;if(!s)return;
+  if(!s.bezig){
+    if(Math.abs(e.clientX-s.x0)+Math.abs(e.clientY-s.y0)<6)return;
+    s.bezig=true;document.body.classList.add('re-slepen');
+    if(s.uid)s.el.classList.add('weg');
+  }
+  e.preventDefault();
+  if(e.clientY<70)window.scrollBy(0,-14);else if(e.clientY>window.innerHeight-70)window.scrollBy(0,14);
+  var prul=document.getElementById('prul'),pr=prul.getBoundingClientRect();
+  var opPrul=!!s.uid&&e.clientX>=pr.left&&e.clientX<=pr.right&&e.clientY>=pr.top-10&&e.clientY<=pr.bottom+10;
+  prul.classList.toggle('actief',opPrul);
+  var oud=document.querySelector('.re-ghost');if(oud)oud.remove();
+  s.doel=null;
+  if(opPrul){s.doel={prul:true};return;}
+  var kol=[].slice.call(document.querySelectorAll('.re-kol')).find(function(k){var r=k.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<r.right&&e.clientY>=r.top-40&&e.clientY<=r.bottom+40;});
+  if(!kol)return;
+  var r=kol.getBoundingClientRect(),duur=LESSEN[s.les].duur;
+  var min=Math.round((RE_START+(e.clientY-r.top)/RE_PPM-s.grijp)/RE_SNAP)*RE_SNAP;
+  min=Math.max(RE_START,Math.min(RE_EIND-duur,min));
+  var dow=+kol.dataset.dow,fout=reProbleem(dow,min,s.les,s.uid);
+  s.doel={dow:dow,min:min,fout:fout};
+  var g=document.createElement('div');g.className='re-ghost'+(fout?' fout':'');
+  g.style.top=(min-RE_START)*RE_PPM+'px';g.style.height=duur*RE_PPM+'px';
+  g.textContent=fout?'✕ '+fout:tijdTekst(min)+' – '+tijdTekst(min+duur);
+  kol.appendChild(g);
+}
+function reStop(e){
+  var s=reSleep;reSleep=null;if(!s)return;
+  s.el.removeEventListener('pointermove',reBeweeg);s.el.removeEventListener('pointerup',reStop);s.el.removeEventListener('pointercancel',reStop);
+  document.body.classList.remove('re-slepen');document.getElementById('prul').classList.remove('actief');
+  var g=document.querySelector('.re-ghost');if(g)g.remove();
+  s.el.classList.remove('weg');
+  if(!s.bezig)return;            // gewone klik: het click-event opent het venster
+  reGeenKlik=true;setTimeout(function(){reGeenKlik=false;},0);
+  if(e.type==='pointercancel'||!s.doel)return;
+  if(s.doel.prul){reVerwijder(s.uid);return;}
+  if(s.doel.fout){showToast('⚠️ '+s.doel.fout);return;}
+  reBewaarStap();
+  if(s.uid){var x=reWerk.find(function(i){return i.uid===s.uid;});x.dow=s.doel.dow;x.min=s.doel.min;}
+  else reWerk.push({uid:++reVolg,dow:s.doel.dow,min:s.doel.min,les:s.les});
+  render();
+}
+function reVerwijder(uid){
+  var x=reWerk.find(function(i){return i.uid===uid;});if(!x)return;
+  reBewaarStap();reWerk=reWerk.filter(function(i){return i.uid!==uid;});
+  render();showToast('🗑️ '+LESSEN[x.les].naam+' ('+DAGEN[x.dow].toLowerCase()+' '+tijdTekst(x.min)+') verwijderd · Ctrl+Z om terug te zetten');
+}
+// Toetsenbord op een les: pijltjes verplaatsen, Delete verwijdert
+function reToets(e){
+  var uid=+e.currentTarget.dataset.uid,x=reWerk.find(function(i){return i.uid===uid;});if(!x)return;
+  if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();reVerwijder(uid);return;}
+  var dow=x.dow,min=x.min,i=DAGVOLG.indexOf(dow);
+  if(e.key==='ArrowUp')min-=RE_SNAP;else if(e.key==='ArrowDown')min+=RE_SNAP;
+  else if(e.key==='ArrowLeft')dow=DAGVOLG[(i+6)%7];else if(e.key==='ArrowRight')dow=DAGVOLG[(i+1)%7];else return;
+  e.preventDefault();
+  var f=reProbleem(dow,min,x.les,uid);if(f){showToast('⚠️ '+f);return;}
+  reBewaarStap();x.dow=dow;x.min=min;render();
+  var el=document.querySelector('.re-blok[data-uid="'+uid+'"]');if(el)el.focus();
+}
+
+/* Venster: les toevoegen of wijzigen */
+var reBewerkUid=null;
+function reOpenNieuw(les,dow,min){
+  reBewerkUid=null;les=les||Object.keys(LESSEN)[0];
+  if(dow==null){   // eerste vrije plaats vanaf maandag
+    outer:for(var i=0;i<7;i++)for(var m=RE_START;m<RE_EIND;m+=RE_SNAP)if(!reProbleem(DAGVOLG[i],m,les)){dow=DAGVOLG[i];min=m;break outer;}
+    if(dow==null){dow=1;min=naarMin(OPENINGSUREN[1][0]);}
+  }
+  reToonVenster('Les toevoegen',les,dow,min);
+}
+function reOpenBewerk(uid){
+  var x=reWerk.find(function(i){return i.uid===uid;});if(!x)return;
+  reBewerkUid=uid;reToonVenster('Les wijzigen',x.les,x.dow,x.min);
+}
+function reToonVenster(titel,les,dow,min){
+  document.getElementById('modalInhoud').innerHTML='<h2 class="card-title">'+titel+'</h2>'+
+    '<div class="fg"><label for="re-les">Les</label><select id="re-les" onchange="reVensterCheck()">'+Object.keys(LESSEN).map(function(k){
+      return '<option value="'+k+'"'+(k===les?' selected':'')+'>'+LESSEN[k].icon+' '+esc(LESSEN[k].naam)+' · '+esc(LESSEN[k].trainer)+' · '+LESSEN[k].duur+' min</option>';}).join('')+'</select></div>'+
+    '<div class="m-rij"><div class="fg"><label for="re-dag">Dag</label><select id="re-dag" onchange="reVensterCheck()">'+DAGVOLG.map(function(d){return '<option value="'+d+'"'+(d===dow?' selected':'')+'>'+DAGEN[d]+'</option>';}).join('')+'</select></div>'+
+    '<div class="fg"><label for="re-uur">Start</label><select id="re-uur" onchange="reVensterCheck()">'+(function(){var o='';for(var m=RE_START;m<RE_EIND;m+=RE_SNAP)o+='<option value="'+m+'"'+(m===min?' selected':'')+'>'+tijdTekst(m)+'</option>';return o;})()+'</select></div></div>'+
+    '<div class="m-fout" id="re-fout"></div><div class="m-knoppen">'+
+    (reBewerkUid?'<button class="knop rood" onclick="sluitModal();reVerwijder('+reBewerkUid+')">🗑️ Verwijderen</button>':'')+
+    '<button class="knop" onclick="sluitModal()">Annuleren</button><button class="knop groen" id="re-ok" onclick="reVensterOk()">'+(reBewerkUid?'✓ Wijzigen':'+ Toevoegen')+'</button></div>';
+  document.getElementById('modal').classList.add('open');
+  reVensterCheck();document.getElementById('re-les').focus();
+}
+function reVensterWaarden(){return {les:document.getElementById('re-les').value,dow:+document.getElementById('re-dag').value,min:+document.getElementById('re-uur').value};}
+function reVensterCheck(){
+  var v=reVensterWaarden(),f=reProbleem(v.dow,v.min,v.les,reBewerkUid);
+  document.getElementById('re-fout').textContent=f?'✕ '+f:'✓ '+DAGEN[v.dow]+' '+tijdTekst(v.min)+' – '+tijdTekst(v.min+LESSEN[v.les].duur);
+  document.getElementById('re-fout').style.color=f?'':'var(--sage)';
+  document.getElementById('re-ok').disabled=!!f;
+}
+function reVensterOk(){
+  var v=reVensterWaarden();if(reProbleem(v.dow,v.min,v.les,reBewerkUid))return;
+  reBewaarStap();
+  if(reBewerkUid){var x=reWerk.find(function(i){return i.uid===reBewerkUid;});x.les=v.les;x.dow=v.dow;x.min=v.min;}
+  else reWerk.push({uid:++reVolg,dow:v.dow,min:v.min,les:v.les});
+  sluitModal();render();
+}
+function sluitModal(){document.getElementById('modal').classList.remove('open');}
+
+/* Publiceren: eerst nagaan welke komende reservaties geraakt worden */
+var reGeraakt=[];
+function rePubliceer(){
+  var nieuw=reNaarRooster(reWerk),nu=new Date();
+  DB.admin.boekingen(nu,addDays(nu,400)).then(function(lijst){
+    var vrij=Date.now();
+    reGeraakt=lijst.filter(function(b){return !(b.status==='wacht-op-betaling'&&vervaltOm(b)<=vrij);}).map(function(b){
+      var d=new Date(b.slotId.slice(0,10)+'T00:00'),dow=d.getDay(),t=b.slotId.slice(11,16),les=b.slotId.split('_')[1],van=naarMin(t),tot=van+b.duur;
+      if(les!=='zaal'&&b.status!=='intern'){
+        return (nieuw[dow]||[]).some(function(x){return x[0]===t&&x[1]===les;})?null:{b:b,reden:'staat niet meer in het rooster'};
+      }
+      var x=(nieuw[dow]||[]).find(function(x){var s=naarMin(x[0]);return s<tot&&s+LESSEN[x[1]].duur>van;});
+      return x?{b:b,reden:'overlapt met '+LESSEN[x[1]].naam+' om '+x[0]}:null;
+    }).filter(Boolean);
+    if(!reGeraakt.length)return reOpslaan();
+    document.getElementById('modalInhoud').innerHTML='<h2 class="card-title">⚠️ '+reGeraakt.length+' komende reservatie'+(reGeraakt.length>1?'s':'')+' geraakt</h2>'+
+      '<p style="color:var(--espresso2);line-height:1.6;font-size:.92rem;">Deze reservaties blijven bestaan: de klant ziet ze nog bij <i>Mijn reservaties</i> en de plaats blijft vastgelegd. Laat de klant weten wat er verandert, of annuleer de reservatie daarna in het tabblad <b>Reservaties</b>.</p>'+
+      '<div class="m-lijst">'+reGeraakt.map(function(g){var b=g.b,i=lesInfo(b),p=b.profiel||{};
+        return '<div><b>'+fmtDatum(i.datum)+' '+i.tijd+'</b> · '+i.les.icon+' '+esc(i.les.naam)+' · '+esc(p.naam||'?')+' <small>('+statusLabel(b).toLowerCase()+')</small><br><small>'+esc(g.reden)+'</small></div>';}).join('')+'</div>'+
+      '<div class="m-knoppen"><button class="knop" onclick="sluitModal()">Terug naar de kalender</button><button class="knop groen" onclick="sluitModal();reOpslaan()">Toch publiceren</button></div>';
+    document.getElementById('modal').classList.add('open');
+  }).catch(fout);
+}
+function reOpslaan(){
+  var nieuw=reNaarRooster(reWerk);
+  // Altijd de nieuwste instellingen ophalen, zodat enkel het rooster verandert
+  DB.admin.instellingen().then(function(d){
+    var cfg=Object.assign({},d&&d.config||configVoorDatabase(nieuw),{rooster:nieuw});
+    return DB.admin.zetInstellingen(cfg);
+  }).then(laadInst).then(function(){
+    zetRooster(dbInst.config.rooster);reLaad(dbInst.config.rooster);render();
+    showToast('✓ Rooster gepubliceerd: de website gebruikt het nieuwe rooster meteen');
+  }).catch(fout);
+}
+window.addEventListener('beforeunload',function(e){if(reAantalWijzigingen()){e.preventDefault();e.returnValue='';}});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape')return sluitModal();
+  if(huidigeTab!=='rooster'||document.getElementById('modal').classList.contains('open')||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+  var k=e.key.toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&k==='z'&&!e.shiftKey){e.preventDefault();reOngedaan();}
+  else if((e.ctrlKey||e.metaKey)&&(k==='y'||(k==='z'&&e.shiftKey))){e.preventDefault();reOpnieuw();}
+});
+
 /* ── INSTELLINGEN ── */
 var dbInst=null;
 function paneelInstellingen(){
-  var hier=configVoorDatabase(),gelijk=dbInst&&JSON.stringify(sorteer(dbInst.config))===JSON.stringify(sorteer(hier));
+  var hier=configVoorDatabase(dbInst&&dbInst.config.rooster),gelijk=dbInst&&JSON.stringify(sorteer(dbInst.config))===JSON.stringify(sorteer(hier));
   return '<div class="card inst"><h2 class="card-title">Rooster en regels</h2>'+
-    '<p>Het rooster, de lessen, openingsuren en boekingsregels pas je aan in <b>assets/boeken.js</b>. De database gebruikt een kopie om alle regels op de server te controleren. Na een wijziging stuur je die kopie hier door.</p>'+
+    '<p>Het <b>rooster</b> pas je aan in het tabblad <a href="#" onclick="toonTab(\'rooster\');return false;">🗓️ Rooster</a>. De lessen (prijs, duur, max. personen), openingsuren en boekingsregels staan in <b>assets/boeken.js</b>. De database gebruikt een kopie om alle regels op de server te controleren. Na een wijziging in boeken.js stuur je die kopie hier door (het rooster blijft dan ongewijzigd).</p>'+
     (gelijk?'<div class="notice sage">✓ De database gebruikt hetzelfde rooster en dezelfde regels als de website'+(dbInst?' (bijgewerkt op '+new Date(dbInst.bijgewerkt).toLocaleString('nl-BE')+')':'')+'.</div>'
-      :'<div class="notice">⚠️ Het rooster of de regels in <b>boeken.js</b> verschillen van die in de database. Boekingen kunnen daardoor geweigerd worden. Stuur ze door:</div>')+
-    '<div style="margin-top:1.25rem;display:flex;gap:.6rem;flex-wrap:wrap;"><button class="knop groen" onclick="stuurInstellingen()"'+(gelijk?' disabled':'')+'>⬆️ Rooster naar database sturen</button>'+
+      :'<div class="notice">⚠️ De lessen of regels in <b>boeken.js</b> verschillen van die in de database. Boekingen kunnen daardoor geweigerd worden. Stuur ze door:</div>')+
+    '<div style="margin-top:1.25rem;display:flex;gap:.6rem;flex-wrap:wrap;"><button class="knop groen" onclick="stuurInstellingen()"'+(gelijk?' disabled':'')+'>⬆️ Regels naar database sturen</button>'+
     '<button class="knop" onclick="document.getElementById(\'cfg\').style.display=\'block\'">Toon details</button></div>'+
     '<pre id="cfg" style="display:none;">'+esc(JSON.stringify(hier,null,1))+'</pre></div>';
 }
 function sorteer(o){if(Array.isArray(o))return o.map(sorteer);if(o&&typeof o==='object'){var r={};Object.keys(o).sort().forEach(function(k){r[k]=sorteer(o[k]);});return r;}return o;}
 function laadInst(){return DB.admin.instellingen().then(function(d){dbInst=d;});}
-function stuurInstellingen(){DB.admin.zetInstellingen(configVoorDatabase()).then(function(){showToast('✓ Rooster en regels bijgewerkt');}).then(laadInst).then(render).catch(fout);}
+function stuurInstellingen(){DB.admin.zetInstellingen(configVoorDatabase(dbInst&&dbInst.config.rooster)).then(function(){showToast('✓ Regels bijgewerkt');}).then(laadInst).then(render).catch(fout);}
 
 /* ── ALGEMEEN ── */
 function fout(e){showToast('⚠️ '+e);}
 function render(){
-  var inh=huidigeTab==='res'?paneelReservaties():huidigeTab==='leden'?paneelLeden():paneelInstellingen();
+  var inh=huidigeTab==='res'?paneelReservaties():huidigeTab==='rooster'?paneelRooster():huidigeTab==='leden'?paneelLeden():paneelInstellingen();
   document.getElementById('inhoud').innerHTML=tabs(huidigeTab)+'<div class="paneel actief">'+inh+'</div>';
+  if(huidigeTab==='rooster')reKoppel();
 }
 
 klaar(function(u){
@@ -222,6 +528,8 @@ klaar(function(u){
     return;
   }
   Promise.all([laadWeek(),laadLeden(),laadInst()]).then(function(){
+    if(dbInst&&dbInst.config&&dbInst.config.rooster){zetRooster(dbInst.config.rooster);reLaad(dbInst.config.rooster);}
+    if(/[?&]tab=rooster/.test(location.search))huidigeTab='rooster';
     if(profielen.some(wachtOpGoedkeuring))showToast('👥 Er '+(profielen.filter(wachtOpGoedkeuring).length===1?'wacht 1 professional':'wachten '+profielen.filter(wachtOpGoedkeuring).length+' professionals')+' op goedkeuring');
     render();
   }).catch(fout);

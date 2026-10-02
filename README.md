@@ -13,29 +13,36 @@ met online lessen boeken en zaalhuur voor professionals.
 | `reserveren.html` | Reservatie bevestigen (enkel na aanmelden) |
 | `betalen.html` | Betaalpagina (online betalen nog niet actief; betalen aan de bar bevestigt) |
 | `account.html` | Mijn account: gegevens, naam/wachtwoord wijzigen, komende en voorbije reservaties (klik op je initialen) |
-| `beheer.html` | Beheerpagina: reservaties, leden goedkeuren, rooster naar database sturen |
+| `beheer.html` | Beheerpagina: reservaties, **weekrooster slepen met de muis**, leden goedkeuren, regels naar database sturen |
 | `fotos.html` | Fotogalerij (`Gallery.html` stuurt door naar deze pagina) |
 
 ## Waar pas je wat aan?
 
-Bijna alles staat bovenaan in **`assets/boeken.js`**:
+**Het weekrooster** pas je aan op de website zelf: `beheer.html` → **🗓️ Rooster**. Sleep lessen
+met de muis naar een andere dag of uur, sleep een les uit de balk bovenaan in de kalender om ze
+toe te voegen, sleep naar 🗑️ (of druk Delete) om te verwijderen, of klik op een les om ze te
+wijzigen. Ctrl+Z maakt ongedaan. Pas na **Publiceren** gaat het rooster naar de database en
+gebruiken de website, het boekingssysteem en de server het meteen. Raakt een wijziging
+komende reservaties, dan krijg je eerst een lijst; die reservaties blijven bestaan.
+
+De rest staat bovenaan in **`assets/boeken.js`**:
 
 - `LESSEN`: lessoorten, begeleiding, duur, max. aantal personen en prijs
-- `ROOSTER`: welke les wanneer (per weekdag)
+- `ROOSTER`: enkel een reserve voor als de database niet bereikbaar is
 - `OPENINGSUREN` en `GESLOTEN`: wanneer niemand kan boeken of huren
 - `REGELS`: betaaltermijn, hoe lang op voorhand boeken/annuleren, max. uren per week, zaalduren
 - `ZAAL`: prijs per uur voor zaalhuur
 - `TYPES`: types personen en wie de zaal mag huren
 
-De hoofdpagina leest het rooster, de openingsuren en de cijfers ook uit dit bestand.
+De hoofdpagina leest de openingsuren en lessen uit dit bestand en het rooster uit de database.
 
 ## Agenda-abonnement (Google Calendar, Apple, Outlook)
 
 `rooster.ics` is het lessenrooster als agenda. De knop **+ Google Calendar** op de hoofdpagina
 abonneert bezoekers erop, zodat wijzigingen vanzelf in hun agenda komen (Google ververst
-ongeveer elke 12 tot 24 uur). Het bestand wordt gemaakt uit `assets/boeken.js`:
+ongeveer elke 12 tot 24 uur). Het bestand wordt gemaakt uit het rooster in de database:
 
-- automatisch door GitHub Actions (`.github/workflows/agenda.yml`) bij elke wijziging op `main`;
+- automatisch door GitHub Actions (`.github/workflows/agenda.yml`), elke 2 uur;
 - of zelf: `node tools/maak-agenda.js`.
 
 ## Stijl
@@ -61,5 +68,6 @@ Accounts en reservaties staan in Supabase (project `asogwgjyurkcciaamhld`, regio
   (status `intern`: geen betaling, geen weeklimiet, ook buiten de openingsuren; wel geen
   overlap met lessen of zaalhuur). Trainers zien dan "Zaal bezet", leden zien niets.
 
-**Rooster of regels gewijzigd in `assets/boeken.js`?** Open `beheer.html` → Instellingen →
-*Rooster naar database sturen*, zodat de server dezelfde regels gebruikt.
+**Lessen of regels gewijzigd in `assets/boeken.js`?** Open `beheer.html` → Instellingen →
+*Regels naar database sturen*, zodat de server dezelfde regels gebruikt (het rooster blijft dan
+zoals het in de database staat).

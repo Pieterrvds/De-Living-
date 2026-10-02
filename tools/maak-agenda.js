@@ -1,11 +1,23 @@
-/* Maakt rooster.ics (agenda-abonnement voor Google Calendar, Apple, Outlook) uit assets/boeken.js.
+/* Maakt rooster.ics (agenda-abonnement voor Google Calendar, Apple, Outlook).
+   Het rooster komt uit de database (Beheer → Rooster); lukt dat niet, dan uit assets/boeken.js.
    Gebruik: node tools/maak-agenda.js
-   Dit gebeurt ook automatisch via GitHub Actions wanneer assets/boeken.js wijzigt. */
+   Dit gebeurt ook automatisch via GitHub Actions (elke 2 uur en bij een wijziging van boeken.js). */
 var fs=require('fs'),path=require('path'),vm=require('vm');
 var root=path.join(__dirname,'..');
 var ctx={window:{}};vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(root,'assets/boeken.js'),'utf8'),ctx);
 var LESSEN=vm.runInContext('LESSEN',ctx),ROOSTER=vm.runInContext('ROOSTER',ctx);
+
+(async function(){
+try{
+  var url=vm.runInContext('SUPABASE_URL',ctx),key=vm.runInContext('SUPABASE_KEY',ctx);
+  var res=await fetch(url+'/rest/v1/instellingen?select=config&id=eq.1',{headers:{apikey:key}});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  var d=await res.json();
+  if(!d[0]||!d[0].config||!d[0].config.rooster)throw new Error('geen rooster');
+  vm.runInContext('zetRooster('+JSON.stringify(d[0].config.rooster)+')',ctx);
+  console.log('Rooster uit de database');
+}catch(e){console.log('Database niet bereikbaar ('+e.message+'): reserverooster uit assets/boeken.js');}
 
 var SITE='https://pieterrvds.github.io/De-Living-/';
 var ADRES='La Vie en Rose, Hoogstraat 40, 9308 Aalst';
@@ -57,3 +69,4 @@ Object.keys(ROOSTER).sort().forEach(function(dow){
 r.push('END:VCALENDAR');
 fs.writeFileSync(path.join(root,'rooster.ics'),r.map(vouw).join('\r\n')+'\r\n');
 console.log('rooster.ics gemaakt ('+r.filter(function(x){return x==='BEGIN:VEVENT';}).length+' lessen per week)');
+})();
