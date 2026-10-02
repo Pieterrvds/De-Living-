@@ -169,6 +169,7 @@ gap:normal;}
 .kal-leg{padding:1rem 2rem;display:flex;gap:1.5rem;flex-wrap:wrap;background:var(--beige);border-top:1px solid var(--border);}
 .kl{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--espresso2);}
 .kp{width:10px;height:10px;border-radius:3px;}
+.kl-binnenkort{opacity:.55;font-style:italic;}
 .kp.yoga{background:rgba(90,122,74,.4);}.kp.kine{background:rgba(184,134,42,.4);}.kp.groep{background:rgba(192,120,120,.4);}
 
 /* ═══════════════════════ LESSEN ═══════════════════════ */
@@ -196,6 +197,16 @@ gap:normal;}
 .les-card{display:flex;flex-direction:column;}
 .les-body{flex:1;display:flex;flex-direction:column;}
 .les-btns{display:flex;flex-direction:column;gap:.6rem;margin-top:auto;}
+.binnenkort-lint{position:absolute;top:16px;left:16px;z-index:2;background:rgba(61,32,7,.86);color:#FDF8EE;font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:.45rem .9rem;border-radius:50px;}
+.les-btn.les-btn-binnenkort{background:rgba(61,32,7,.08);color:var(--espresso2);box-shadow:none;cursor:default;}
+.les-btn.les-btn-binnenkort:hover{transform:none;background:rgba(61,32,7,.08);box-shadow:none;}
+.binnenkort-melding{margin-top:1rem;padding:.9rem 1.1rem;border-radius:16px;background:rgba(253,248,238,.75);border:1px dashed rgba(61,32,7,.25);font-size:.92rem;color:var(--espresso2);line-height:1.6;}
+.yoga-balk{display:none;}
+@media(max-width:700px){
+  .yoga-balk{display:flex;position:fixed;left:12px;right:12px;bottom:12px;z-index:850;align-items:center;justify-content:center;gap:.5rem;min-height:58px;border-radius:18px;background:#3F6B34;color:#fff;font-size:1.1rem;font-weight:800;text-decoration:none;box-shadow:0 10px 30px rgba(40,20,5,.3);transform:translateY(140%);transition:transform .35s cubic-bezier(.22,1,.36,1);}
+  .yoga-balk.toon{transform:none;}
+  .wa{bottom:84px!important;}
+}
 .les-btn.wa-btn{background:transparent;color:#128C4B;border:1.5px solid rgba(37,211,102,.55);box-shadow:none;}
 .les-btn.wa-btn:hover{background:#25D366;color:white;border-color:#25D366;box-shadow:0 10px 26px rgba(37,211,102,.3);}
 
@@ -362,7 +373,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
     <li><a href="fotos.html">Foto's</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
-  <a href="boeken.html" class="nav-pill">🌹 Les boeken</a>
+  <a href="yoga.html" class="nav-pill">🧘 Yoga reserveren</a>
   <button class="hamburger" id="hbg" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
 <div class="mob-menu" id="mobMenu">
@@ -372,7 +383,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
   <a href="#evenementen" onclick="cm()">Evenementen</a>
   <a href="fotos.html"   onclick="cm()">Foto's</a>
   <a href="#contact"     onclick="cm()">Contact</a>
-  <a href="boeken.html"  onclick="cm()" class="mob-pill-m">🌹 Les boeken</a>
+  <a href="yoga.html"   onclick="cm()" class="mob-pill-m">🧘 Yoga reserveren</a>
 </div>
 
 <!-- HERO -->
@@ -388,8 +399,8 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
     <p class="hero-subtitle">Bewegen, rusten &amp; genieten — onder één dak</p>
     <p class="hero-loc">Yoga &nbsp;·&nbsp; Kinesitherapie &nbsp;·&nbsp; Groepslessen &nbsp;·&nbsp; Bar</p>
     <div class="hero-ctas">
-      <a href="#lessen" class="btn-rose">✦ Ontdek onze lessen</a>
-      <a href="boeken.html" class="btn-glass">🌹 Les boeken</a>
+      <a href="yoga.html" class="btn-rose">🧘 Yoga reserveren</a>
+      <a href="#lessen" class="btn-glass">✦ Ontdek onze lessen</a>
     </div>
   </div>
   <div class="hero-scroll-hint">
@@ -467,11 +478,11 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
       <p class="sec-lead sr d2" style="max-width:360px;">Plan je week vooruit. Zet het rooster in je Google Calendar: wijzigingen komen er vanzelf in. Ook voor <a href="webcal://pieterrvds.github.io/De-Living-/rooster.ics" class="kal-webcal">Apple of Outlook</a>.</p>
     </div>
     <div class="boek-cta-wrap sr d2">
-      <a href="boeken.html" class="boek-cta">
+      <a href="yoga.html" class="boek-cta">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 16l2 2 4-4"/></svg>
         Les boeken
       </a>
-      <span class="boek-cta-sub">Kies een uur in het rooster en reserveer je plaats</span>
+      <span class="boek-cta-sub">Kies een yogales en reserveer je plaats met je beurtenkaart</span>
     </div>
     <div class="kal-wrap sr scale d1">
       <div class="kal-top">
@@ -510,17 +521,18 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
             <div class="les-bul"><div class="bul-dot"></div>Hatha · Vinyasa · Yin · Yoga Nidra</div>
             <div class="les-bul"><div class="bul-dot"></div>Alle niveaus welkom</div>
             <div class="les-bul"><div class="bul-dot"></div>Gwen Deryck (RYT-500)</div>
-            <div class="les-bul"><div class="bul-dot"></div>Max. <span data-bron="max-yoga">16</span> personen</div>
+            <div class="les-bul"><div class="bul-dot"></div>Max. <span data-bron="max-yoga">25</span> personen</div>
+            <div class="les-bul"><div class="bul-dot"></div>Met een beurtenkaart, te koop bij Gwen</div>
           </div>
           <div class="les-btns">
-            <a href="boeken.html" class="les-btn">🌹 Boek een les</a>
+            <a href="yoga.html" class="les-btn">🧘 Yoga reserveren</a>
             <!-- Fictief WhatsApp-nummer: vervang door het echte nummer van de lesgever -->
             <a href="https://wa.me/32470000001?text=Hallo%20Gwen!%20Ik%20heb%20een%20vraag%20over%20yoga%20bij%20La%20Vie%20en%20Rose." target="_blank" rel="noopener" class="les-btn wa-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Contacteer Gwen</a>
           </div>
         </div>
       </div>
       <div class="les-card sr d2">
-        <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=85" alt="Kinesitherapie" loading="lazy"></div>
+        <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=85" alt="Kinesitherapie" loading="lazy"><span class="binnenkort-lint">Binnenkort</span></div>
         <div class="les-body">
           <div class="les-ey">Individuele begeleiding</div>
           <div class="les-name">Kinesitherapie</div>
@@ -532,14 +544,14 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
             <div class="les-bul"><div class="bul-dot"></div>Op afspraak</div>
           </div>
           <div class="les-btns">
-            <a href="boeken.html" class="les-btn">🌹 Boek een les</a>
+            <span class="les-btn les-btn-binnenkort" aria-disabled="true">⏳ Binnenkort online boeken</span>
             <!-- Fictief WhatsApp-nummer: vervang door het echte nummer van de lesgever -->
             <a href="https://wa.me/32470000002?text=Hallo!%20Ik%20heb%20een%20vraag%20over%20kinesitherapie%20bij%20La%20Vie%20en%20Rose." target="_blank" rel="noopener" class="les-btn wa-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Contacteer de kinesist</a>
           </div>
         </div>
       </div>
       <div class="les-card sr d3">
-        <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=85" alt="Groepsles" loading="lazy"></div>
+        <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=85" alt="Groepsles" loading="lazy"><span class="binnenkort-lint">Binnenkort</span></div>
         <div class="les-body">
           <div class="les-ey">Samen sporten</div>
           <div class="les-name">Groepslessen</div>
@@ -551,7 +563,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
             <div class="les-bul"><div class="bul-dot"></div>Begeleid door Pieter</div>
           </div>
           <div class="les-btns">
-            <a href="boeken.html" class="les-btn">🌹 Boek een les</a>
+            <span class="les-btn les-btn-binnenkort" aria-disabled="true">⏳ Binnenkort online boeken</span>
             <!-- Fictief WhatsApp-nummer: vervang door het echte nummer van de lesgever -->
             <a href="https://wa.me/32470000003?text=Hallo!%20Ik%20heb%20een%20vraag%20over%20de%20groepslessen%20bij%20La%20Vie%20en%20Rose." target="_blank" rel="noopener" class="les-btn wa-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Contacteer Pieter</a>
           </div>
@@ -583,6 +595,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
       </div>
       <div class="ev-intro-r sr d2">
         <p class="sec-lead">Regelmatig organiseren we bijzondere momenten voor iedereen die wil opladen en genieten.</p>
+        <p class="binnenkort-melding">⏳ <b>Binnenkort</b> · Onze eerste evenementen worden nog aangekondigd. Hieronder alvast een voorproefje. Volg ons op Instagram om niets te missen.</p>
         <div class="ev-ctrl">
           <button class="ev-arrow" id="evPrev" aria-label="Vorig evenement">&#8249;</button>
           <div class="ev-progress"><div class="ev-progress-fill" id="evProg"></div></div>
@@ -717,13 +730,14 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
   </div>
 </footer>
 <div class="toast" id="toast"></div>
+<a href="yoga.html" class="yoga-balk" id="yogaBalk">🧘 Yoga reserveren</a>
 
 <script src="assets/boeken.js"></script>
 <script>
 /* ══ CIJFERS UIT HET ROOSTER ══ — vóór de teller-animatie invullen, en opnieuw zodra
    het rooster uit de database binnen is (dat pas je aan in Beheer → Rooster). */
 function vulCijfers(){
-  var bron={'disciplines':Object.keys(LESSEN).length,'lessen-per-week':lessenPerWeek(),'max-yoga':LESSEN.yoga.max,'max-groep':LESSEN.groep.max};
+  var bron={'disciplines':Object.keys(LESSEN).length,'lessen-per-week':lessenPerWeek(true),'max-yoga':LESSEN.yoga.max,'max-groep':LESSEN.groep.max};
   document.querySelectorAll('[data-bron]').forEach(function(el){
     var v=bron[el.getAttribute('data-bron')];if(v==null)return;
     if(el.hasAttribute('data-target')){
@@ -924,7 +938,8 @@ var rooster={};
 function bouwRooster(){
   rooster={};
   Object.keys(ROOSTER).forEach(function(dow){
-    rooster[dow]=ROOSTER[dow].filter(function(r){return !weekdagGesloten(+dow,naarMin(r[0]),naarMin(r[0])+LESSEN[r[1]].duur);})
+    // enkel lessen die je nu al online kan boeken (de rest staat als "binnenkort" in de legende)
+    rooster[dow]=ROOSTER[dow].filter(function(r){return !isBinnenkort(r[1])&&!weekdagGesloten(+dow,naarMin(r[0]),naarMin(r[0])+LESSEN[r[1]].duur);})
       .map(function(r){var les=LESSEN[r[1]];return {t:r[1],tijd:r[0],l:les.icon+' '+(les.kort||les.naam)+' '+r[0],wie:lesgeverVan(r)};});
   });
 }
@@ -985,8 +1000,14 @@ function showToast(msg){
 }
 
 document.getElementById('kalLeg').innerHTML=Object.keys(LESSEN).map(function(k){
-  return '<div class="kl"><div class="kp '+k+'"></div>'+LESSEN[k].naam+'</div>';
+  return '<div class="kl'+(isBinnenkort(k)?' kl-binnenkort':'')+'"><div class="kp '+k+'"></div>'+LESSEN[k].naam+(isBinnenkort(k)?' · binnenkort':'')+'</div>';
 }).join('');
+/* Gsm: vaste knop "Yoga reserveren" onderaan zodra je voorbij de openingsfoto scrolt */
+(function(){
+  var b=document.getElementById('yogaBalk');if(!b)return;
+  var h=function(){b.classList.toggle('toon',window.scrollY>window.innerHeight*.6);};
+  window.addEventListener('scroll',h,{passive:true});h();
+})();
 // Openingsuren komen uit assets/boeken.js (OPENINGSUREN)
 document.getElementById('openingsuren').innerHTML=openingsurenTekst();
 renderKal();

@@ -271,3 +271,10 @@ body.re-slepen .re-blok:hover{transform:none;box-shadow:none;}
 .bez.vol{color:#A04545;}
 .bez-balk{width:44px;height:6px;border-radius:50px;background:rgba(61,32,7,.1);overflow:hidden;flex-shrink:0;}
 .bez-balk i{display:block;height:100%;border-radius:50px;background:currentColor;}
+
+/* Rustige pagina (data-rustig): geen eigen cursor; afmelden niet in de menubalk (staat onderaan de pagina) */
+body[data-rustig] .cursor,body[data-rustig] .cursor-ring{display:none!important;}
+body[data-rustig],body[data-rustig] *{cursor:auto;}
+body[data-rustig] a,body[data-rustig] button,body[data-rustig] label{cursor:pointer;}
+body[data-rustig] .nav-afmelden{display:none!important;}
+body[data-rustig] .wa{display:none;}   /* hulp met WhatsApp staat onderaan de pagina */

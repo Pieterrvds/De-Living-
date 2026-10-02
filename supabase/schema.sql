@@ -53,6 +53,25 @@ alter table public.boekingen drop constraint if exists boekingen_status_check;
 alter table public.boekingen add constraint boekingen_status_check
   check (status in ('wacht-op-betaling','bevestigd','betaald','intern'));
 
+-- Beurtenkaarten: een lid koopt ter plaatse een kaart (bv. 10 beurten); de lesgever bevestigt de
+-- betaling op de website. Een les uit config.beurtenkaart.lessen boeken kost 1 beurt
+-- (boekingen.beurt). Saldo = bevestigde beurten − reservaties met een beurt; annuleren geeft de
+-- beurt dus vanzelf terug. Correcties (bv. −1 bij te laat annuleren) staan hier ook.
+alter table public.boekingen add column if not exists beurt boolean not null default false;
+create table if not exists public.beurten (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid not null references public.profielen(id) on delete cascade,
+  aantal         int  not null,                                  -- +10 (kaart), +1 / −1 (correctie)
+  bedrag         numeric(8,2) not null default 0,                -- ter plaatse betaald
+  soort          text not null default 'kaart' check (soort in ('kaart','correctie')),
+  status         text not null default 'aangevraagd' check (status in ('aangevraagd','bevestigd')),
+  opmerking      text not null default '',
+  aangemaakt     timestamptz not null default now(),
+  bevestigd_op   timestamptz,
+  bevestigd_door uuid references public.profielen(id) on delete set null
+);
+create index if not exists beurten_user_idx on public.beurten(user_id);
+
 -- ── HULPFUNCTIES ───────────────────────────────────────────────────────
 -- 'HH:MM' → minuten
 create or replace function public.hm(t text) returns int
@@ -75,6 +94,25 @@ create or replace function public.telt(b public.boekingen) returns boolean
 language sql stable security definer set search_path = public as $$
   select b.status <> 'wacht-op-betaling'
       or b.aangemaakt > now() - make_interval(mins => coalesce((cfg()->'regels'->>'betaaltermijnMin')::int, 5))
+$$;
+
+-- Beurten van een lid: bevestigde beurten min reservaties die met een beurt geboekt zijn
+create or replace function public.beurten_saldo(uid uuid) returns int
+language sql stable security definer set search_path = public as $$
+  select (coalesce((select sum(aantal) from beurten where user_id = uid and status = 'bevestigd'), 0)
+        - (select count(*) from boekingen where user_id = uid and beurt))::int
+$$;
+
+-- Mag de aangemelde gebruiker beurtenkaarten beheren? (beheerder, of goedgekeurde lesgever
+-- van een les die met beurten geboekt wordt, bv. de yoga-instructeur)
+create or replace function public.beheert_beurten() returns boolean
+language sql stable security definer set search_path = public as $$
+  select is_admin() or exists (
+    select 1 from profielen p
+     where p.id = auth.uid() and p.goedgekeurd
+       and coalesce((cfg()->'types'->p.type->>'pro')::boolean, false)
+       and exists (select 1 from jsonb_array_elements_text(coalesce(cfg()->'types'->p.type->'lessen', '[]'::jsonb)) l
+                    where coalesce(cfg()->'beurtenkaart'->'lessen', '[]'::jsonb) ? l))
 $$;
 
 -- ── NIEUW ACCOUNT → PROFIEL ────────────────────────────────────────────
@@ -153,12 +191,14 @@ begin
       raise exception 'De zaal is dan al bezet.';
     end if;
     new.bedrag     := 0;
+    new.beurt      := false;
     new.aangemaakt := now();
     new.opmerking  := left(coalesce(new.opmerking, ''), 500);
     new.voor_wie   := left(coalesce(new.voor_wie, ''), 200);
     return new;
   end if;
   new.activiteit := '';
+  new.beurt      := false;
 
   -- vervallen onbetaalde reservaties opruimen
   delete from boekingen
@@ -175,10 +215,16 @@ begin
   van    := extract(hour from lokaal)::int * 60 + extract(minute from lokaal)::int;
 
   if new.les = 'zaal' then
+    if coalesce((c->'zaal'->>'binnenkort')::boolean, false) then
+      raise exception 'Zaalhuur kan je binnenkort online boeken.';
+    end if;
     duur := round(extract(epoch from (new.eind - new.start)) / 60)::int;
   else
     les := c->'lessen'->new.les;
     if les is null then raise exception 'Onbekende les.'; end if;
+    if coalesce((les->>'binnenkort')::boolean, false) then
+      raise exception '% kan je binnenkort online boeken.', les->>'naam';
+    end if;
     duur := (les->>'duur')::int;
   end if;
   tot      := van + duur;
@@ -245,6 +291,16 @@ begin
      and b.status <> 'intern';   -- ingeplande activiteiten van de beheerder tellen niet mee
   if uren + duur / 60.0 > (r->>'maxUrenPerWeek')::numeric + 0.001 then
     raise exception 'Je weeklimiet van % uur is bereikt.', r->>'maxUrenPerWeek';
+  end if;
+
+  -- lessen met een beurtenkaart: kost 1 beurt en is meteen bevestigd (betaald met de kaart)
+  if new.les <> 'zaal' and coalesce(c->'beurtenkaart'->'lessen', '[]'::jsonb) ? new.les then
+    if beurten_saldo(new.user_id) < 1 then
+      raise exception 'Je hebt geen beurten meer. Koop een beurtenkaart bij de lesgever.';
+    end if;
+    new.beurt  := true;
+    new.status := 'betaald';
+    new.bedrag := 0;
   end if;
   return new;
 end $$;
@@ -330,6 +386,12 @@ create policy "annuleren" on public.boekingen for delete
   using (is_admin() or (user_id = auth.uid() and (
            status = 'wacht-op-betaling'
            or start >= now() + make_interval(hours => (cfg()->'regels'->>'annulerenTotUurVooraf')::int))));
+
+alter table public.beurten enable row level security;
+drop policy if exists "eigen beurten of beheer" on public.beurten;
+create policy "eigen beurten of beheer" on public.beurten for select
+  using (user_id = auth.uid() or beheert_beurten());
+-- (beurten toevoegen of wijzigen kan enkel via de functies hieronder)
 
 -- ── FUNCTIES VOOR DE WEBSITE ───────────────────────────────────────────
 -- Bezetting van een periode: enkel aantallen, geen namen (+ of het van jou is)
@@ -419,6 +481,154 @@ begin
   update instellingen set config = jsonb_set(config, '{rooster}', r), bijgewerkt = now() where id = 1;
 end $$;
 
+-- ── BEURTENKAARTEN ─────────────────────────────────────────────────────
+-- Lid: eigen saldo en openstaande aanvraag
+create or replace function public.mijn_beurten() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'saldo', beurten_saldo(auth.uid()),
+    'aanvraag', (select jsonb_build_object('id', b.id, 'aantal', b.aantal, 'aangemaakt', b.aangemaakt)
+                   from beurten b where b.user_id = auth.uid() and b.status = 'aangevraagd'
+                  order by b.aangemaakt desc limit 1))
+$$;
+
+-- Lid: een beurtenkaart aanvragen (betalen gebeurt ter plaatse; de lesgever bevestigt)
+create or replace function public.vraag_beurtenkaart(kaart int) returns void
+language plpgsql security definer set search_path = public as $$
+declare k jsonb;
+begin
+  if auth.uid() is null or not exists (select 1 from profielen where id = auth.uid()) then
+    raise exception 'Meld je eerst aan.';
+  end if;
+  select x into k from jsonb_array_elements(coalesce(cfg()->'beurtenkaart'->'kaarten', '[]'::jsonb)) x
+   where (x->>'beurten')::int = kaart limit 1;
+  if k is null then raise exception 'Deze beurtenkaart bestaat niet.'; end if;
+  if exists (select 1 from beurten where user_id = auth.uid() and status = 'aangevraagd') then
+    raise exception 'Je hebt al een beurtenkaart aangevraagd. Betaal ze bij de lesgever.';
+  end if;
+  insert into beurten (user_id, aantal, bedrag, soort, status)
+  values (auth.uid(), kaart, coalesce((k->>'prijs')::numeric, 0), 'kaart', 'aangevraagd');
+end $$;
+
+-- Lid: eigen aanvraag intrekken (zolang ze niet bevestigd is)
+create or replace function public.trek_aanvraag_in() returns void
+language sql security definer set search_path = public as $$
+  delete from beurten where user_id = auth.uid() and status = 'aangevraagd'
+$$;
+
+-- Lesgever/beheerder: betaling ontvangen → beurten bevestigen
+create or replace function public.bevestig_beurtenkaart(aanvraag uuid, betaald numeric default null) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not beheert_beurten() then raise exception 'Enkel de lesgever of de beheerder kan beurten bevestigen.'; end if;
+  update beurten set status = 'bevestigd', bevestigd_op = now(), bevestigd_door = auth.uid(),
+                     bedrag = greatest(coalesce(betaald, bedrag), 0)
+   where id = aanvraag and status = 'aangevraagd' and (user_id <> auth.uid() or is_admin());
+  if not found then raise exception 'Deze aanvraag bestaat niet (meer).'; end if;
+end $$;
+
+-- Lesgever/beheerder: een aanvraag weigeren (bv. dubbel aangevraagd)
+create or replace function public.weiger_aanvraag(aanvraag uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not beheert_beurten() then raise exception 'Enkel de lesgever of de beheerder kan dit.'; end if;
+  delete from beurten where id = aanvraag and status = 'aangevraagd';
+  if not found then raise exception 'Deze aanvraag bestaat niet (meer).'; end if;
+end $$;
+
+-- Lesgever/beheerder: rechtstreeks beurten geven (kaart ter plaatse betaald) of corrigeren
+create or replace function public.geef_beurten(klant uuid, aantal_beurten int, betaald numeric default 0,
+                                               notitie text default '', correctie boolean default false) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not beheert_beurten() then raise exception 'Enkel de lesgever of de beheerder kan beurten geven.'; end if;
+  if not exists (select 1 from profielen where id = klant) then raise exception 'Klant niet gevonden.'; end if;
+  if klant = auth.uid() and not is_admin() then raise exception 'Je kan jezelf geen beurten geven.'; end if;
+  if aantal_beurten is null or aantal_beurten = 0 or abs(aantal_beurten) > 50 then
+    raise exception 'Kies tussen 1 en 50 beurten.';
+  end if;
+  if aantal_beurten < 0 and beurten_saldo(klant) + aantal_beurten < 0 then
+    raise exception 'Zoveel beurten heeft deze klant niet.';
+  end if;
+  insert into beurten (user_id, aantal, bedrag, soort, status, opmerking, bevestigd_op, bevestigd_door)
+  values (klant, aantal_beurten,
+          case when aantal_beurten > 0 and not correctie then greatest(coalesce(betaald, 0), 0) else 0 end,
+          case when aantal_beurten > 0 and not correctie then 'kaart' else 'correctie' end,
+          'bevestigd', left(coalesce(notitie, ''), 200), now(), auth.uid());
+end $$;
+
+-- Lesgever/beheerder: leden zoeken op naam of e-mail (met saldo en openstaande aanvraag)
+create or replace function public.zoek_klanten(term text)
+returns table (id uuid, naam text, email text, saldo int, aanvraag int)
+language plpgsql stable security definer set search_path = public as $$
+#variable_conflict use_column
+declare t text := btrim(coalesce(term, ''));
+begin
+  if not beheert_beurten() then raise exception 'Enkel de lesgever of de beheerder kan leden zoeken.'; end if;
+  if length(t) < 2 then return; end if;
+  t := '%' || replace(replace(t, '%', ''), '_', '') || '%';
+  return query
+    select p.id, p.naam, p.email, beurten_saldo(p.id),
+           (select b.aantal from beurten b where b.user_id = p.id and b.status = 'aangevraagd' limit 1)
+      from profielen p
+     where p.naam ilike t or p.email ilike t
+     order by p.naam
+     limit 25;
+end $$;
+
+-- Lesgever/beheerder: openstaande aanvragen en kaarten/correcties van de laatste 90 dagen
+create or replace function public.beurten_overzicht()
+returns table (id uuid, user_id uuid, naam text, email text, aantal int, bedrag numeric, soort text, status text,
+               opmerking text, aangemaakt timestamptz, bevestigd_op timestamptz, door text, saldo int)
+language plpgsql stable security definer set search_path = public as $$
+#variable_conflict use_column
+begin
+  if not beheert_beurten() then raise exception 'Enkel de lesgever of de beheerder kan dit zien.'; end if;
+  return query
+    select b.id, b.user_id, p.naam, p.email, b.aantal, b.bedrag, b.soort, b.status, b.opmerking,
+           b.aangemaakt, b.bevestigd_op, d.naam, beurten_saldo(b.user_id)
+      from beurten b
+      join profielen p on p.id = b.user_id
+      left join profielen d on d.id = b.bevestigd_door
+     where b.status = 'aangevraagd' or b.bevestigd_op > now() - interval '90 days'
+     order by (b.status = 'aangevraagd') desc, coalesce(b.bevestigd_op, b.aangemaakt) desc
+     limit 200;
+end $$;
+
+-- Lesgever/beheerder: wie komt er naar de lessen met beurten (in een periode)?
+create or replace function public.deelnemers(van timestamptz, tot timestamptz)
+returns table (id uuid, les text, start timestamptz, naam text, beurt boolean)
+language plpgsql stable security definer set search_path = public as $$
+#variable_conflict use_column
+begin
+  if not beheert_beurten() then raise exception 'Enkel de lesgever of de beheerder kan dit zien.'; end if;
+  return query
+    select b.id, b.les, b.start, p.naam, b.beurt
+      from boekingen b join profielen p on p.id = b.user_id
+     where b.start >= van and b.start < tot and telt(b) and b.status <> 'intern'
+       and coalesce(cfg()->'beurtenkaart'->'lessen', '[]'::jsonb) ? b.les
+     order by b.start, p.naam;
+end $$;
+
+-- Lesgever/beheerder: een deelnemer uitschrijven, met of zonder beurt terug
+-- (zonder = te laat geannuleerd: de beurt blijft gebruikt)
+create or replace function public.schrijf_uit(boeking uuid, beurt_terug boolean) returns void
+language plpgsql security definer set search_path = public as $$
+declare b boekingen;
+begin
+  if not beheert_beurten() then raise exception 'Enkel de lesgever of de beheerder kan dit.'; end if;
+  select * into b from boekingen where id = boeking;
+  if b.id is null or not (coalesce(cfg()->'beurtenkaart'->'lessen', '[]'::jsonb) ? b.les) then
+    raise exception 'Deze reservatie bestaat niet (meer).';
+  end if;
+  delete from boekingen where id = boeking;
+  if b.beurt and not beurt_terug then
+    insert into beurten (user_id, aantal, soort, status, opmerking, bevestigd_op, bevestigd_door)
+    values (b.user_id, -1, 'correctie', 'bevestigd',
+            'Te laat geannuleerd: ' || to_char(b.start at time zone 'Europe/Brussels', 'DD/MM/YYYY HH24:MI'), now(), auth.uid());
+  end if;
+end $$;
+
 -- Beheerder: een account volledig verwijderen (met profiel en reservaties)
 create or replace function public.verwijder_gebruiker(uid uuid) returns void
 language plpgsql security definer set search_path = public, auth as $$
@@ -433,12 +643,23 @@ end $$;
 revoke all on function public.zet_instellingen(jsonb)   from anon;
 revoke all on function public.verwijder_gebruiker(uuid) from anon;
 revoke all on function public.zet_mijn_uren(jsonb)      from anon;
+revoke all on function public.beurten_saldo(uuid)       from public, anon, authenticated;
+revoke all on function public.mijn_beurten()            from anon;
+revoke all on function public.vraag_beurtenkaart(int)   from anon;
+revoke all on function public.trek_aanvraag_in()        from anon;
+revoke all on function public.bevestig_beurtenkaart(uuid, numeric) from anon;
+revoke all on function public.weiger_aanvraag(uuid)     from anon;
+revoke all on function public.geef_beurten(uuid, int, numeric, text, boolean) from anon;
+revoke all on function public.zoek_klanten(text)        from anon;
+revoke all on function public.beurten_overzicht()       from anon;
+revoke all on function public.deelnemers(timestamptz, timestamptz) from anon;
+revoke all on function public.schrijf_uit(uuid, boolean) from anon;
 grant execute on function public.bezetting(timestamptz, timestamptz) to anon, authenticated;
 
 -- ── STARTWAARDEN ───────────────────────────────────────────────────────
 insert into public.beheerders (email) values ('pieterv-d-s@hotmail.com') on conflict do nothing;
 
-insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":16,"prijs":15},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["09:00","18:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["09:00","18:00"]},"gesloten":{"0":[["13:00","24:00"]],"1":[["19:00","24:00"]],"4":[["19:00","24:00"]]},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]}}}'::jsonb)
+insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":25,"prijs":15},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40,"binnenkort":true},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15,"binnenkort":true}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["09:00","18:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["09:00","18:00"]},"gesloten":{"0":[["13:00","24:00"]],"1":[["19:00","24:00"]],"4":[["19:00","24:00"]]},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20,"binnenkort":true},"beurtenkaart":{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]}}}'::jsonb)
 on conflict (id) do nothing;
 
 -- ── OMSCHAKELING oktober 2026 ──────────────────────────────────────────
@@ -459,3 +680,18 @@ alter table public.profielen disable trigger controleer_gewijzigd_profiel;
 update public.profielen set type = 'groepslesgever' where type in ('personal-trainer', 'lesgever');
 update public.profielen set type = 'lid', goedgekeurd = true where type = 'dietist';
 alter table public.profielen enable trigger controleer_gewijzigd_profiel;
+
+-- ── OMSCHAKELING oktober 2026 (2) ──────────────────────────────────────
+-- Voorlopig enkel yoga online (max. 25 personen, met beurtenkaart); kinesitherapie,
+-- groepslessen en zaalhuur staan op de website als "binnenkort".
+-- Gebeurt één keer: daarna past de beheerder dit aan via assets/boeken.js → Regels naar database sturen.
+update public.instellingen set
+  config = config
+    || jsonb_build_object('lessen', (select jsonb_object_agg(e.key,
+           case when e.key = 'yoga' then e.value || '{"max":25}'::jsonb
+                else e.value || '{"binnenkort":true}'::jsonb end)
+         from jsonb_each(config->'lessen') e))
+    || jsonb_build_object('zaal', coalesce(config->'zaal', '{}'::jsonb) || '{"binnenkort":true}'::jsonb)
+    || jsonb_build_object('beurtenkaart', '{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]}'::jsonb),
+  bijgewerkt = now()
+where id = 1 and not (config ? 'beurtenkaart');

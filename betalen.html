@@ -99,7 +99,7 @@ function render(){
   }
   if(isBevestigd(booking)){
     toon('<div class="card fout-card sr scale"><h2 class="card-title">✓ Je reservatie is bevestigd</h2><p>'+esc(slot.les.naam)+' op '+fmtDatum(slot.datum)+', '+slot.tijd+' – '+boekingEind(booking,slot)+'.<br>'+
-      (booking.status==='bevestigd'?'Je betaalt '+fmtEuro(booking.bedrag)+' aan de bar vóór je sessie.':'Betaald: '+fmtEuro(booking.bedrag)+'.')+' Tot dan! 🌹</p>'+
+      (booking.beurt?'Betaald met 1 beurt van je beurtenkaart.':booking.status==='bevestigd'?'Je betaalt '+fmtEuro(booking.bedrag)+' aan de bar vóór je sessie.':'Betaald: '+fmtEuro(booking.bedrag)+'.')+' Tot dan! 🌹</p>'+
       '<a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>');
     return;
   }

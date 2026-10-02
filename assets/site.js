@@ -19,16 +19,16 @@
     '<a class="wa" href="https://wa.me/32471955489" target="_blank" rel="noopener" aria-label="WhatsApp"><div class="wa-tip">Stuur ons een berichtje</div>'+WA_ICON+'</a>'+
     '<nav id="nav"><a href="index.html" class="nav-logo">La Vie <em>en Rose</em></a>'+
     '<ul class="nav-links">'+NAV_LINKS.map(function(l){return '<li><a href="'+l[0]+'">'+l[1]+'</a></li>';}).join('')+'</ul>'+
-    '<div class="nav-right" id="navRight"><a href="boeken.html" class="nav-pill">🌹 Les boeken</a></div>'+
+    '<div class="nav-right" id="navRight"><a href="yoga.html" class="nav-pill">🧘 Yoga reserveren</a></div>'+
     '<button class="hamburger" id="hbg" aria-label="Menu"><span></span><span></span><span></span></button></nav>'+
     '<div class="mob-menu" id="mobMenu">'+NAV_LINKS.map(function(l){return '<a href="'+l[0]+'">'+l[1]+'</a>';}).join('')+
-    '<a href="boeken.html" class="mob-pill-m">🌹 Les boeken</a></div>');
+    '<a href="yoga.html" class="mob-pill-m">🧘 Yoga reserveren</a></div>');
 
   window.addEventListener('DOMContentLoaded',function(){
     body.insertAdjacentHTML('beforeend',
       '<footer><div class="foot-inner"><span class="foot-logo">La Vie en Rose</span><span class="foot-tag">Sports Café · Aalst</span>'+
       '<div class="foot-lks"><a href="index.html">Home</a>'+NAV_LINKS.map(function(l){return '<a href="'+l[0]+'">'+l[1]+'</a>';}).join('')+
-      '<a href="boeken.html">Les boeken</a></div>'+
+      '<a href="yoga.html">Yoga reserveren</a></div>'+
       '<div class="foot-copy">© 2025 La Vie en Rose · Hoogstraat 40, 9308 Aalst · Gemaakt met ❤️</div></div></footer>'+
       '<div class="toast" id="toast"></div>');
     reveal();
@@ -52,7 +52,8 @@
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('DOMContentLoaded',onScroll);
 
-  var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // <body data-rustig>: rustige pagina (geen vallende blaadjes), bv. de eenvoudige yogapagina
+  var reduced=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)||body.hasAttribute('data-rustig');
 
   /* Cursor */
   var cur=document.getElementById('cursor'),ring=document.getElementById('cursorRing');

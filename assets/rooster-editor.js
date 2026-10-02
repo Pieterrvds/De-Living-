@@ -103,7 +103,7 @@ RE.teken=function(){
       var l=LESSEN[x.les],mag=ed.mag(x),wie=ed.lesgever(x);
       c+='<button class="re-blok les-'+x.les+(ed.gewijzigd(x)?' nieuw':'')+(mag?'':' vast')+'" data-uid="'+x.uid+'" style="top:'+(x.min-RE_START)*RE_PPM+'px;height:'+l.duur*RE_PPM+'px" '+
         'title="'+esc(l.naam+' · '+tijdTekst(x.min)+' – '+tijdTekst(x.min+l.duur)+' · '+wie+(mag?'':' (niet van jou)'))+'" aria-label="'+esc(l.naam+' op '+DAGEN[d]+' om '+tijdTekst(x.min)+' met '+wie)+'">'+
-        '<b>'+l.icon+' '+esc(l.kort||l.naam)+'</b><span>'+tijdTekst(x.min)+' – '+tijdTekst(x.min+l.duur)+'</span><small>'+esc(wie)+'</small></button>';
+        '<b>'+l.icon+' '+esc(l.kort||l.naam)+'</b><span>'+tijdTekst(x.min)+' – '+tijdTekst(x.min+l.duur)+'</span><small>'+esc(wie)+(isBinnenkort(x.les)?' · binnenkort':'')+'</small></button>';
     });
     return c+'</div>';
   }).join('')+'</div></div>';

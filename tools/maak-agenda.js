@@ -50,7 +50,8 @@ Object.keys(ROOSTER).sort().forEach(function(dow){
   while(dag.getUTCDay()!==+dow)dag.setUTCDate(dag.getUTCDate()+1);
   ROOSTER[dow].forEach(function(item){
     var tijd=item[0],id=item[1],les=LESSEN[id];
-    // Lessen in een gesloten periode staan ook niet op de website
+    // "binnenkort"-lessen en lessen in een gesloten periode staan niet in de agenda
+    if(vm.runInContext('isBinnenkort("'+id+'")',ctx))return;
     if(vm.runInContext('weekdagGesloten('+(+dow)+',naarMin("'+tijd+'"),naarMin("'+tijd+'")+'+les.duur+')',ctx))return;
     r.push('BEGIN:VEVENT',
       'UID:lvr-'+id+'-'+BYDAY[dow].toLowerCase()+'-'+tijd.replace(':','')+'@pieterrvds.github.io',

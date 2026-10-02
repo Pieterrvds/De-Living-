@@ -104,7 +104,8 @@ var weekStart=mondayOf(new Date()),filter='alle',boekingen=[],profielen=[],zoekt
 function tabs(actief){
   var wacht=profielen.filter(wachtOpGoedkeuring).length;
   return '<div class="tabs">'+[['res','📅 Reservaties'],['rooster','🗓️ Rooster'+(reAantalWijzigingen()?' <span class="teller">'+reAantalWijzigingen()+'</span>':'')],['leden','👥 Leden'+(wacht?' <span class="teller">'+wacht+'</span>':'')],['inst','⚙️ Instellingen']].map(function(t){
-    return '<button class="tab'+(t[0]===actief?' actief':'')+'" onclick="toonTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>';
+    return '<button class="tab'+(t[0]===actief?' actief':'')+'" onclick="toonTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+
+    '<a class="tab" href="beurten.html" style="text-decoration:none;">🎟️ Beurtenkaarten ↗</a></div>';
 }
 var huidigeTab='res';
 function toonTab(t){huidigeTab=t;render();}

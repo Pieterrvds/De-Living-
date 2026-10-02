@@ -83,7 +83,7 @@
 </main>
 
 <script>
-var user=null,tab='komend';
+var user=null,tab='komend',beurten=null;
 
 function statusProfiel(u){
   if(u.isAdmin)return '⚙️ Beheerder';
@@ -98,7 +98,6 @@ function render(){
   var komend=alle.filter(function(b){return !isVoorbij(b.slot);});
   var voorbij=alle.filter(function(b){return isVoorbij(b.slot);}).reverse();
   var week=urenInWeek(user,new Date());
-  var besteed=alle.filter(function(b){return b.status==='betaald'||b.status==='bevestigd';}).reduce(function(s,b){return s+(b.bedrag||0);},0);
 
   var profiel='<aside class="card profiel sr left">'+
     '<div class="p-kop"><div class="p-avatar">'+esc(initialen(user.naam))+'</div><div>'+
@@ -114,7 +113,7 @@ function render(){
       '<div class="fg"><label for="a-nieuw">Nieuw wachtwoord</label><input type="password" id="a-nieuw" required minlength="6" autocomplete="new-password"></div>'+
       '<div class="fg"><label for="a-herhaal">Herhaal nieuw wachtwoord</label><input type="password" id="a-herhaal" required minlength="6" autocomplete="new-password"></div>'+
       '<div class="p-fout" id="pwFout"></div><button class="btn btn-primary btn-block" id="pwKnop">Wachtwoord wijzigen</button></form></details>'+
-    '<div class="p-knoppen">'+(user.isAdmin?'<a class="btn btn-outline" href="beheer.html">⚙️ Beheer</a>':'')+
+    '<div class="p-knoppen">'+(user.isAdmin?'<a class="btn btn-outline" href="beheer.html">⚙️ Beheer</a>':'')+(magBeurtenBeheren(user)?'<a class="btn btn-outline" href="beurten.html">🎟️ Beurtenkaarten</a>':'')+
       '<button class="btn btn-outline" onclick="logout()">Afmelden</button></div>'+
     '<p class="res-regels">E-mailadres wijzigen of je account laten verwijderen? Stuur ons een <a href="https://wa.me/'+REGELS.whatsapp+'" target="_blank" rel="noopener">WhatsApp-bericht</a>.</p>'+
   '</aside>';
@@ -123,7 +122,7 @@ function render(){
     '<div class="card kpi sr up"><div class="kpi-getal">'+komend.length+'</div><div class="kpi-label">Komende reservaties</div></div>'+
     '<div class="card kpi sr up"><div class="kpi-getal">'+fmtUren(week).replace(' uur','')+'<small style="font-size:.9rem;color:var(--muted);"> / '+REGELS.maxUrenPerWeek+' u</small></div><div class="kpi-label">Geboekt deze week</div>'+
       '<div class="meter"><i style="width:'+Math.min(100,week/REGELS.maxUrenPerWeek*100)+'%"></i></div></div>'+
-    '<div class="card kpi sr up"><div class="kpi-getal">'+fmtEuro(besteed)+'</div><div class="kpi-label">Totaal geboekt</div></div>'+
+    '<a class="card kpi sr up" href="yoga.html" style="text-decoration:none;"><div class="kpi-getal">'+(beurten?beurten.saldo:'–')+'</div><div class="kpi-label">'+(beurten&&beurten.aanvraag?'Beurten · kaart aangevraagd':'Beurten op je kaart')+'</div></a>'+
   '</div>';
 
   var lijst=tab==='komend'?komend:voorbij;
@@ -134,7 +133,7 @@ function render(){
     '</div></div>'+
     '<div class="'+(tab==='voorbij'?'res-voorbij':'')+'">'+
     (lijst.length?lijst.map(function(b){return reservatieRij(b,'annuleer');}).join('')
-      :'<div class="leeg-res">'+(tab==='komend'?'Je hebt nog geen komende reservaties.<br><a class="btn btn-primary" href="boeken.html">🌹 Les boeken</a>':'Nog geen voorbije reservaties.')+'</div>')+
+      :'<div class="leeg-res">'+(tab==='komend'?'Je hebt nog geen komende reservaties.<br><a class="btn btn-primary" href="yoga.html">🧘 Yoga reserveren</a>':'Nog geen voorbije reservaties.')+'</div>')+
     '</div><div class="res-regels">Zelf annuleren kan tot '+REGELS.annulerenTotUurVooraf+' uur op voorhand, daarna via WhatsApp. Onbetaalde reservaties vervallen na '+REGELS.betaaltermijnMin+' minuten.</div></div>';
 
   document.getElementById('inhoud').innerHTML='<div class="acc-grid">'+profiel+'<div>'+kpis+res+'</div></div>'+lesgeverHtml();
@@ -156,7 +155,9 @@ function lesgeverHtml(){
     });
   }
   return '<div class="card lesgever sr up"><h2 class="card-title">🗓️ Mijn lessen</h2>'+
-    '<p class="lg-intro">Als '+esc(getType(user.type).label.toLowerCase())+' zet je hier zelf je uren in het rooster. Leden zien ze meteen op de website en kunnen ze boeken. Hieronder zie je ook hoe vol je lessen zijn.</p>'+
+    '<p class="lg-intro">Als '+esc(getType(user.type).label.toLowerCase())+' zet je hier zelf je uren in het rooster. Leden zien ze meteen op de website en kunnen ze boeken. Hieronder zie je ook hoe vol je lessen zijn.'+
+      (eigenLessen(user).every(isBinnenkort)?' <b>Let op:</b> online boeken voor '+eigenLessen(user).map(function(l){return LESSEN[l].naam.toLowerCase();}).join(' en ')+' kan pas binnenkort; je kan je uren wel al klaarzetten.':'')+
+      (magBeurtenBeheren(user)?' Beurtenkaarten bevestigen en zien wie er komt doe je bij <a href="beurten.html">🎟️ Beurtenkaarten</a>.':'')+'</p>'+
     '<div class="lg-kop">Komende 2 weken</div>'+
     (rij.length?'<div class="mijn-lessen">'+rij.map(function(s){
       return '<div class="ml les-'+s.lesId+'"><div class="ml-wat"><b>'+s.les.icon+' '+esc(s.les.naam)+'</b>'+DAGEN_KORT[s.datum.getDay()]+' '+s.datum.getDate()+' '+MAANDEN[s.datum.getMonth()].slice(0,3)+' · '+s.tijd+' – '+s.eind+'</div>'+bezettingHtml(bezetting(s),s.les.max)+'</div>';
@@ -221,7 +222,7 @@ function bewaarWachtwoord(e){
 }
 function herlaad(){
   var nu=new Date();
-  return Promise.all([DB.laadMijn(),eigenLessen(user).length?DB.laadBezetting(nu,addDays(nu,15)):null]).then(render).catch(function(e){
+  return Promise.all([DB.laadMijn(),eigenLessen(user).length?DB.laadBezetting(nu,addDays(nu,15)):null,DB.beurten.mijn().then(function(b){beurten=b;}).catch(function(){beurten=null;})]).then(render).catch(function(e){
     document.getElementById('inhoud').innerHTML='<div class="card" style="padding:2.5rem;text-align:center;"><h2 class="card-title">Geen verbinding</h2><p>'+esc(e)+'</p></div>';
   });
 }

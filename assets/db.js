@@ -78,14 +78,15 @@ DB.wijzigWachtwoord=async function(huidig,nieuw){
   if(c.error)throw /Invalid login credentials/i.test(c.error.message)?'Je huidige wachtwoord klopt niet.':nlFout(c.error);
   await DB.nieuwWachtwoord(nieuw);
 };
-async function logout(){if(sb)await sb.auth.signOut();location.href='boeken.html';}
+// Afmelden en daarna naar de yogapagina (of 'naar')
+async function logout(naar){if(sb)await sb.auth.signOut();location.href=typeof naar==='string'?naar:'yoga.html';}
 
 /* ── RESERVATIES ── */
 // Rij uit de database → vorm die de pagina's gebruiken
 function naarBoeking(r){
   var s=new Date(r.start).getTime(),e=new Date(r.eind).getTime();
   return {id:r.id,slotId:slotIdVan(s,r.les),userId:r.user_id,plaatsen:1,duur:Math.round((e-s)/60000),
-    voorWie:r.voor_wie||'',opmerking:r.opmerking||'',bedrag:+r.bedrag,status:r.status,aangemaakt:r.aangemaakt,activiteit:r.activiteit||'',
+    voorWie:r.voor_wie||'',opmerking:r.opmerking||'',bedrag:+r.bedrag,status:r.status,aangemaakt:r.aangemaakt,activiteit:r.activiteit||'',beurt:!!r.beurt,
     profiel:r.profielen||null};
 }
 // Bezetting (van iedereen, enkel aantallen) in een periode
@@ -136,6 +137,23 @@ DB.annuleer=async function(id){
   var r=await sb.from('boekingen').delete().eq('id',id).select();
   if(r.error)throw nlFout(r.error);
   if(!r.data||!r.data.length)throw 'Annuleren kan nu enkel nog via WhatsApp.';
+};
+
+/* ── BEURTENKAARTEN ── */
+function _rpc(naam,args){if(!sb)return Promise.reject(GEEN_VERBINDING);return sb.rpc(naam,args||{}).then(function(r){if(r.error)throw nlFout(r.error);return r.data;});}
+DB.beurten={
+  // lid
+  mijn:function(){return _rpc('mijn_beurten').then(function(d){return d||{saldo:0,aanvraag:null};});},
+  aanvragen:function(aantal){return _rpc('vraag_beurtenkaart',{kaart:aantal});},
+  intrekken:function(){return _rpc('trek_aanvraag_in');},
+  // lesgever of beheerder (de database controleert dit)
+  overzicht:function(){return _rpc('beurten_overzicht');},
+  bevestig:function(id,betaald){return _rpc('bevestig_beurtenkaart',{aanvraag:id,betaald:betaald==null?null:betaald});},
+  weiger:function(id){return _rpc('weiger_aanvraag',{aanvraag:id});},
+  geef:function(klant,aantal,betaald,notitie,correctie){return _rpc('geef_beurten',{klant:klant,aantal_beurten:aantal,betaald:betaald||0,notitie:notitie||'',correctie:!!correctie});},
+  zoek:function(term){return _rpc('zoek_klanten',{term:term});},
+  deelnemers:function(van,tot){return _rpc('deelnemers',{van:van.toISOString(),tot:tot.toISOString()});},
+  schrijfUit:function(id,beurtTerug){return _rpc('schrijf_uit',{boeking:id,beurt_terug:!!beurtTerug});}
 };
 
 /* ── BEHEER ── (de database weigert dit voor wie geen beheerder is) */

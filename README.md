@@ -8,7 +8,9 @@ met online lessen boeken en zaalhuur voor lesgevers (kinesisten, yoga-instructeu
 | Bestand | Wat |
 |---|---|
 | `index.html` | Hoofdpagina (over ons, rooster, lessen, evenementen, contact) |
-| `boeken.html` | Weekrooster om een les te boeken of de zaal te huren |
+| `yoga.html` | **Yoga reserveren**: eenvoudige pagina voor de gsm (grote tekst en knoppen), met aanmelden, beurtenkaart en reservaties op één plek |
+| `beurten.html` | Beurtenkaarten voor de yoga-lesgever en de beheerder: betalingen bevestigen, beurten geven, deelnemers per les |
+| `boeken.html` | Volledig weekrooster (alle lessen; wat nog niet kan staat als "binnenkort") |
 | `login.html` | Aanmelden en account maken (met type persoon) |
 | `reserveren.html` | Reservatie bevestigen (enkel na aanmelden) |
 | `betalen.html` | Betaalpagina (online betalen nog niet actief; betalen aan de bar bevestigt) |
@@ -35,13 +37,30 @@ Een uur in het rooster is dan `[uur, les, id lesgever, naam lesgever]`.
 elke groepsles een balkje (bv. 5/16). In Beheer → Reservaties staat per les wie er komt, en
 lesgevers zien de bezetting van hun eigen lessen bij *Mijn account*.
 
+**Voorlopig enkel yoga online.** Kinesitherapie, groepslessen en zaalhuur staan wel op de website,
+maar als *binnenkort* (`binnenkort:true` bij de les in `LESSEN` en bij `ZAAL`). Zet je dat op
+`false` (of haal het weg) en stuur je de regels naar de database, dan kan je ze weer online boeken.
+Ook de evenementen en de foto's dragen een *binnenkort*-melding.
+
+**Beurtenkaart (yoga).** Een les uit `BEURTENKAART.lessen` reserveren kost 1 beurt:
+
+1. Het lid vraagt op `yoga.html` een kaart aan (bv. 10 beurten) en betaalt ter plaatse bij Gwen.
+2. Gwen tikt op `beurten.html` op *Betaald ontvangen*; de beurten staan meteen op de kaart.
+   Ze kan ook een klant opzoeken en rechtstreeks een kaart geven, of beurten bijgeven/afnemen
+   (bv. een gratis eerste les, of −1 bij te laat annuleren).
+3. Annuleren (tot 24 uur op voorhand) geeft de beurt terug. Daarna kan het via WhatsApp; Gwen
+   kan dan iemand uitschrijven met of zonder beurt terug.
+
+De kaarten en hun prijs staan in `BEURTENKAART.kaarten` (`prijs:null` = "vraag de prijs aan Gwen").
+
 De rest staat bovenaan in **`assets/boeken.js`**:
 
 - `LESSEN`: lessoorten, begeleiding, duur, max. aantal personen en prijs
 - `ROOSTER`: enkel een reserve voor als de database niet bereikbaar is
 - `OPENINGSUREN` en `GESLOTEN`: wanneer niemand kan boeken of huren
 - `REGELS`: betaaltermijn, hoe lang op voorhand boeken/annuleren, max. uren per week, zaalduren
-- `ZAAL`: prijs per uur voor zaalhuur
+- `ZAAL`: prijs per uur voor zaalhuur (en of het al online kan)
+- `BEURTENKAART`: welke lessen je met een beurt boekt en welke kaarten er zijn
 - `TYPES`: types personen, wie de zaal mag huren en welke lessen een lesgever zelf plant
 
 De hoofdpagina leest de openingsuren en lessen uit dit bestand en het rooster uit de database.
@@ -79,6 +98,10 @@ Accounts en reservaties staan in Supabase (project `asogwgjyurkcciaamhld`, regio
   overlap met lessen of zaalhuur). Trainers zien dan "Zaal bezet", leden zien niets.
 - Lesgevers zetten hun uren via de functie `zet_mijn_uren`: de server vervangt enkel hun eigen
   uren en controleert lessoort, openingsuren, gesloten periodes en overlap.
+- Beurtenkaarten staan in de tabel `beurten` (kaarten en correcties). Saldo = bevestigde beurten
+  min reservaties met een beurt. Enkel de beheerder en de goedgekeurde lesgever van een les met
+  beurten (de yoga-instructeur) kunnen betalingen bevestigen, leden zoeken en deelnemers zien;
+  dat kan enkel via de functies in `schema.sql` (geen rechtstreekse toegang tot de tabel).
 
 **Lessen of regels gewijzigd in `assets/boeken.js`?** Open `beheer.html` → Instellingen →
 *Regels naar database sturen*, zodat de server dezelfde regels gebruikt (het rooster blijft dan

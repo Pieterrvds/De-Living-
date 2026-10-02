@@ -9,12 +9,23 @@ var SUPABASE_URL='https://asogwgjyurkcciaamhld.supabase.co';
 var SUPABASE_KEY='sb_publishable_baeXtXYJnKGuO265hWRkhw_iK4Q6NhO';
 
 /* ── LESSEN & ROOSTER ── (prijzen zijn voorlopige voorbeeldprijzen)
-   'kort' is de korte naam in de maandkalender op de hoofdpagina. */
+   'kort' is de korte naam in de maandkalender op de hoofdpagina.
+   binnenkort:true = staat al op de website, maar online boeken kan nog niet ("binnenkort"). */
 var LESSEN={
-  yoga:{naam:'Yoga',kort:'Yoga',icon:'🧘',duur:60,trainer:'Gwen Deryck',max:16,prijs:15,soort:'Groepsles'},
-  kine:{naam:'Kinesitherapie',kort:'Kine',icon:'💆',duur:45,trainer:'Onze kinesist',max:1,prijs:40,soort:'Individuele begeleiding'},
-  groep:{naam:'Groepsles',kort:'Groep',icon:'🤸',duur:60,trainer:'Pieter',max:12,prijs:15,soort:'Groepsles'}
+  yoga:{naam:'Yoga',kort:'Yoga',icon:'🧘',duur:60,trainer:'Gwen Deryck',max:25,prijs:15,soort:'Groepsles'},
+  kine:{naam:'Kinesitherapie',kort:'Kine',icon:'💆',duur:45,trainer:'Onze kinesist',max:1,prijs:40,soort:'Individuele begeleiding',binnenkort:true},
+  groep:{naam:'Groepsles',kort:'Groep',icon:'🤸',duur:60,trainer:'Pieter',max:12,prijs:15,soort:'Groepsles',binnenkort:true}
 };
+/* ── BEURTENKAART ── Lessen in 'lessen' boek je met een beurt (1 beurt per les).
+   Een lid koopt de kaart ter plaatse; de lesgever bevestigt de betaling op beurten.html.
+   prijs:null = op de website staat "vraag de prijs aan de lesgever". */
+var BEURTENKAART={
+  lessen:['yoga'],
+  kaarten:[{beurten:10,prijs:null}]
+};
+function metBeurt(lesId){return BEURTENKAART.lessen.indexOf(lesId)>=0;}
+// Kan dit online geboekt worden, of is het "binnenkort"?
+function isBinnenkort(lesId){return lesId==='zaal'?!!ZAAL.binnenkort:!!(LESSEN[lesId]||{}).binnenkort;}
 // Weekdag (0 = zondag … 6 = zaterdag) → lessen: [uur, les, (id lesgever), (naam lesgever)].
 // Het echte rooster staat in de database: de beheerder past het aan in Beheer → Rooster en
 // goedgekeurde lesgevers passen hun eigen uren aan bij Mijn account (slepen met de muis).
@@ -114,7 +125,7 @@ var REGELS={
 
 /* ── ZAALHUUR ── Professionals (types met zaal:true) kunnen elk vrij uur de zaal huren.
    Een uur is vrij als er geen les uit het ROOSTER overlapt. Prijs is een voorbeeldprijs. */
-var ZAAL={naam:'Zaal huren',kort:'Zaal',icon:'🏠',duur:60,trainer:'Zelf begeleid',max:1,prijs:20,soort:'Zaalhuur voor professionals'};  // prijs per uur
+var ZAAL={naam:'Zaal huren',kort:'Zaal',icon:'🏠',duur:60,trainer:'Zelf begeleid',max:1,prijs:20,soort:'Zaalhuur voor professionals',binnenkort:true};  // prijs per uur
 
 /* ── PERSOONSTYPES ── */
 // pro: professional (eerst goedkeuren) · zaal: mag de zaal huren · lessen: welke lessen deze
@@ -133,6 +144,9 @@ function wachtOpGoedkeuring(user){return !!(user&&getType(user.type).pro&&!user.
 // De beheerder (eigenaar) kan de zaal altijd gebruiken voor eigen activiteiten, zonder betaling.
 function magInplannen(user){return !!(user&&user.isAdmin);}
 // Goedgekeurde lesgevers passen hun eigen uren in het rooster aan
+// Beurtenkaarten bevestigen en deelnemers zien: beheerder of goedgekeurde lesgever van een beurtenles
+function magBeurtenBeheren(user){return !!(user&&(user.isAdmin||eigenLessenRuw(user).some(metBeurt)));}
+function eigenLessenRuw(user){return isGoedgekeurdePro(user)?(getType(user.type).lessen||[]):[];}
 function eigenLessen(user){return isGoedgekeurdePro(user)?(getType(user.type).lessen||[]).filter(function(l){return LESSEN[l];}):[];}
 
 /* ── ACTIVITEITEN ── keuzelijst bij 'Inplannen' door de beheerder */
@@ -217,9 +231,10 @@ function zaalVrijLes(datum,van,tot){
   return !(ROOSTER[datum.getDay()]||[]).some(function(r){var s=naarMin(r[0]),e=s+LESSEN[r[1]].duur;return s<tot&&e>van;});
 }
 // Aantal lessen per week volgens het ROOSTER (lessen in een gesloten periode tellen niet mee).
-function lessenPerWeek(){
+// boekbaar = enkel lessen die nu al online te boeken zijn (niet "binnenkort").
+function lessenPerWeek(boekbaar){
   return Object.keys(ROOSTER).reduce(function(n,dow){
-    return n+ROOSTER[dow].filter(function(r){return !weekdagGesloten(+dow,naarMin(r[0]),naarMin(r[0])+LESSEN[r[1]].duur);}).length;
+    return n+ROOSTER[dow].filter(function(r){return !(boekbaar&&isBinnenkort(r[1]))&&!weekdagGesloten(+dow,naarMin(r[0]),naarMin(r[0])+LESSEN[r[1]].duur);}).length;
   },0);
 }
 function slotsVoorDag(datum){
@@ -254,7 +269,7 @@ function isTeLaat(slot){return slot.start.getTime()-Date.now()<REGELS.boekenTotM
 function currentUser(){return (window.DB&&DB.user)||null;}
 
 // Alleen interne pagina's toelaten als doorverwijzing (geen open redirect).
-function veiligeNext(next){return /^[a-z]+\.html(\?[\w=&%.:-]*)?$/.test(next||'')?next:'boeken.html';}
+function veiligeNext(next){return /^[a-z]+\.html(\?[\w=&%.:-]*)?$/.test(next||'')?next:'yoga.html';}
 function huidigePagina(){return location.pathname.split('/').pop()+location.search;}
 // Stuurt niet-ingelogde bezoekers naar de aanmeldpagina en daarna terug.
 function requireLogin(next){
@@ -274,7 +289,7 @@ function getBookings(){
 // 'YYYY-MM-DDTHH:MM_les' voor een tijdstip (lokale tijd)
 function slotIdVan(ms,les){var d=new Date(ms);return isoDate(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+'_'+les;}
 function isBevestigd(b){return b.status==='betaald'||b.status==='bevestigd'||b.status==='intern';}
-function statusLabel(b){return b.status==='intern'?'Ingepland':b.status==='betaald'?'Betaald':b.status==='bevestigd'?'Bevestigd · betalen aan de bar':'Wacht op betaling';}
+function statusLabel(b){return b.beurt?'Met beurt':b.status==='intern'?'Ingepland':b.status==='betaald'?'Betaald':b.status==='bevestigd'?'Bevestigd · betalen aan de bar':'Wacht op betaling';}
 function boekingDuur(b,slot){return b.duur||(slot||parseSlot(b.slotId,true)).les.duur;}
 function boekingEind(b,slot){slot=slot||parseSlot(b.slotId,true);return eindTijd(slot.tijd,boekingDuur(b,slot));}
 // Geboekte uren van een persoon in de week (ma–zo) van een datum.
@@ -322,11 +337,12 @@ function reservatieRij(b,annuleerFn){
 function configVoorDatabase(rooster){
   var m=function(o,f){var r={};Object.keys(o).forEach(function(k){r[k]=f(o[k],k);});return r;};
   return {
-    lessen:m(LESSEN,function(l){return {naam:l.naam,duur:l.duur,max:l.max,prijs:l.prijs};}),
+    lessen:m(LESSEN,function(l){var x={naam:l.naam,duur:l.duur,max:l.max,prijs:l.prijs};if(l.binnenkort)x.binnenkort=true;return x;}),
     rooster:rooster||ROOSTER,openingsuren:OPENINGSUREN,gesloten:GESLOTEN,
     regels:{betaaltermijnMin:REGELS.betaaltermijnMin,boekenTotMinVooraf:REGELS.boekenTotMinVooraf,
       annulerenTotUurVooraf:REGELS.annulerenTotUurVooraf,maxUrenPerWeek:REGELS.maxUrenPerWeek,zaalDuren:REGELS.zaalDuren},
-    zaal:{prijs:ZAAL.prijs},
+    zaal:ZAAL.binnenkort?{prijs:ZAAL.prijs,binnenkort:true}:{prijs:ZAAL.prijs},
+    beurtenkaart:{lessen:BEURTENKAART.lessen.slice(),kaarten:BEURTENKAART.kaarten.map(function(k){return {beurten:k.beurten,prijs:k.prijs};})},
     types:TYPES.reduce(function(r,t){r[t.id]={pro:!!t.pro,zaal:!!t.zaal,lessen:t.lessen||[]};return r;},{})
   };
 }
@@ -361,12 +377,13 @@ function renderNav(){
   var nav=document.getElementById('nav');if(nav)nav.classList.toggle('met-gebruiker',!!u);
   var mob=document.getElementById('mobMenu');
   if(mob&&u&&!document.getElementById('mobAccount'))mob.insertAdjacentHTML('afterbegin','<a href="account.html" id="mobAccount">👤 Mijn account</a>');
+  if(mob&&magBeurtenBeheren(u)&&!document.getElementById('mobBeurten'))mob.insertAdjacentHTML('afterbegin','<a href="beurten.html" id="mobBeurten">🎟️ Beurtenkaarten</a>');
   if(mob&&u&&u.isAdmin&&!document.getElementById('mobBeheer'))mob.insertAdjacentHTML('afterbegin','<a href="beheer.html" id="mobBeheer">⚙️ Beheer</a>');
   if(u){
     el.innerHTML=(u.isAdmin?'<a class="nav-pill ghost nav-beheer" href="beheer.html">⚙️ Beheer</a>':'')+
       '<a class="user-chip" href="account.html" title="Mijn account en reservaties"><div class="user-avatar">'+esc(initialen(u.naam))+'</div>'+
       '<div class="user-meta"><div class="user-name">'+esc(u.naam)+'</div>'+typeBadge(u)+'</div></a>'+
-      '<button class="nav-pill ghost" onclick="logout()">Afmelden</button>';
+      '<button class="nav-pill ghost nav-afmelden" onclick="logout()">Afmelden</button>';
   }else{
     el.innerHTML='<a class="nav-pill" href="login.html?next='+encodeURIComponent(huidigePagina())+'">Aanmelden</a>';
   }

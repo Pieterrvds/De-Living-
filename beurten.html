@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#FDF8EE">
+<title>Beurtenkaarten – La Vie en Rose</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700;800&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/boeken.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+<script src="assets/db.js"></script>
+<style>
+/* Beurtenkaarten beheren – voor de yoga-lesgever en de beheerder, ook op de gsm */
+.bk{padding:94px 16px 3rem;font-size:1.0625rem;line-height:1.5;color:#2E1A08;}
+.bk-wrap{max-width:760px;margin:0 auto;}
+.bk-kop{text-align:center;margin-bottom:1.25rem;}
+.bk-kop h1{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:700;color:var(--espresso);}
+.bk-kop p{color:var(--espresso2);}
+.bk-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:1.25rem;}
+.bk-tab{min-height:54px;border-radius:14px;border:2px solid rgba(61,32,7,.2);background:#fff;font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:800;color:var(--espresso);cursor:pointer;padding:.4rem;line-height:1.2;}
+.bk-tab.actief{background:var(--espresso);border-color:var(--espresso);color:#fff;}
+.bk-tab .n{display:inline-block;min-width:1.6em;padding:0 .4em;border-radius:50px;background:#C9462F;color:#fff;font-size:.85rem;margin-left:.2rem;}
+@media(max-width:560px){.bk-tabs{grid-template-columns:1fr 1fr;}}
+.kaart{background:#fff;border:2px solid rgba(61,32,7,.12);border-radius:18px;padding:1rem 1.1rem;margin-bottom:.75rem;box-shadow:0 4px 18px rgba(61,32,7,.06);}
+.kaart.wacht{border-color:#E3C77A;background:#FFFBEF;}
+.k-naam{font-weight:800;font-size:1.15rem;color:var(--espresso);}
+.k-sub{color:var(--espresso2);font-size:.95rem;overflow-wrap:anywhere;}
+.k-rij{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;}
+.saldo-b{display:inline-block;padding:.2rem .7rem;border-radius:50px;font-weight:800;background:#EBF2E5;color:#3F6B34;white-space:nowrap;}
+.saldo-b.nul{background:#FBF0EE;color:#9E3B3B;}
+.aanv-b{display:inline-block;padding:.2rem .7rem;border-radius:50px;font-weight:800;background:#FFF0C7;color:#6B4A08;white-space:nowrap;margin-left:.3rem;}
+.knop-groot{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;min-height:56px;padding:.75rem 1rem;margin-top:.6rem;border-radius:14px;border:none;font-family:'Nunito',sans-serif;font-size:1.08rem;font-weight:800;cursor:pointer;text-decoration:none;text-align:center;}
+.knop-groot.groen{background:#3F6B34;color:#fff;}
+.knop-groot.wit{background:#fff;color:var(--espresso);border:2px solid rgba(61,32,7,.3);}
+.knop-groot.rood{background:#9E3B3B;color:#fff;}
+.knop-groot:disabled{opacity:.6;cursor:wait;}
+.knoppen-2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
+.knoppen-2 .knop-groot{margin-top:.6rem;}
+.knop-link{background:none;border:none;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;color:#7A2E2E;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:.5rem 0;min-height:44px;}
+.zoek{width:100%;min-height:58px;font-family:'Nunito',sans-serif;font-size:1.15rem;padding:.7rem 1rem;border:2px solid rgba(61,32,7,.3);border-radius:14px;background:#fff;}
+.zoek:focus,.veld input:focus{outline:none;border-color:#3F6B34;box-shadow:0 0 0 4px rgba(63,107,52,.18);}
+.leeg-t{color:var(--espresso2);text-align:center;padding:1.5rem .5rem;}
+.les-k .k-rij{margin-bottom:.4rem;}
+.dn{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem 0;border-top:1px dashed rgba(61,32,7,.15);}
+.dn:first-of-type{border-top:none;}
+.dn small{color:var(--muted);}
+.les-k.voorbij{opacity:.6;}
+.hist{display:grid;grid-template-columns:auto 1fr auto;gap:.2rem .9rem;align-items:center;}
+.hist .plus{font-weight:800;color:#3F6B34;font-size:1.1rem;}
+.hist .min{font-weight:800;color:#9E3B3B;font-size:1.1rem;}
+.tot{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem;}
+.tot .kaart{text-align:center;margin:0;}
+.tot b{display:block;font-size:1.5rem;color:var(--espresso);}
+/* venster */
+.blad-bg{position:fixed;inset:0;background:rgba(40,20,5,.55);z-index:1200;display:none;align-items:flex-end;justify-content:center;}
+.blad-bg.open{display:flex;}
+.blad{background:var(--vanilla);width:100%;max-width:560px;border-radius:24px 24px 0 0;padding:1.4rem 1.2rem calc(1.4rem + env(safe-area-inset-bottom));max-height:92vh;overflow-y:auto;font-size:1.0625rem;line-height:1.5;}
+.blad h2{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--espresso);margin-bottom:.5rem;}
+.blad p{margin-bottom:.5rem;}
+@media(min-width:700px){.blad-bg{align-items:center;padding:1rem;}.blad{border-radius:24px;}}
+.veld{margin:.75rem 0;}
+.veld label{display:block;font-weight:800;margin-bottom:.3rem;}
+.veld input{width:100%;min-height:54px;font-family:'Nunito',sans-serif;font-size:1.1rem;padding:.6rem .9rem;border:2px solid rgba(61,32,7,.3);border-radius:12px;background:#fff;}
+.veld .hint{font-size:.9rem;color:var(--espresso2);margin-top:.25rem;}
+.fout{color:#9E3B3B;font-weight:800;min-height:1.2em;}
+.blad-scheiding{margin:1.1rem 0 .3rem;padding-top:1rem;border-top:2px dashed rgba(61,32,7,.15);font-weight:800;}
+</style>
+</head>
+<body data-rustig>
+<script src="assets/site.js"></script>
+
+<main class="bk">
+  <div class="bk-wrap">
+    <header class="bk-kop">
+      <h1>🎟️ Beurtenkaarten</h1>
+      <p>Bevestig betalingen, geef beurten en bekijk wie er komt.</p>
+    </header>
+    <div id="bk"><p class="leeg-t">Even geduld…</p></div>
+  </div>
+</main>
+
+<div class="blad-bg" id="blad" role="dialog" aria-modal="true" aria-labelledby="bladTitel"><div class="blad" id="bladInhoud"></div></div>
+
+<script>
+var user=null,tab='aanvragen',rijen=[],deelnemers=[],zoekterm='',resultaten=[],zoekTimer=null,bezig=false;
+var KAART=BEURTENKAART.kaarten[0]||{beurten:10,prijs:null};
+
+function fmtKort(iso){var d=new Date(iso);return DAGEN_KORT[d.getDay()]+' '+d.getDate()+'/'+(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes());}
+function beurtenTekst(n){return n===1||n===-1?n+' beurt':n+' beurten';}
+function saldoBadge(n){return '<span class="saldo-b'+(n<1?' nul':'')+'">'+beurtenTekst(n)+'</span>';}
+function aanvragen(){return rijen.filter(function(r){return r.status==='aangevraagd';});}
+
+function laad(){
+  var v=new Date();v.setHours(0,0,0,0);
+  return Promise.all([DB.beurten.overzicht(),DB.beurten.deelnemers(v,addDays(v,15))]).then(function(r){rijen=r[0]||[];deelnemers=r[1]||[];teken();})
+    .catch(function(e){document.getElementById('bk').innerHTML='<div class="kaart"><p><b>Dat lukte niet.</b> '+esc(e)+'</p><button class="knop-groot groen" onclick="laad()">Opnieuw</button></div>';});
+}
+function kiesTab(t){tab=t;teken();if(t==='zoeken'){var z=document.getElementById('zoek');if(z)z.focus();}}
+
+function teken(){
+  var n=aanvragen().length;
+  var h='<div class="bk-tabs" role="tablist">'+[['aanvragen','Te bevestigen'+(n?' <span class="n">'+n+'</span>':'')],['zoeken','Klant zoeken'],['lessen','Deelnemers'],['historiek','Geschiedenis']].map(function(t){
+    return '<button class="bk-tab'+(tab===t[0]?' actief':'')+'" role="tab" aria-selected="'+(tab===t[0])+'" onclick="kiesTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>';
+  h+=tab==='aanvragen'?aanvragenHtml():tab==='zoeken'?zoekHtml():tab==='lessen'?lessenHtml():historiekHtml();
+  document.getElementById('bk').innerHTML=h;
+  if(tab==='zoeken')toonResultaten();
+}
+
+/* ── TE BEVESTIGEN ── */
+function aanvragenHtml(){
+  var l=aanvragen();
+  if(!l.length)return '<p class="leeg-t">Geen openstaande aanvragen. 👍<br>Een klant die een beurtenkaart aanvraagt, verschijnt hier.</p>';
+  return l.map(function(r){
+    return '<div class="kaart wacht"><div class="k-rij"><div><div class="k-naam">'+esc(r.naam)+'</div><div class="k-sub">'+esc(r.email)+'</div></div>'+saldoBadge(r.saldo)+'</div>'+
+      '<p style="margin-top:.5rem;">Vraagt een kaart van <b>'+r.aantal+' beurten</b> · '+fmtKort(r.aangemaakt)+'</p>'+
+      '<button class="knop-groot groen" onclick="bevestigVraag(\''+r.id+'\')">✓ Betaald ontvangen</button>'+
+      '<button class="knop-link" onclick="weigerVraag(\''+r.id+'\')">Aanvraag weigeren</button></div>';
+  }).join('');
+}
+function bevestigVraag(id){
+  var r=rijen.find(function(x){return x.id===id;});if(!r)return;
+  blad('<h2 id="bladTitel">Betaling ontvangen?</h2><p><b>'+esc(r.naam)+'</b> · kaart van '+r.aantal+' beurten</p>'+
+    '<div class="veld"><label for="bedrag">Betaald bedrag (€)</label><input id="bedrag" type="number" inputmode="decimal" min="0" step="0.5" value="'+(r.bedrag>0?r.bedrag:'')+'" placeholder="bv. 120"><div class="hint">Mag je leeg laten.</div></div>'+
+    '<div class="fout" id="bFout"></div><button class="knop-groot groen" id="okKnop">✓ Ja, zet '+r.aantal+' beurten op de kaart</button><button class="knop-groot wit" onclick="sluitBlad()">Annuleren</button>');
+  document.getElementById('okKnop').onclick=function(){
+    var b=document.getElementById('bedrag').value,k=this;bezigKnop(k);
+    DB.beurten.bevestig(id,b===''?null:+b).then(laad).then(function(){bezig=false;sluitBlad();showToast('✓ '+r.aantal+' beurten voor '+voornaam(r.naam));})
+      .catch(function(e){klaarKnop(k,'✓ Ja, zet '+r.aantal+' beurten op de kaart');document.getElementById('bFout').textContent=e;});
+  };
+}
+function weigerVraag(id){
+  var r=rijen.find(function(x){return x.id===id;});if(!r)return;
+  blad('<h2 id="bladTitel">Aanvraag weigeren?</h2><p>De aanvraag van <b>'+esc(r.naam)+'</b> ('+r.aantal+' beurten) verdwijnt. Er worden geen beurten gegeven.</p>'+
+    '<button class="knop-groot rood" id="okKnop">Ja, weigeren</button><button class="knop-groot wit" onclick="sluitBlad()">Nee, terug</button>');
+  document.getElementById('okKnop').onclick=function(){bezigKnop(this);DB.beurten.weiger(id).then(laad).then(function(){bezig=false;sluitBlad();showToast('Aanvraag geweigerd');}).catch(function(e){bezig=false;showToast('⚠️ '+e);});};
+}
+
+/* ── KLANT ZOEKEN ── */
+function zoekHtml(){
+  return '<input class="zoek" id="zoek" type="search" placeholder="Naam of e-mail van de klant" value="'+esc(zoekterm)+'" oninput="zoekIn(this.value)" autocomplete="off">'+
+    '<div id="resultaten" style="margin-top:.9rem;"></div>';
+}
+function zoekIn(t){
+  zoekterm=t;clearTimeout(zoekTimer);
+  if(t.trim().length<2){resultaten=[];return toonResultaten();}
+  zoekTimer=setTimeout(function(){DB.beurten.zoek(t.trim()).then(function(r){if(zoekterm===t){resultaten=r||[];toonResultaten();}}).catch(function(e){showToast('⚠️ '+e);});},250);
+}
+function toonResultaten(){
+  var el=document.getElementById('resultaten');if(!el)return;
+  if(zoekterm.trim().length<2){el.innerHTML='<p class="leeg-t">Typ minstens 2 letters van de naam of het e-mailadres.</p>';return;}
+  if(!resultaten.length){el.innerHTML='<p class="leeg-t">Niemand gevonden. Heeft de klant al een account gemaakt op de website?</p>';return;}
+  el.innerHTML=resultaten.map(function(k){
+    return '<div class="kaart"><div class="k-rij"><div><div class="k-naam">'+esc(k.naam||'(geen naam)')+'</div><div class="k-sub">'+esc(k.email)+'</div></div>'+
+      '<div>'+saldoBadge(k.saldo)+(k.aanvraag?'<span class="aanv-b">vraagt '+k.aanvraag+'</span>':'')+'</div></div>'+
+      '<div class="knoppen-2"><button class="knop-groot groen" onclick="kaartVerkocht(\''+k.id+'\')">🎟️ Kaart verkocht</button><button class="knop-groot wit" onclick="aanpassen(\''+k.id+'\')">Aanpassen…</button></div></div>';
+  }).join('');
+}
+function klant(id){return resultaten.find(function(k){return k.id===id;});}
+function kaartVerkocht(id){
+  var k=klant(id);if(!k)return;
+  blad('<h2 id="bladTitel">Kaart verkocht</h2><p><b>'+esc(k.naam)+'</b> heeft nu '+beurtenTekst(k.saldo)+'.</p>'+
+    '<div class="veld"><label for="aantal">Aantal beurten</label><input id="aantal" type="number" inputmode="numeric" min="1" max="50" value="'+KAART.beurten+'"></div>'+
+    '<div class="veld"><label for="bedrag">Betaald bedrag (€)</label><input id="bedrag" type="number" inputmode="decimal" min="0" step="0.5" value="'+(KAART.prijs!=null?KAART.prijs:'')+'" placeholder="bv. 120"></div>'+
+    '<div class="fout" id="bFout"></div><button class="knop-groot groen" id="okKnop">✓ Betaald, zet de beurten erop</button><button class="knop-groot wit" onclick="sluitBlad()">Annuleren</button>');
+  document.getElementById('okKnop').onclick=function(){
+    var n=parseInt(document.getElementById('aantal').value,10),b=document.getElementById('bedrag').value,knop=this;
+    if(!(n>=1&&n<=50)){document.getElementById('bFout').textContent='Kies tussen 1 en 50 beurten.';return;}
+    bezigKnop(knop);
+    DB.beurten.geef(id,n,b===''?0:+b,'',false).then(function(){return herzoek();}).then(laad).then(function(){bezig=false;sluitBlad();showToast('✓ '+beurtenTekst(n)+' voor '+voornaam(k.naam));})
+      .catch(function(e){klaarKnop(knop,'✓ Betaald, zet de beurten erop');document.getElementById('bFout').textContent=e;});
+  };
+}
+function aanpassen(id){
+  var k=klant(id);if(!k)return;
+  blad('<h2 id="bladTitel">Beurten aanpassen</h2><p><b>'+esc(k.naam)+'</b> heeft nu '+beurtenTekst(k.saldo)+'. Gebruik dit voor een vergissing, een cadeau of een gemiste les. Er hoort geen betaling bij.</p>'+
+    '<div class="veld"><label for="aantal">Aantal beurten</label><input id="aantal" type="number" inputmode="numeric" min="1" max="50" value="1"></div>'+
+    '<div class="veld"><label for="notitie">Reden (voor jezelf)</label><input id="notitie" maxlength="200" placeholder="bv. te laat geannuleerd"></div>'+
+    '<div class="fout" id="bFout"></div><div class="knoppen-2"><button class="knop-groot rood" id="minKnop">− Afnemen</button><button class="knop-groot groen" id="plusKnop">+ Bijgeven</button></div>'+
+    '<button class="knop-groot wit" onclick="sluitBlad()">Annuleren</button>');
+  var doe=function(teken,knop){
+    var n=parseInt(document.getElementById('aantal').value,10);
+    if(!(n>=1&&n<=50)){document.getElementById('bFout').textContent='Kies tussen 1 en 50 beurten.';return;}
+    bezigKnop(knop);
+    DB.beurten.geef(id,teken*n,0,document.getElementById('notitie').value,true).then(function(){return herzoek();}).then(laad)
+      .then(function(){bezig=false;sluitBlad();showToast((teken>0?'+':'−')+' '+beurtenTekst(n)+' voor '+voornaam(k.naam));})
+      .catch(function(e){bezig=false;knop.disabled=false;knop.textContent=teken>0?'+ Bijgeven':'− Afnemen';document.getElementById('bFout').textContent=e;});
+  };
+  document.getElementById('minKnop').onclick=function(){doe(-1,this);};
+  document.getElementById('plusKnop').onclick=function(){doe(1,this);};
+}
+function herzoek(){return zoekterm.trim().length>=2?DB.beurten.zoek(zoekterm.trim()).then(function(r){resultaten=r||[];}):null;}
+
+/* ── DEELNEMERS ── */
+function lessenHtml(){
+  var v=new Date();v.setHours(0,0,0,0);var h='',n=0;
+  for(var i=0;i<15;i++){
+    slotsVoorDag(addDays(v,i)).filter(function(s){return metBeurt(s.lesId);}).forEach(function(s){
+      var t=s.start.getTime(),wie=deelnemers.filter(function(d){return d.les===s.lesId&&new Date(d.start).getTime()===t;});n++;
+      h+='<div class="kaart les-k'+(isVoorbij(s)?' voorbij':'')+'"><div class="k-rij"><div class="k-naam">'+s.les.icon+' '+DAGEN[s.datum.getDay()]+' '+s.datum.getDate()+' '+MAANDEN[s.datum.getMonth()]+' · '+s.tijd+'</div>'+bezettingHtml(wie.length,s.les.max)+'</div>'+
+        (wie.length?wie.map(function(d){return '<div class="dn"><span>'+esc(d.naam)+(d.beurt?'':' <small>(zonder beurt)</small>')+'</span>'+
+          (isVoorbij(s)?'':'<button class="knop-link" onclick="uitschrijven(\''+d.id+'\')">Uitschrijven</button>')+'</div>';}).join('')
+          :'<p class="k-sub">Nog niemand ingeschreven.</p>')+'</div>';
+    });
+  }
+  return n?h:'<p class="leeg-t">Geen lessen in de komende twee weken.</p>';
+}
+function uitschrijven(id){
+  var d=deelnemers.find(function(x){return x.id===id;});if(!d)return;
+  var s=new Date(d.start);
+  blad('<h2 id="bladTitel">Uitschrijven</h2><p><b>'+esc(d.naam)+'</b> · '+DAGEN[s.getDay()].toLowerCase()+' '+s.getDate()+' '+MAANDEN[s.getMonth()]+' om '+pad(s.getHours())+':'+pad(s.getMinutes())+'</p>'+
+    '<p>Krijgt '+esc(voornaam(d.naam))+' de beurt terug?</p>'+
+    '<button class="knop-groot groen" id="terugKnop">Uitschrijven, beurt terug</button>'+
+    (d.beurt?'<button class="knop-groot rood" id="nietKnop">Uitschrijven zonder beurt terug<br><small style="font-weight:600;">(te laat afgemeld)</small></button>':'')+
+    '<button class="knop-groot wit" onclick="sluitBlad()">Annuleren</button>');
+  var doe=function(terug,knop){bezigKnop(knop);DB.beurten.schrijfUit(id,terug).then(laad).then(function(){bezig=false;sluitBlad();showToast(voornaam(d.naam)+' is uitgeschreven'+(terug?' (beurt terug)':''));}).catch(function(e){bezig=false;showToast('⚠️ '+e);sluitBlad();});};
+  document.getElementById('terugKnop').onclick=function(){doe(true,this);};
+  if(d.beurt)document.getElementById('nietKnop').onclick=function(){doe(false,this);};
+}
+
+/* ── GESCHIEDENIS ── */
+function historiekHtml(){
+  var l=rijen.filter(function(r){return r.status==='bevestigd';});
+  var maand=new Date();maand=new Date(maand.getFullYear(),maand.getMonth(),1).getTime();
+  var dezeMaand=l.filter(function(r){return r.soort==='kaart'&&new Date(r.bevestigd_op).getTime()>=maand;});
+  var h='<div class="tot"><div class="kaart"><b>'+dezeMaand.length+'</b>kaarten deze maand</div><div class="kaart"><b>'+dezeMaand.reduce(function(s,r){return s+r.aantal;},0)+'</b>beurten verkocht</div><div class="kaart"><b>'+fmtEuro(dezeMaand.reduce(function(s,r){return s+(+r.bedrag||0);},0))+'</b>ontvangen</div></div>';
+  if(!l.length)return h+'<p class="leeg-t">Nog niets bevestigd in de laatste 90 dagen.</p>';
+  return h+l.map(function(r){
+    return '<div class="kaart hist"><span class="'+(r.aantal>0?'plus':'min')+'">'+(r.aantal>0?'+':'')+r.aantal+'</span>'+
+      '<div><div class="k-naam" style="font-size:1rem;">'+esc(r.naam)+'</div><div class="k-sub">'+(r.soort==='kaart'?'Kaart':'Correctie')+(r.opmerking?' · '+esc(r.opmerking):'')+' · door '+esc(r.door||'?')+'</div></div>'+
+      '<div style="text-align:right;"><div>'+(r.bedrag>0?fmtEuro(+r.bedrag):'')+'</div><div class="k-sub">'+fmtKort(r.bevestigd_op)+'</div></div></div>';
+  }).join('');
+}
+
+/* ── VENSTER ── */
+function voornaam(n){return String(n||'').trim().split(/\s+/)[0]||'';}
+function blad(html){document.getElementById('bladInhoud').innerHTML=html;document.getElementById('blad').classList.add('open');document.body.style.overflow='hidden';var f=document.querySelector('#bladInhoud input,#bladInhoud button');if(f)setTimeout(function(){f.focus();},50);}
+function sluitBlad(){document.getElementById('blad').classList.remove('open');document.body.style.overflow='';}
+function bezigKnop(k){bezig=true;k.disabled=true;k.textContent='Even geduld…';}
+function klaarKnop(k,t){bezig=false;k.disabled=false;k.textContent=t;}
+document.getElementById('blad').addEventListener('click',function(e){if(e.target===this&&!bezig)sluitBlad();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!bezig)sluitBlad();});
+
+/* ── STARTEN ── */
+klaar(function(u){
+  user=u;if(!requireLogin())return;
+  renderNav();
+  if(!magBeurtenBeheren(u)){
+    document.getElementById('bk').innerHTML='<div class="kaart" style="text-align:center;"><p><b>Geen toegang</b></p><p>Deze pagina is voor de yoga-lesgever en de beheerder.'+
+      (wachtOpGoedkeuring(u)?' Je account wacht nog op goedkeuring.':'')+'</p><a class="knop-groot groen" href="yoga.html">Naar yoga reserveren</a></div>';
+    return;
+  }
+  laad();
+});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&user&&magBeurtenBeheren(user)&&!document.getElementById('blad').classList.contains('open'))laad();});
+</script>
+</body>
+</html>
