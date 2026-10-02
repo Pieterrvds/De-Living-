@@ -15,11 +15,14 @@ var RE_DAGVOLG=[1,2,3,4,5,6,0],RE_PPM=1,RE_SNAP=15;
 var RE_START=Math.min.apply(null,Object.keys(OPENINGSUREN).map(function(d){return naarMin(OPENINGSUREN[d][0]);}));
 var RE_EIND=Math.max.apply(null,Object.keys(OPENINGSUREN).map(function(d){return naarMin(OPENINGSUREN[d][1]);}));
 function tijdTekst(m){return pad(Math.floor(m/60))+':'+pad(m%60);}
+// Gesloten periode als blok in de kalender (les '_dicht', met eigen duur); enkel de beheerder past ze aan
+var DICHT='_dicht';
+function reDuur(x){return x.les===DICHT?x.duur:LESSEN[x.les].duur;}
 
 function RoosterEditor(o){
   var ed=this;ed.o=o;ed.volg=0;ed.terug=[];ed.vooruit=[];ed.sleep=null;ed.geenKlik=false;ed.bewerkUid=null;
   RoosterEditor.zorgVoorExtra();
-  ed.laad(o.rooster);
+  ed.laad(o.rooster,o.gesloten);
   document.addEventListener('keydown',function(e){
     if(!ed.zichtbaar())return;
     if(e.key==='Escape')return ed.sluit();
@@ -41,40 +44,50 @@ RoosterEditor.venster=function(){return document.getElementById('reModal');};
 
 var RE=RoosterEditor.prototype;
 RE.zichtbaar=function(){return !!document.getElementById(this.o.el);};
-RE.laad=function(rooster){
+RE.laad=function(rooster,gesloten){
   var ed=this,l=[];
+  gesloten=gesloten||GESLOTEN;
+  Object.keys(gesloten||{}).forEach(function(d){(gesloten[d]||[]).forEach(function(g){
+    var a=naarMin(g[0]),b=naarMin(g[1]);if(b>a)l.push({uid:++ed.volg,dow:+d,min:a,les:DICHT,duur:b-a});});});
   Object.keys(rooster||{}).forEach(function(d){(rooster[d]||[]).forEach(function(x){
     if(LESSEN[x[1]])l.push({uid:++ed.volg,dow:+d,min:naarMin(x[0]),les:x[1],tid:x[2]||'',tnaam:x[3]||'',stijl:stijlVan(x)});});});
   ed.orig=l;ed.werk=l.map(function(x){return Object.assign({},x);});ed.terug=[];ed.vooruit=[];
   ed.origRooster=ed.naarRooster(ed.orig);
 };
 RE.naarRooster=function(lijst){
-  var r={};(lijst||this.werk).slice().sort(function(a,b){return a.min-b.min;}).forEach(function(x){
+  var r={};(lijst||this.werk).filter(function(x){return x.les!==DICHT;}).sort(function(a,b){return a.min-b.min;}).forEach(function(x){
     var st=stijlGeldig(x.les,x.stijl)?x.stijl:'';
     (r[x.dow]=r[x.dow]||[]).push(st?[tijdTekst(x.min),x.les,x.tid||'',x.tid?x.tnaam:'',st]:x.tid?[tijdTekst(x.min),x.les,x.tid,x.tnaam]:[tijdTekst(x.min),x.les]);});
   return r;
 };
+// Gesloten periodes als {weekdag:[[van,tot],…]}
+RE.naarGesloten=function(){
+  var r={};this.werk.filter(function(x){return x.les===DICHT;}).sort(function(a,b){return a.min-b.min;}).forEach(function(x){
+    (r[x.dow]=r[x.dow]||[]).push([tijdTekst(x.min),tijdTekst(x.min+x.duur)]);});
+  return r;
+};
 RE.zoek=function(uid){return this.werk.find(function(x){return x.uid===uid;});};
-RE.mag=function(x){return !this.o.magBewerken||this.o.magBewerken(x);};
-RE.lesgever=function(x){return x.tnaam||LESSEN[x.les].trainer;};
+RE.mag=function(x){return x.les===DICHT?!!this.o.dichtBeheer:(!this.o.magBewerken||this.o.magBewerken(x));};
+RE.lesgever=function(x){return x.les===DICHT?'':x.tnaam||LESSEN[x.les].trainer;};
 RE.stap=function(){this.terug.push(JSON.stringify(this.werk));if(this.terug.length>100)this.terug.shift();this.vooruit=[];};
 RE.ververs=function(){if(this.o.naWijziging)this.o.naWijziging();this.teken();};
 RE.ongedaan=function(){if(!this.terug.length)return;this.vooruit.push(JSON.stringify(this.werk));this.werk=JSON.parse(this.terug.pop());this.ververs();};
 RE.opnieuw=function(){if(!this.vooruit.length)return;this.terug.push(JSON.stringify(this.werk));this.werk=JSON.parse(this.vooruit.pop());this.ververs();};
 RE.terugzetten=function(){if(!this.aantal()||!confirm('Alle wijzigingen sinds de laatste publicatie wissen?'))return;this.stap();this.werk=this.orig.map(function(x){return Object.assign({},x);});this.ververs();};
-RE.anders=function(a,x){return a.dow!==x.dow||a.min!==x.min||a.les!==x.les||a.tid!==x.tid||(a.stijl||'')!==(x.stijl||'');};
+RE.anders=function(a,x){return a.dow!==x.dow||a.min!==x.min||a.les!==x.les||a.tid!==x.tid||(a.stijl||'')!==(x.stijl||'')||a.duur!==x.duur;};
 RE.aantal=function(){
   var ed=this,o={},w={};ed.orig.forEach(function(x){o[x.uid]=x;});ed.werk.forEach(function(x){w[x.uid]=x;});
   return ed.werk.filter(function(x){return !o[x.uid]||ed.anders(o[x.uid],x);}).length+ed.orig.filter(function(x){return !w[x.uid];}).length;
 };
 RE.gewijzigd=function(x){var a=this.orig.find(function(o){return o.uid===x.uid;});return !a||this.anders(a,x);};
 // Kan les 'les' op dag 'dow' om 'min' staan? Geeft de reden terug als dat niet kan.
-RE.probleem=function(dow,min,les,uid){
-  var e=min+LESSEN[les].duur,o=OPENINGSUREN[dow];
-  if(!o||min<naarMin(o[0])||e>naarMin(o[1]))return 'Buiten de openingsuren ('+(o?o[0]+' – '+o[1]:'gesloten')+')';
-  if(weekdagGesloten(dow,min,e))return 'In een gesloten periode';
-  var x=this.werk.find(function(x){return x.uid!==uid&&x.dow===dow&&x.min<e&&x.min+LESSEN[x.les].duur>min;});
-  return x?'Overlapt met '+LESSEN[x.les].naam+' om '+tijdTekst(x.min):'';
+RE.probleem=function(dow,min,les,uid,duur){
+  var e=min+(les===DICHT?duur:LESSEN[les].duur),o=OPENINGSUREN[dow];
+  if(les===DICHT){if(e<=min)return 'Kies een einduur na het beginuur';}
+  else if(!o||min<naarMin(o[0])||e>naarMin(o[1]))return 'Buiten de openingsuren ('+(o?o[0]+' – '+o[1]:'gesloten')+')';
+  var x=this.werk.find(function(x){return x.uid!==uid&&x.dow===dow&&x.min<e&&x.min+reDuur(x)>min;});
+  if(!x)return '';
+  return x.les===DICHT?'In een gesloten periode ('+tijdTekst(x.min)+' – '+tijdTekst(x.min+x.duur)+')':'Overlapt met '+LESSEN[x.les].naam+' om '+tijdTekst(x.min);
 };
 
 RE.teken=function(){
@@ -84,7 +97,8 @@ RE.teken=function(){
       var titel=' title="Sleep naar een dag en uur, of klik om toe te voegen"';
       if(LESSEN[k].stijlen)return LESSEN[k].stijlen.map(function(s){
         return '<button class="re-chip les-'+k+'" data-les="'+k+'" data-stijl="'+esc(s.naam)+'"'+titel+'>'+LESSEN[k].icon+' '+esc(s.naam)+'<small>'+LESSEN[k].duur+' min</small></button>';}).join('');
-      return '<button class="re-chip les-'+k+'" data-les="'+k+'"'+titel+'>'+LESSEN[k].icon+' '+esc(LESSEN[k].kort||LESSEN[k].naam)+'<small>'+LESSEN[k].duur+' min</small></button>';}).join('')+'</div>'+
+      return '<button class="re-chip les-'+k+'" data-les="'+k+'"'+titel+'>'+LESSEN[k].icon+' '+esc(LESSEN[k].kort||LESSEN[k].naam)+'<small>'+LESSEN[k].duur+' min</small></button>';}).join('')+
+      (ed.o.dichtBeheer?'<button class="re-chip re-chip-dicht" data-les="'+DICHT+'" title="Sleep naar een dag en uur om die periode te sluiten">🔒 Gesloten<small>1 uur</small></button>':'')+'</div>'+
     '<div class="re-acties"><span class="re-status'+(n?' open':'')+'">'+(n?n+' niet-gepubliceerde wijziging'+(n>1?'en':''):'✓ Gepubliceerd')+'</span>'+
     '<button class="knop rond" data-actie="ongedaan" title="Ongedaan maken (Ctrl+Z)" aria-label="Ongedaan maken"'+(ed.terug.length?'':' disabled')+'>↶</button>'+
     '<button class="knop rond" data-actie="opnieuw" title="Opnieuw (Ctrl+Y)" aria-label="Opnieuw"'+(ed.vooruit.length?'':' disabled')+'>↷</button>'+
@@ -93,7 +107,7 @@ RE.teken=function(){
     '<p class="re-hulp">Sleep een les om ze te <b>verplaatsen</b> (per kwartier) · sleep naar 🗑️ of druk <b>Delete</b> om te <b>verwijderen</b> · <b>dubbelklik</b> op een leeg vak of klik op een les hierboven om <b>toe te voegen</b> · klik op een les om ze te <b>wijzigen</b>. '+
     (ed.o.hulp||'')+'Pas na <b>Publiceren</b> ziet iedereen het nieuwe rooster.</p>';
   h+='<div class="re-wrap"><div class="re-grid"><div class="re-kop"></div>'+RE_DAGVOLG.map(function(d){
-    var k=ed.werk.filter(function(x){return x.dow===d;}).length;
+    var k=ed.werk.filter(function(x){return x.dow===d&&x.les!==DICHT;}).length;
     return '<div class="re-kop">'+DAGEN[d]+'<small>'+(k?k+' les'+(k>1?'sen':''):'geen lessen')+'</small></div>';}).join('');
   h+='<div class="re-as" style="height:'+hoogte+'px">';
   for(var m=RE_START+60;m<RE_EIND;m+=60)h+='<div style="top:'+(m-RE_START)*RE_PPM+'px">'+tijdTekst(m)+'</div>';
@@ -101,9 +115,15 @@ RE.teken=function(){
     var c='<div class="re-kol" data-dow="'+d+'" style="height:'+hoogte+'px">',o=OPENINGSUREN[d],dicht=[];
     if(!o)dicht.push([RE_START,RE_EIND,'Gesloten']);
     else{dicht.push([RE_START,naarMin(o[0]),'']);dicht.push([naarMin(o[1]),RE_EIND,'Dicht']);}
-    (GESLOTEN[d]||[]).forEach(function(g){dicht.push([naarMin(g[0]),Math.min(naarMin(g[1]),RE_EIND),'Gesloten']);});
     dicht.forEach(function(g){var a=Math.max(g[0],RE_START),b=Math.min(g[1],RE_EIND);if(b>a)c+='<div class="re-dicht" style="top:'+(a-RE_START)*RE_PPM+'px;height:'+(b-a)*RE_PPM+'px">'+(b-a>=45?g[2]:'')+'</div>';});
     ed.werk.filter(function(x){return x.dow===d;}).forEach(function(x){
+      if(x.les===DICHT){   // gesloten periode
+        var a=Math.max(x.min,RE_START),b2=Math.min(x.min+x.duur,RE_EIND);if(b2<=a)return;
+        var t=tijdTekst(x.min)+' – '+tijdTekst(x.min+x.duur);
+        c+=ed.mag(x)?'<button class="re-blok re-blok-dicht'+(ed.gewijzigd(x)?' nieuw':'')+'" data-uid="'+x.uid+'" style="top:'+(a-RE_START)*RE_PPM+'px;height:'+(b2-a)*RE_PPM+'px" title="Gesloten '+t+'" aria-label="Gesloten op '+DAGEN[d]+' '+t+'"><b>🔒 Gesloten</b><span>'+t+'</span></button>'
+          :'<div class="re-dicht" style="top:'+(a-RE_START)*RE_PPM+'px;height:'+(b2-a)*RE_PPM+'px">'+(b2-a>=45?'Gesloten':'')+'</div>';
+        return;
+      }
       var l=LESSEN[x.les],mag=ed.mag(x),wie=ed.lesgever(x);
       c+='<button class="re-blok les-'+x.les+(ed.gewijzigd(x)?' nieuw':'')+(mag?'':' vast')+'" data-uid="'+x.uid+'" style="top:'+(x.min-RE_START)*RE_PPM+'px;height:'+l.duur*RE_PPM+'px" '+
         'title="'+esc(lesNaam(x.les,x.stijl)+' · '+tijdTekst(x.min)+' – '+tijdTekst(x.min+l.duur)+' · '+wie+(mag?'':' (niet van jou)'))+'" aria-label="'+esc(l.naam+' op '+DAGEN[d]+' om '+tijdTekst(x.min)+' met '+wie)+'">'+
@@ -141,10 +161,11 @@ RE.koppel=function(el){
 RE.start=function(e){
   if(e.button!==0)return;
   var ed=this,el=e.currentTarget,uid=el.dataset.uid?+el.dataset.uid:null,x=uid&&ed.zoek(uid),les=x?x.les:el.dataset.les;
-  var grijp=x?Math.max(0,(e.clientY-el.getBoundingClientRect().top)/RE_PPM):Math.min(15,LESSEN[les].duur/2);
+  var duur=x?reDuur(x):les===DICHT?60:LESSEN[les].duur;
+  var grijp=x?Math.max(0,(e.clientY-el.getBoundingClientRect().top)/RE_PPM):Math.min(15,duur/2);
   var beweeg=function(ev){ed.beweeg(ev);},stop=function(ev){
     el.removeEventListener('pointermove',beweeg);el.removeEventListener('pointerup',stop);el.removeEventListener('pointercancel',stop);ed.stop(ev);};
-  ed.sleep={el:el,uid:uid,les:les,stijl:el.dataset.stijl||'',grijp:grijp,x0:e.clientX,y0:e.clientY,bezig:false,doel:null};
+  ed.sleep={el:el,uid:uid,les:les,duur:duur,stijl:el.dataset.stijl||'',grijp:grijp,x0:e.clientX,y0:e.clientY,bezig:false,doel:null};
   try{el.setPointerCapture(e.pointerId);}catch(_){}
   el.addEventListener('pointermove',beweeg);el.addEventListener('pointerup',stop);el.addEventListener('pointercancel',stop);
 };
@@ -164,10 +185,10 @@ RE.beweeg=function(e){
   if(opPrul){s.doel={prul:true};return;}
   var kol=[].slice.call(document.querySelectorAll('#'+ed.o.el+' .re-kol')).find(function(k){var r=k.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<r.right&&e.clientY>=r.top-40&&e.clientY<=r.bottom+40;});
   if(!kol)return;
-  var r=kol.getBoundingClientRect(),duur=LESSEN[s.les].duur;
+  var r=kol.getBoundingClientRect(),duur=s.duur;
   var min=Math.round((RE_START+(e.clientY-r.top)/RE_PPM-s.grijp)/RE_SNAP)*RE_SNAP;
   min=Math.max(RE_START,Math.min(RE_EIND-duur,min));
-  var dow=+kol.dataset.dow,fout=ed.probleem(dow,min,s.les,s.uid);
+  var dow=+kol.dataset.dow,fout=ed.probleem(dow,min,s.les,s.uid,duur);
   s.doel={dow:dow,min:min,fout:fout};
   var g=document.createElement('div');g.className='re-ghost'+(fout?' fout':'');
   g.style.top=(min-RE_START)*RE_PPM+'px';g.style.height=duur*RE_PPM+'px';
@@ -186,14 +207,14 @@ RE.stop=function(e){
   if(s.doel.fout){showToast('⚠️ '+s.doel.fout);return;}
   ed.stap();
   if(s.uid){var x=ed.zoek(s.uid);x.dow=s.doel.dow;x.min=s.doel.min;}
-  else ed.werk.push(ed.nieuwItem(s.doel.dow,s.doel.min,s.les,s.stijl));
+  else ed.werk.push(s.les===DICHT?{uid:++ed.volg,dow:s.doel.dow,min:s.doel.min,les:DICHT,duur:60}:ed.nieuwItem(s.doel.dow,s.doel.min,s.les,s.stijl));
   ed.ververs();
 };
 RE.nieuwItem=function(dow,min,les,stijl){var e=this.o.eigenaar;return {uid:++this.volg,dow:dow,min:min,les:les,tid:e?e.tid:'',tnaam:e?e.tnaam:'',stijl:stijl||''};};
 RE.verwijder=function(uid){
   var x=this.zoek(uid);if(!x)return;
   this.stap();this.werk=this.werk.filter(function(i){return i.uid!==uid;});
-  this.ververs();showToast('🗑️ '+LESSEN[x.les].naam+' ('+DAGEN[x.dow].toLowerCase()+' '+tijdTekst(x.min)+') verwijderd · Ctrl+Z om terug te zetten');
+  this.ververs();showToast('🗑️ '+(x.les===DICHT?'Gesloten periode':LESSEN[x.les].naam)+' ('+DAGEN[x.dow].toLowerCase()+' '+tijdTekst(x.min)+') verwijderd · Ctrl+Z om terug te zetten');
 };
 // Toetsenbord op een les: pijltjes verplaatsen, Delete verwijdert
 RE.toets=function(e){
@@ -203,23 +224,49 @@ RE.toets=function(e){
   if(e.key==='ArrowUp')min-=RE_SNAP;else if(e.key==='ArrowDown')min+=RE_SNAP;
   else if(e.key==='ArrowLeft')dow=RE_DAGVOLG[(i+6)%7];else if(e.key==='ArrowRight')dow=RE_DAGVOLG[(i+1)%7];else return;
   e.preventDefault();
-  var f=ed.probleem(dow,min,x.les,uid);if(f){showToast('⚠️ '+f);return;}
+  var f=ed.probleem(dow,min,x.les,uid,reDuur(x));if(f){showToast('⚠️ '+f);return;}
   ed.stap();x.dow=dow;x.min=min;ed.ververs();
   var b=document.querySelector('#'+ed.o.el+' .re-blok[data-uid="'+uid+'"]');if(b)b.focus();
+};
+
+/* Venster: gesloten periode toevoegen of wijzigen (beheerder) */
+RE.dichtVenster=function(uid,x){
+  var ed=this,opt=function(van,tot,sel){var h='';for(var m=van;m<=tot;m+=RE_SNAP)h+='<option value="'+m+'"'+(m===sel?' selected':'')+'>'+tijdTekst(m)+'</option>';return h;};
+  ed.venster('<h2 class="card-title">🔒 '+(uid?'Gesloten periode wijzigen':'Gesloten periode toevoegen')+'</h2>'+
+    '<p style="color:var(--espresso2);font-size:.92rem;">Elke week op deze dag en uren kan niemand een les boeken.</p>'+
+    '<div class="fg"><label for="d-dag">Dag</label><select id="d-dag">'+RE_DAGVOLG.map(function(d){return '<option value="'+d+'"'+(d===x.dow?' selected':'')+'>'+DAGEN[d]+'</option>';}).join('')+'</select></div>'+
+    '<div class="m-rij"><div class="fg"><label for="d-van">Van</label><select id="d-van">'+opt(0,1425,x.min)+'</select></div>'+
+    '<div class="fg"><label for="d-tot">Tot</label><select id="d-tot">'+opt(15,1440,x.min+x.duur)+'</select></div></div>'+
+    '<div class="m-fout" id="re-fout"></div><div class="m-knoppen">'+(uid?'<button class="knop rood" id="d-weg">🗑️ Verwijderen</button>':'')+
+    '<button class="knop" id="d-annuleer">Annuleren</button><button class="knop groen" id="d-ok">'+(uid?'✓ Wijzigen':'+ Toevoegen')+'</button></div>');
+  var waarden=function(){var a=+document.getElementById('d-van').value;return {dow:+document.getElementById('d-dag').value,min:a,duur:+document.getElementById('d-tot').value-a};};
+  var check=function(){var v=waarden(),f=ed.probleem(v.dow,v.min,DICHT,uid,v.duur),el=document.getElementById('re-fout');
+    el.textContent=f?'✕ '+f:'✓ Gesloten op '+DAGEN[v.dow].toLowerCase()+' van '+tijdTekst(v.min)+' tot '+tijdTekst(v.min+v.duur);el.style.color=f?'':'var(--sage)';
+    document.getElementById('d-ok').disabled=!!f;return !f;};
+  ['d-dag','d-van','d-tot'].forEach(function(id){document.getElementById(id).addEventListener('change',check);});
+  document.getElementById('d-annuleer').onclick=function(){ed.sluit();};
+  if(uid)document.getElementById('d-weg').onclick=function(){ed.sluit();ed.verwijder(uid);};
+  document.getElementById('d-ok').onclick=function(){
+    if(!check())return;var v=waarden();ed.stap();
+    if(uid){var y=ed.zoek(uid);y.dow=v.dow;y.min=v.min;y.duur=v.duur;}else ed.werk.push({uid:++ed.volg,dow:v.dow,min:v.min,les:DICHT,duur:v.duur});
+    ed.sluit();ed.ververs();
+  };
+  check();
 };
 
 /* Venster: les toevoegen of wijzigen */
 RE.venster=function(html){document.getElementById('reModalInhoud').innerHTML=html;RoosterEditor.venster().classList.add('open');};
 RE.sluit=function(){RoosterEditor.venster().classList.remove('open');};
 RE.openNieuw=function(les,dow,min,stijl){
-  var ed=this;ed.bewerkUid=null;les=les||ed.o.lessen[0];
+  var ed=this;
+  if(les===DICHT)return ed.dichtVenster(null,{dow:1,min:RE_START,duur:60});ed.bewerkUid=null;les=les||ed.o.lessen[0];
   if(dow==null){   // eerste vrije plaats vanaf maandag
     outer:for(var i=0;i<7;i++)for(var m=RE_START;m<RE_EIND;m+=RE_SNAP)if(!ed.probleem(RE_DAGVOLG[i],m,les)){dow=RE_DAGVOLG[i];min=m;break outer;}
     if(dow==null){dow=1;min=naarMin(OPENINGSUREN[1][0]);}
   }
   var e=ed.o.eigenaar;ed.toonVenster('Les toevoegen',{les:les,dow:dow,min:min,tid:e?e.tid:'',stijl:stijl||''});
 };
-RE.openBewerk=function(uid){var x=this.zoek(uid);if(!x)return;this.bewerkUid=uid;this.toonVenster('Les wijzigen',x);};
+RE.openBewerk=function(uid){var x=this.zoek(uid);if(!x)return;if(x.les===DICHT)return this.dichtVenster(uid,x);this.bewerkUid=uid;this.toonVenster('Les wijzigen',x);};
 RE.toonVenster=function(titel,x){
   var ed=this,lessen=ed.o.lessen.indexOf(x.les)<0?ed.o.lessen.concat([x.les]):ed.o.lessen;
   ed.venster('<h2 class="card-title">'+titel+'</h2>'+

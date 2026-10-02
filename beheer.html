@@ -104,7 +104,7 @@ var weekStart=mondayOf(new Date()),filter='alle',boekingen=[],profielen=[],zoekt
 
 function tabs(actief){
   var wacht=profielen.filter(wachtOpGoedkeuring).length;
-  return '<div class="tabs">'+[['res','📅 Reservaties'],['rooster','🗓️ Rooster'+(reAantalWijzigingen()?' <span class="teller">'+reAantalWijzigingen()+'</span>':'')],['leden','👥 Leden'+(wacht?' <span class="teller">'+wacht+'</span>':'')],['inst','⚙️ Instellingen']].map(function(t){
+  return '<div class="tabs">'+[['res','📅 Reservaties'],['rooster','🗓️ Rooster'+(reAantalWijzigingen()?' <span class="teller">'+reAantalWijzigingen()+'</span>':'')],['leden','👥 Leden'+(wacht?' <span class="teller">'+wacht+'</span>':'')]].map(function(t){
     return '<button class="tab'+(t[0]===actief?' actief':'')+'" onclick="toonTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+
     '<a class="tab" href="beurten.html" style="text-decoration:none;">🎟️ Beurtenkaarten ↗</a></div>';
 }
@@ -160,7 +160,7 @@ function bezettingOverzicht(){
   var rijen=[];
   for(var i=0;i<7;i++)slotsVoorDag(addDays(weekStart,i)).forEach(function(s){
     var wie=boekingen.filter(function(b){return b.slotId===s.id;});
-    rijen.push('<div class="bz-rij les-'+s.lesId+(isVoorbij(s)?' voorbij':'')+'"><div class="bz-wanneer"><b>'+DAGEN_KORT[s.datum.getDay()]+' '+s.datum.getDate()+'/'+(s.datum.getMonth()+1)+' · '+s.tijd+'</b>'+s.les.icon+' '+esc(lesNaam(s.lesId,s.stijl))+' · '+esc(s.trainer)+'</div>'+
+    rijen.push('<div class="bz-rij les-'+s.lesId+(isVoorbij(s)?' voorbij':'')+'"><div class="bz-wanneer"><b>'+DAGEN_KORT[s.datum.getDay()]+' '+s.datum.getDate()+'/'+(s.datum.getMonth()+1)+' · '+s.tijd+'</b>'+s.les.icon+' '+esc(slotNaam(s))+' · '+esc(s.trainer)+'</div>'+
       bezettingHtml(wie.length,s.les.max)+'<div class="bz-wie">'+(wie.length?wie.map(function(b){return esc((b.profiel&&b.profiel.naam)||'?')+(b.voorWie?' (voor '+esc(b.voorWie)+')':'');}).join(', '):'<i>nog niemand</i>')+'</div></div>');
   });
   return '<details class="card bz" open><summary>📊 Bezetting van de lessen deze week</summary>'+(rijen.length?rijen.join(''):'<div class="leeg">Geen lessen in deze week.</div>')+'</details>';
@@ -172,7 +172,7 @@ function verplaatsVraag(id){
   var i=lesInfo(b),les=b.slotId.split('_')[1],ma=mondayOf(i.datum),opties=[];
   for(var k=0;k<7;k++)slotsVoorDag(addDays(ma,k)).forEach(function(s){if(s.lesId===les)opties.push(s);});
   ed.venster('<h2 class="card-title">Reservatie verplaatsen</h2><p style="color:var(--espresso2);">'+esc((b.profiel||{}).naam||'?')+' · '+fmtDatum(i.datum)+' om '+i.tijd+'. Kies het nieuwe uur in dezelfde week:</p>'+
-    (opties.length?opties.map(function(s){return '<button class="knop" style="width:100%;justify-content:flex-start;margin-top:.5rem;" onclick="verplaats(\''+id+'\',\''+s.id+'\')">'+s.les.icon+' '+fmtDatum(s.datum)+' · '+s.tijd+' · '+esc(lesNaam(s.lesId,s.stijl))+'</button>';}).join('')
+    (opties.length?opties.map(function(s){return '<button class="knop" style="width:100%;justify-content:flex-start;margin-top:.5rem;" onclick="verplaats(\''+id+'\',\''+s.id+'\')">'+s.les.icon+' '+fmtDatum(s.datum)+' · '+s.tijd+' · '+esc(slotNaam(s))+'</button>';}).join('')
       :'<p>Er is die week geen '+esc(i.les.naam.toLowerCase())+' meer in het rooster.</p>')+
     '<div class="m-knoppen" style="margin-top:1rem;"><button class="knop" onclick="ed.sluit()">Annuleren</button></div>');
 }
@@ -231,7 +231,7 @@ function verwijderLid(id){
 var ed=null;
 function reAantalWijzigingen(){return ed?ed.aantal():0;}
 function maakEditor(rooster){
-  ed=new RoosterEditor({el:'reHier',rooster:rooster,lessen:Object.keys(LESSEN),
+  ed=new RoosterEditor({el:'reHier',rooster:rooster,gesloten:dbInst.config.gesloten||{},dichtBeheer:true,lessen:Object.keys(LESSEN),
     lesgevers:function(les){return profielen.filter(function(p){return isGoedgekeurdePro(p)&&(getType(p.type).lessen||[]).indexOf(les)>=0;})
       .map(function(p){return {id:p.id,naam:p.naam||p.email};});},
     hulp:'Klik op een les om ook de <b>lesgever</b> te kiezen: goedgekeurde lesgevers verschuiven hun eigen uren dan zelf bij <i>Mijn account</i>. ',
@@ -259,7 +259,7 @@ function nieuwStart(b,naar){
 }
 /* Publiceren: reservaties van verschoven lessen gaan mee; andere geraakte reservaties eerst tonen */
 function rePubliceer(nieuw){
-  var nu=new Date(),schuif=verschuivingen();
+  var nu=new Date(),schuif=verschuivingen(),dicht=ed.naarGesloten();
   DB.admin.boekingen(nu,addDays(nu,400)).then(function(lijst){
     var vrij=Date.now(),mee=[];
     var geraakt=lijst.filter(function(b){return !(b.status==='wacht-op-betaling'&&vervaltOm(b)<=vrij);}).map(function(b){
@@ -267,7 +267,9 @@ function rePubliceer(nieuw){
       if(les!=='zaal'&&b.status!=='intern'){
         var naar=schuif[dow+'|'+t+'|'+les];
         if(naar){mee.push({b:b,start:nieuwStart(b,naar)});return null;}
-        return (nieuw[dow]||[]).some(function(x){return x[0]===t&&x[1]===les;})?null:{b:b,reden:'staat niet meer in het rooster'};
+        if(!(nieuw[dow]||[]).some(function(x){return x[0]===t&&x[1]===les;}))return {b:b,reden:'staat niet meer in het rooster'};
+        var g=(dicht[dow]||[]).find(function(g){return naarMin(g[0])<tot&&naarMin(g[1])>van;});
+        return g?{b:b,reden:'valt in de gesloten periode '+g[0]+' – '+g[1]}:null;
       }
       var x=(nieuw[dow]||[]).find(function(x){var s=naarMin(x[0]);return s<tot&&s+LESSEN[x[1]].duur>van;});
       return x?{b:b,reden:'overlapt met '+LESSEN[x[1]].naam+' om '+x[0]}:null;
@@ -292,15 +294,16 @@ function reOpslaan(nieuw,mee){
     if(nu&&roosterSleutel(nu)!==roosterSleutel(ed.origRooster)){
       dbInst=d;
       ed.venster('<h2 class="card-title">Het rooster is intussen gewijzigd</h2><p style="color:var(--espresso2);line-height:1.6;font-size:.92rem;">Een lesgever heeft intussen eigen uren aangepast. Laad eerst het nieuwste rooster en doe je wijziging daarna opnieuw, zodat je die uren niet overschrijft.</p>'+
-        '<div class="m-knoppen"><button class="knop" onclick="ed.sluit()">Annuleren</button><button class="knop groen" onclick="ed.sluit();zetRooster(dbInst.config.rooster);ed.laad(dbInst.config.rooster);render();">Nieuwste rooster laden</button></div>');
+        '<div class="m-knoppen"><button class="knop" onclick="ed.sluit()">Annuleren</button><button class="knop groen" onclick="ed.sluit();zetRooster(dbInst.config.rooster);zetUren(dbInst.config);ed.laad(dbInst.config.rooster,dbInst.config.gesloten||{});render();">Nieuwste rooster laden</button></div>');
       return 'gestopt';
     }
-    var cfg=Object.assign({},d&&d.config||configVoorDatabase(nieuw),{rooster:nieuw});
+    // rooster én gesloten periodes (🔒) uit de kalender
+    var cfg=Object.assign({},d&&d.config||configVoorDatabase(nieuw),{rooster:nieuw,gesloten:ed.naarGesloten()});
     return DB.admin.zetInstellingen(cfg).then(laadInst).then(function(){
       // reservaties van verschoven lessen mee verplaatsen
       return Promise.all((mee||[]).map(function(m){return DB.admin.verplaats(m.b.id,m.start,m.b.duur);}));
     }).then(function(){
-      zetRooster(dbInst.config.rooster);ed.laad(dbInst.config.rooster);
+      zetRooster(dbInst.config.rooster);zetUren(dbInst.config);ed.laad(dbInst.config.rooster,dbInst.config.gesloten||{});
       return laadWeek().catch(function(){});
     }).then(function(){
       render();
@@ -311,24 +314,12 @@ function reOpslaan(nieuw,mee){
 
 /* ── INSTELLINGEN ── */
 var dbInst=null;
-function paneelInstellingen(){
-  var hier=configVoorDatabase(dbInst&&dbInst.config.rooster),gelijk=dbInst&&JSON.stringify(sorteer(dbInst.config))===JSON.stringify(sorteer(hier));
-  return '<div class="card inst"><h2 class="card-title">Rooster en regels</h2>'+
-    '<p>Het <b>rooster</b> pas je aan in het tabblad <a href="#" onclick="toonTab(\'rooster\');return false;">🗓️ Rooster</a>. De lessen (prijs, duur, max. personen), openingsuren en boekingsregels staan in <b>assets/boeken.js</b>. De database gebruikt een kopie om alle regels op de server te controleren. Na een wijziging in boeken.js stuur je die kopie hier door (het rooster blijft dan ongewijzigd).</p>'+
-    (gelijk?'<div class="notice sage">✓ De database gebruikt hetzelfde rooster en dezelfde regels als de website'+(dbInst?' (bijgewerkt op '+new Date(dbInst.bijgewerkt).toLocaleString('nl-BE')+')':'')+'.</div>'
-      :'<div class="notice">⚠️ De lessen of regels in <b>boeken.js</b> verschillen van die in de database. Boekingen kunnen daardoor geweigerd worden. Stuur ze door:</div>')+
-    '<div style="margin-top:1.25rem;display:flex;gap:.6rem;flex-wrap:wrap;"><button class="knop groen" onclick="stuurInstellingen()"'+(gelijk?' disabled':'')+'>⬆️ Regels naar database sturen</button>'+
-    '<button class="knop" onclick="document.getElementById(\'cfg\').style.display=\'block\'">Toon details</button></div>'+
-    '<pre id="cfg" style="display:none;">'+esc(JSON.stringify(hier,null,1))+'</pre></div>';
-}
-function sorteer(o){if(Array.isArray(o))return o.map(sorteer);if(o&&typeof o==='object'){var r={};Object.keys(o).sort().forEach(function(k){r[k]=sorteer(o[k]);});return r;}return o;}
 function laadInst(){return DB.admin.instellingen().then(function(d){dbInst=d;});}
-function stuurInstellingen(){DB.admin.zetInstellingen(configVoorDatabase(dbInst&&dbInst.config.rooster)).then(function(){showToast('✓ Regels bijgewerkt');}).then(laadInst).then(render).catch(fout);}
 
 /* ── ALGEMEEN ── */
 function fout(e){showToast('⚠️ '+e);}
 function render(){
-  var inh=huidigeTab==='res'?paneelReservaties():huidigeTab==='rooster'?paneelRooster():huidigeTab==='leden'?paneelLeden():paneelInstellingen();
+  var inh=huidigeTab==='res'?paneelReservaties():huidigeTab==='rooster'?paneelRooster():paneelLeden();
   document.getElementById('inhoud').innerHTML=tabs(huidigeTab)+'<div class="paneel actief">'+inh+'</div>';
   if(huidigeTab==='rooster'&&ed)ed.teken();
 }
@@ -341,7 +332,7 @@ klaar(function(u){
     return;
   }
   Promise.all([laadWeek(),laadLeden(),laadInst()]).then(function(){
-    if(dbInst&&dbInst.config&&dbInst.config.rooster){zetRooster(dbInst.config.rooster);maakEditor(dbInst.config.rooster);}
+    if(dbInst&&dbInst.config&&dbInst.config.rooster){zetRooster(dbInst.config.rooster);zetUren(dbInst.config);maakEditor(dbInst.config.rooster);}
     if(/[?&]tab=rooster/.test(location.search))huidigeTab='rooster';
     if(profielen.some(wachtOpGoedkeuring))showToast('👥 Er '+(profielen.filter(wachtOpGoedkeuring).length===1?'wacht 1 professional':'wachten '+profielen.filter(wachtOpGoedkeuring).length+' professionals')+' op goedkeuring');
     render();

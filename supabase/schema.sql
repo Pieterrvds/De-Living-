@@ -21,6 +21,14 @@ create table if not exists public.beheerders (
   email text primary key
 );
 
+-- Vaste lesgevers: wie zich met dit e-mailadres aanmeldt, wordt meteen herkend
+-- (juiste type, goedgekeurd) en krijgt de lessen van dat type zonder lesgever.
+create table if not exists public.vaste_lesgevers (
+  email text primary key,
+  naam  text not null,
+  type  text not null
+);
+
 create table if not exists public.profielen (
   id          uuid primary key references auth.users(id) on delete cascade,
   naam        text not null default '',
@@ -116,20 +124,45 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- ── NIEUW ACCOUNT → PROFIEL ────────────────────────────────────────────
+-- Lessen van het type van een vaste lesgever die nog geen lesgever hebben, aan die lesgever geven
+create or replace function public.wijs_lessen_toe(uid uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare p profielen; c jsonb; r jsonb := '{}'::jsonb; d text;
+begin
+  select * into p from profielen where id = uid;
+  select config into c from instellingen where id = 1 for update;
+  if p.id is null or c is null or c->'rooster' is null then return; end if;
+  for d in select jsonb_object_keys(c->'rooster') loop
+    r := r || jsonb_build_object(d, coalesce((
+      select jsonb_agg(case when coalesce(x->>2, '') = ''
+                              and coalesce(c->'types'->p.type->'lessen', '[]'::jsonb) ? (x->>1)
+                         then jsonb_build_array(x->>0, x->>1, p.id::text, p.naam)
+                              || case when x->>4 is not null then jsonb_build_array(x->>4) else '[]'::jsonb end
+                         else x end order by n)
+        from jsonb_array_elements(c->'rooster'->d) with ordinality t(x, n)), '[]'::jsonb));
+  end loop;
+  update instellingen set config = jsonb_set(config, '{rooster}', r), bijgewerkt = now() where id = 1;
+end $$;
+revoke all on function public.wijs_lessen_toe(uuid) from public, anon, authenticated;
+
 create or replace function public.nieuw_profiel() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare
   t text := coalesce(new.raw_user_meta_data->>'type', 'lid');
+  v vaste_lesgevers;
 begin
+  select * into v from vaste_lesgevers where email = lower(new.email);
+  if v.email is not null then t := v.type; end if;
   if not coalesce(cfg()->'types' ? t, false) then t := 'lid'; end if;
   insert into profielen (id, naam, email, type, goedgekeurd)
   values (new.id,
-          left(coalesce(new.raw_user_meta_data->>'naam', ''), 100),
+          left(coalesce(v.naam, nullif(new.raw_user_meta_data->>'naam', ''), ''), 100),   -- vaste lesgever: altijd de gekende naam
           lower(new.email),
           t,
-          -- gewone leden hoeven niet goedgekeurd te worden
-          not coalesce((cfg()->'types'->t->>'pro')::boolean, false))
+          -- gewone leden hoeven niet goedgekeurd te worden; vaste lesgevers zijn al gekend
+          v.email is not null or not coalesce((cfg()->'types'->t->>'pro')::boolean, false))
   on conflict (id) do nothing;
+  if v.email is not null then perform wijs_lessen_toe(new.id); end if;
   return new;
 end $$;
 
@@ -396,6 +429,7 @@ create policy "annuleren" on public.boekingen for delete
            status = 'wacht-op-betaling'
            or start >= now() + make_interval(hours => (cfg()->'regels'->>'annulerenTotUurVooraf')::int))));
 
+alter table public.vaste_lesgevers enable row level security;   -- enkel via de functies hierboven
 alter table public.beurten enable row level security;
 drop policy if exists "eigen beurten of beheer" on public.beurten;
 create policy "eigen beurten of beheer" on public.beurten for select
@@ -674,8 +708,10 @@ grant execute on function public.bezetting(timestamptz, timestamptz) to anon, au
 
 -- ── STARTWAARDEN ───────────────────────────────────────────────────────
 insert into public.beheerders (email) values ('pieterv-d-s@hotmail.com') on conflict do nothing;
+insert into public.vaste_lesgevers (email, naam, type) values ('gwen.deryck@telenet.be', 'Gwen Deryck', 'yoga-instructeur')
+  on conflict (email) do update set naam = excluded.naam, type = excluded.type;
 
-insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":25,"prijs":15,"stijlen":["Hatha yoga","Vinyasa flow","Yin yoga","Yoga Nidra"]},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40,"binnenkort":true},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15,"binnenkort":true}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["09:00","18:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["09:00","18:00"]},"gesloten":{"0":[["13:00","24:00"]],"1":[["19:00","24:00"]],"4":[["19:00","24:00"]]},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20,"binnenkort":true},"beurtenkaart":{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]}}}'::jsonb)
+insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":25,"prijs":15,"stijlen":["Hatha yoga","Vinyasa flow","Yin yoga","Yoga Nidra"]},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40,"binnenkort":true},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15,"binnenkort":true}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["07:00","22:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["07:00","22:00"]},"gesloten":{},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20,"binnenkort":true},"beurtenkaart":{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]}},"migratie":4}'::jsonb)
 on conflict (id) do nothing;
 
 -- ── OMSCHAKELING oktober 2026 ──────────────────────────────────────────
@@ -717,3 +753,18 @@ where id = 1 and not (config ? 'beurtenkaart');
 update public.instellingen
    set config = jsonb_set(config, '{lessen,yoga,stijlen}', '["Hatha yoga", "Vinyasa flow", "Yin yoga", "Yoga Nidra"]'::jsonb), bijgewerkt = now()
  where id = 1 and config->'lessen' ? 'yoga' and not (config->'lessen'->'yoga' ? 'stijlen');
+
+-- ── OMSCHAKELING oktober 2026 (4) ──────────────────────────────────────
+-- Alles weer open: elke dag 07:00 – 22:00 en geen gesloten periodes meer. Gesloten periodes
+-- zet de beheerder voortaan zelf in Beheer → Rooster (🔒 Gesloten). Gebeurt één keer.
+update public.instellingen
+   set config = config || '{"openingsuren":{"0":["07:00","22:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["07:00","22:00"]},"gesloten":{},"migratie":4}'::jsonb,
+       bijgewerkt = now()
+ where id = 1 and coalesce((config->>'migratie')::int, 0) < 4;
+
+-- Heeft een vaste lesgever (Gwen) al een account? Dan nu herkennen en haar lessen toewijzen.
+alter table public.profielen disable trigger controleer_gewijzigd_profiel;
+update public.profielen p set type = v.type, goedgekeurd = true, naam = coalesce(nullif(p.naam, ''), v.naam)
+  from public.vaste_lesgevers v where p.email = v.email and (p.type <> v.type or not p.goedgekeurd);
+alter table public.profielen enable trigger controleer_gewijzigd_profiel;
+select public.wijs_lessen_toe(p.id) from public.profielen p join public.vaste_lesgevers v on v.email = p.email;

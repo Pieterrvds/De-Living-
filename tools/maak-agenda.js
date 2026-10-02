@@ -15,7 +15,7 @@ try{
   if(!res.ok)throw new Error('HTTP '+res.status);
   var d=await res.json();
   if(!d[0]||!d[0].config||!d[0].config.rooster)throw new Error('geen rooster');
-  vm.runInContext('zetRooster('+JSON.stringify(d[0].config.rooster)+')',ctx);
+  vm.runInContext('zetRooster('+JSON.stringify(d[0].config.rooster)+');zetUren('+JSON.stringify(d[0].config)+')',ctx);
   console.log('Rooster uit de database');
 }catch(e){console.log('Database niet bereikbaar ('+e.message+'): reserverooster uit assets/boeken.js');}
 

@@ -101,8 +101,8 @@
 
     <section class="yg-hulp">
       <h2>Hulp nodig?</h2>
-      <p>Lukt het niet? Stuur ons een berichtje, we helpen je graag.</p>
-      <a class="knop-groot wit" id="hulpWa" href="#" target="_blank" rel="noopener">💬 Stuur een WhatsApp-bericht</a>
+      <p>Lukt het niet? Stuur Gwen een berichtje, ze helpt je graag.</p>
+      <a class="knop-groot wit" id="hulpWa" href="#" target="_blank" rel="noopener">💬 WhatsApp naar Gwen</a>
       <p class="klein" id="ygWie"></p>
       <p class="klein"><a href="index.html">Naar de website van La Vie en Rose</a></p>
     </section>
@@ -115,7 +115,7 @@
 /* ── GEGEVENS ── */
 var user=null,saldo=0,aanvraag=null,weken=2,gekozen=null,bezig=false;
 var MAX_WEKEN=6;
-document.getElementById('hulpWa').href='https://wa.me/'+REGELS.whatsapp+'?text='+encodeURIComponent('Hallo! Ik heb een vraag over het reserveren van een yogales.');
+document.getElementById('hulpWa').href='https://wa.me/'+(LESSEN.yoga.whatsapp||REGELS.whatsapp)+'?text='+encodeURIComponent('Hallo! Ik heb een vraag over het reserveren van een yogales.');
 
 function voornaam(n){return String(n||'').trim().split(/\s+/)[0]||'';}
 function dagLabel(d){
@@ -167,7 +167,7 @@ function teken(){
   var mijn=mijnReservaties();
   if(mijn.length){
     h+='<h2 class="yg-titel">Je reservaties</h2>'+mijn.map(function(b){var s=b.slot;
-      return '<div class="kaart res"><div class="les-dag">✓ '+dagLabel(s.datum)+'</div><div class="les-uur">'+s.tijd+' – '+boekingEind(b,s)+' · '+esc(lesNaam(s.lesId,s.stijl))+' met '+esc(voornaam(s.trainer))+'</div>'+
+      return '<div class="kaart res"><div class="les-dag">✓ '+dagLabel(s.datum)+'</div><div class="les-uur">'+s.tijd+' – '+boekingEind(b,s)+' · '+esc(slotNaam(s))+' met '+esc(voornaam(s.trainer))+'</div>'+
         '<button class="knop-groot wit" onclick="annuleerVraag(\''+b.id+'\')">Annuleren</button></div>';}).join('');
   }
   h+='<h2 class="yg-titel">Kies een les</h2>';
@@ -220,7 +220,7 @@ function sluitBlad(){
 }
 document.getElementById('blad').addEventListener('click',function(e){if(e.target===this&&!bezig)sluitBlad();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!bezig)sluitBlad();});
-function lesBlok(s){return '<div class="blad-les"><div class="ic" aria-hidden="true">🧘</div><div><b>'+dagLabel(s.datum)+'</b><br>'+s.tijd+' tot '+s.eind+'<br>'+esc(lesNaam(s.lesId,s.stijl))+' met '+esc(s.trainer)+(s.stijl?'<br><small>'+esc(stijlUitleg(s.lesId,s.stijl))+'</small>':'')+'</div></div>';}
+function lesBlok(s){return '<div class="blad-les"><div class="ic" aria-hidden="true">🧘</div><div><b>'+dagLabel(s.datum)+'</b><br>'+s.tijd+' tot '+s.eind+'<br>'+esc(slotNaam(s))+' met '+esc(s.trainer)+(s.stijl?'<br><small>'+esc(stijlUitleg(s.lesId,s.stijl))+'</small>':'')+'</div></div>';}
 function ok(titel,tekst){blad('<div class="blad-midden"><div class="blad-ok" aria-hidden="true">✓</div><h2 id="bladTitel">'+titel+'</h2>'+tekst+'</div><button class="knop-groot groen" data-focus onclick="sluitBlad()">OK</button>');}
 function fout(e){
   var m=String(e||'');

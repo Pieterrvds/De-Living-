@@ -278,3 +278,6 @@ body[data-rustig],body[data-rustig] *{cursor:auto;}
 body[data-rustig] a,body[data-rustig] button,body[data-rustig] label{cursor:pointer;}
 body[data-rustig] .nav-afmelden{display:none!important;}
 body[data-rustig] .wa{display:none;}   /* hulp met WhatsApp staat onderaan de pagina */
+/* Gesloten periode in de roostereditor (beheerder) */
+.re-blok.re-blok-dicht{--c:#7A5426;--bg:repeating-linear-gradient(135deg,rgba(61,32,7,.07) 0 8px,rgba(61,32,7,.14) 8px 16px);--fg:#5C3314;background:var(--bg);border-left-color:#7A5426;}
+.re-chip.re-chip-dicht{--c:#7A5426;--bg:repeating-linear-gradient(135deg,rgba(61,32,7,.05) 0 6px,rgba(61,32,7,.12) 6px 12px);--fg:#5C3314;}

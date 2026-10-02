@@ -13,6 +13,7 @@ var SUPABASE_KEY='sb_publishable_baeXtXYJnKGuO265hWRkhw_iK4Q6NhO';
    binnenkort:true = staat al op de website, maar online boeken kan nog niet ("binnenkort"). */
 var LESSEN={
   yoga:{naam:'Yoga',kort:'Yoga',icon:'🧘',duur:60,trainer:'Gwen Deryck',max:25,prijs:15,soort:'Groepsles',
+    whatsapp:'32498930036',   // Gwen: vragen en te laat annuleren voor yoga
     // soorten yoga: de lesgever kiest per wekelijkse les welke soort het is (Mijn account of Beheer → Rooster)
     stijlen:[
       {naam:'Hatha yoga',uitleg:'Rustig: houdingen en ademhaling'},
@@ -65,6 +66,14 @@ function stijlVan(x){return x&&stijlGeldig(x[1],x[4])?x[4]:'';}
 function stijlUitleg(les,st){var s=((LESSEN[les]||{}).stijlen||[]).find(function(s){return s.naam===st;});return s?s.uitleg:'';}
 // Naam om te tonen: de soort yoga als die gekozen is, anders de les ("Yoga")
 function lesNaam(lesId,st){return st||(LESSEN[lesId]||{}).naam||lesId;}
+// Openingsuren en gesloten periodes uit de database overnemen (de beheerder past gesloten periodes aan)
+function zetUren(c){
+  if(c.gesloten&&typeof c.gesloten==='object'){Object.keys(GESLOTEN).forEach(function(k){delete GESLOTEN[k];});
+    Object.keys(c.gesloten).forEach(function(k){if(/^[0-6]$/.test(k)&&Array.isArray(c.gesloten[k])&&c.gesloten[k].length)GESLOTEN[k]=c.gesloten[k].map(function(g){return [g[0],g[1]];});});}
+  if(c.openingsuren&&typeof c.openingsuren==='object'){Object.keys(c.openingsuren).forEach(function(k){if(/^[0-6]$/.test(k))OPENINGSUREN[k]=c.openingsuren[k];});}
+}
+// Naam van een uur/reservatie (soort yoga, de les, of de ingeplande activiteit)
+function slotNaam(s){return s.stijl||s.les.naam;}
 // Wie geeft deze les? (naam uit het rooster, anders de standaard bij de les)
 function lesgeverVan(x){return (x&&x[3])||(LESSEN[x[1]]||{}).trainer||'';}
 // Rooster uit de database halen (één keer per pagina). Lukt het niet, dan blijft het reserverooster staan.
@@ -75,7 +84,7 @@ function laadRooster(opnieuw){
   var t=setTimeout(function(){if(ctrl)ctrl.abort();},5000);
   _rooster=fetch(SUPABASE_URL+'/rest/v1/instellingen?select=config&id=eq.1',{headers:{apikey:SUPABASE_KEY},signal:ctrl&&ctrl.signal})
     .then(function(r){if(!r.ok)throw r.status;return r.json();})
-    .then(function(d){if(d&&d[0]&&d[0].config&&d[0].config.rooster){zetRooster(d[0].config.rooster);return true;}return false;})
+    .then(function(d){var c=d&&d[0]&&d[0].config;if(c&&c.rooster){zetRooster(c.rooster);zetUren(c);return true;}return false;})
     .catch(function(){return false;})
     .then(function(ok){clearTimeout(t);return ok;});
   return _rooster;
@@ -86,16 +95,13 @@ function laadRooster(opnieuw){
    hoofdpagina wordt hier ook uit opgebouwd. */
 var OPENINGSUREN={
   1:['07:00','22:00'],2:['07:00','22:00'],3:['07:00','22:00'],4:['07:00','22:00'],5:['07:00','22:00'],
-  6:['09:00','18:00'],0:['09:00','18:00']
+  6:['07:00','22:00'],0:['07:00','22:00']
 };
 
-/* ── GESLOTEN PERIODES ── Extra periodes binnen de openingsuren waarin niemand
-   een les kan boeken of de zaal kan huren. Weekdag → [van, tot]. */
-var GESLOTEN={
-  0:[['13:00','24:00']],   // zondagnamiddag
-  1:[['19:00','24:00']],   // maandag na 19:00
-  4:[['19:00','24:00']]    // donderdag na 19:00
-};
+/* ── GESLOTEN PERIODES ── Periodes binnen de openingsuren waarin niemand een les kan boeken
+   of de zaal kan huren. Weekdag → [[van, tot], …]. De beheerder zet ze in Beheer → Rooster
+   (🔒 Gesloten); ze staan in de database. Dit is enkel een reserve. */
+var GESLOTEN={};
 function naarMin(t){var p=t.split(':');return +p[0]*60+ +p[1];}
 // Overlapt [van, tot) (in minuten) met een gesloten periode op die dag?
 function weekdagGesloten(dow,van,tot){
@@ -321,8 +327,8 @@ function magZelfAnnuleren(b,slot){
 }
 function waAnnuleerLink(b,slot){
   slot=slot||parseSlot(b.slotId,true);
-  var t='Hallo! Ik wil graag mijn reservatie annuleren: '+lesNaam(slot.lesId,slot.stijl)+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.';
-  return 'https://wa.me/'+REGELS.whatsapp+'?text='+encodeURIComponent(t);
+  var t='Hallo! Ik wil graag mijn reservatie annuleren: '+slotNaam(slot)+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.';
+  return 'https://wa.me/'+(slot.les.whatsapp||REGELS.whatsapp)+'?text='+encodeURIComponent(t);
 }
 function fmtUren(u){return (Math.round(u*100)/100).toString().replace('.',',')+' uur';}
 function mijnBookings(user){
@@ -340,7 +346,7 @@ function reservatieRij(b,annuleerFn){
     else if(magZelfAnnuleren(b,s))actie='<button class="res-annuleer" onclick="'+annuleerFn+'(\''+b.id+'\')">'+(b.status==='intern'?'Verwijderen':'Annuleren')+'</button>';
     else actie='<a href="'+waAnnuleerLink(b,s)+'" target="_blank" rel="noopener" title="Minder dan '+REGELS.annulerenTotUurVooraf+' uur op voorhand">Annuleren via WhatsApp ↗</a>';
   }
-  return '<div class="res-rij"><div class="res-info"><b>'+s.les.icon+' '+esc(lesNaam(s.lesId,s.stijl))+'</b> · '+fmtDatum(s.datum)+' · '+s.tijd+' – '+boekingEind(b,s)+
+  return '<div class="res-rij"><div class="res-info"><b>'+s.les.icon+' '+esc(slotNaam(s))+'</b> · '+fmtDatum(s.datum)+' · '+s.tijd+' – '+boekingEind(b,s)+
     (b.voorWie?' · voor '+esc(b.voorWie):'')+(b.bedrag&&b.status!=='intern'?' · '+fmtEuro(b.bedrag):'')+'</div>'+
     '<div class="res-acties"><span class="status '+(ok?'betaald':'wacht')+'">'+statusLabel(b)+'</span>'+actie+'</div></div>';
 }
