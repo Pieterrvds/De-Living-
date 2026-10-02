@@ -119,7 +119,7 @@ function render(){
   var html=stappen(2)+'<div class="res-grid"><form class="card res-card les-'+slot.lesId+' sr left" onsubmit="bevestig(event)">'+
     '<p class="eyebrow">Jouw reservatie</p>'+
     '<div class="les-kop"><div class="ic">'+slot.les.icon+'</div><div><div class="sr-soort">'+esc(slot.les.soort)+'</div><div class="nm">'+esc(slot.les.naam)+'</div>'+
-    '<div class="wn">'+fmtDatum(slot.datum)+' · <span id="kopUur">'+slot.tijd+' – '+eindTijd(slot.tijd,duur)+'</span> · '+esc(slot.les.trainer)+'</div></div></div>'+
+    '<div class="wn">'+fmtDatum(slot.datum)+' · <span id="kopUur">'+slot.tijd+' – '+eindTijd(slot.tijd,duur)+'</span> · '+esc(slot.trainer||slot.les.trainer)+'</div></div></div>'+
     '<div class="user-box"><div class="user-avatar">'+esc(initialen(user.naam))+'</div><div><div class="nm">'+esc(user.naam)+'</div>'+
     '<div class="em">'+esc(user.email)+'</div><div style="margin-top:5px;">'+typeBadge(user)+'</div></div></div>';
 

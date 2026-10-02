@@ -13,18 +13,19 @@ var SUPABASE_KEY='sb_publishable_baeXtXYJnKGuO265hWRkhw_iK4Q6NhO';
 var LESSEN={
   yoga:{naam:'Yoga',kort:'Yoga',icon:'🧘',duur:60,trainer:'Gwen Deryck',max:16,prijs:15,soort:'Groepsles'},
   kine:{naam:'Kinesitherapie',kort:'Kine',icon:'💆',duur:45,trainer:'Onze kinesist',max:1,prijs:40,soort:'Individuele begeleiding'},
-  pt:{naam:'Personal Training',kort:'PT',icon:'💪',duur:60,trainer:'Pieter',max:1,prijs:60,soort:'1-op-1 training'}
+  groep:{naam:'Groepsles',kort:'Groep',icon:'🤸',duur:60,trainer:'Pieter',max:12,prijs:15,soort:'Groepsles'}
 };
-// Weekdag (0 = zondag … 6 = zaterdag) → lessen.
-// Het echte rooster staat in de database en pas je aan in Beheer → Rooster (slepen met de muis).
+// Weekdag (0 = zondag … 6 = zaterdag) → lessen: [uur, les, (id lesgever), (naam lesgever)].
+// Het echte rooster staat in de database: de beheerder past het aan in Beheer → Rooster en
+// goedgekeurde lesgevers passen hun eigen uren aan bij Mijn account (slepen met de muis).
 // Dit is enkel een reserve voor als de database even niet bereikbaar is.
 var ROOSTER={
-  1:[['09:00','yoga'],['18:00','pt']],                           // PT: maandag 18–19u (Pieter)
+  1:[['09:00','yoga'],['18:00','groep']],
   2:[['09:00','kine']],
-  3:[['12:00','yoga'],['17:00','kine'],['18:00','pt'],['19:30','yoga']],   // PT: woensdag 18–19u
+  3:[['12:00','yoga'],['17:00','kine'],['18:00','groep'],['19:30','yoga']],
   4:[['16:00','kine']],
   5:[['07:00','yoga']],
-  6:[['10:00','yoga'],['16:00','pt']],                           // PT: zaterdag 16–17u
+  6:[['10:00','yoga'],['16:00','groep']],
   0:[['10:00','yoga'],['11:30','kine']]
 };
 var UUR_START=7, UUR_EINDE=21;
@@ -35,14 +36,16 @@ function zetRooster(r){
   Object.keys(r||{}).forEach(function(k){
     if(!/^[0-6]$/.test(k)||!Array.isArray(r[k]))return;
     var l=r[k].filter(function(x){return Array.isArray(x)&&/^([01]\d|2[0-3]):[0-5]\d$/.test(x[0])&&LESSEN[x[1]];})
-      .map(function(x){return [x[0],x[1]];}).sort(function(a,b){return a[0]<b[0]?-1:a[0]>b[0]?1:0;});
+      .map(function(x){return typeof x[2]==='string'&&x[2]?[x[0],x[1],x[2],String(x[3]||'')]:[x[0],x[1]];}).sort(function(a,b){return a[0]<b[0]?-1:a[0]>b[0]?1:0;});
     if(l.length)ROOSTER[k]=l;
   });
 }
+// Wie geeft deze les? (naam uit het rooster, anders de standaard bij de les)
+function lesgeverVan(x){return (x&&x[3])||(LESSEN[x[1]]||{}).trainer||'';}
 // Rooster uit de database halen (één keer per pagina). Lukt het niet, dan blijft het reserverooster staan.
 var _rooster=null;
-function laadRooster(){
-  if(_rooster)return _rooster;
+function laadRooster(opnieuw){
+  if(_rooster&&!opnieuw)return _rooster;
   var ctrl=window.AbortController?new AbortController():null;
   var t=setTimeout(function(){if(ctrl)ctrl.abort();},5000);
   _rooster=fetch(SUPABASE_URL+'/rest/v1/instellingen?select=config&id=eq.1',{headers:{apikey:SUPABASE_KEY},signal:ctrl&&ctrl.signal})
@@ -114,12 +117,13 @@ var REGELS={
 var ZAAL={naam:'Zaal huren',kort:'Zaal',icon:'🏠',duur:60,trainer:'Zelf begeleid',max:1,prijs:20,soort:'Zaalhuur voor professionals'};  // prijs per uur
 
 /* ── PERSOONSTYPES ── */
+// pro: professional (eerst goedkeuren) · zaal: mag de zaal huren · lessen: welke lessen deze
+// lesgever zelf in het rooster kan zetten (bij Mijn account)
 var TYPES=[
   {id:'lid',label:'Lid / sporter',icon:'🏃',pro:false},
-  {id:'personal-trainer',label:'Personal trainer',icon:'💪',pro:true,zaal:true},
-  {id:'kinesist',label:'Kinesist',icon:'🩺',pro:true,zaal:true},
-  {id:'dietist',label:'Diëtist',icon:'🥗',pro:true},
-  {id:'lesgever',label:'Lesgever',icon:'📣',pro:true,zaal:true}
+  {id:'kinesist',label:'Kinesist',icon:'🩺',pro:true,zaal:true,lessen:['kine']},
+  {id:'yoga-instructeur',label:'Yoga-instructeur',icon:'🧘',pro:true,zaal:true,lessen:['yoga']},
+  {id:'groepslesgever',label:'Groepslesgever',icon:'📣',pro:true,zaal:true,lessen:['groep']}
 ];
 function getType(id){return TYPES.find(function(t){return t.id===id;})||TYPES[0];}
 // Professionals krijgen hun extra rechten pas na goedkeuring door de beheerder.
@@ -128,10 +132,12 @@ function magZaalHuren(user){return !!(user&&getType(user.type).zaal&&user.goedge
 function wachtOpGoedkeuring(user){return !!(user&&getType(user.type).pro&&!user.goedgekeurd);}
 // De beheerder (eigenaar) kan de zaal altijd gebruiken voor eigen activiteiten, zonder betaling.
 function magInplannen(user){return !!(user&&user.isAdmin);}
+// Goedgekeurde lesgevers passen hun eigen uren in het rooster aan
+function eigenLessen(user){return isGoedgekeurdePro(user)?(getType(user.type).lessen||[]).filter(function(l){return LESSEN[l];}):[];}
 
 /* ── ACTIVITEITEN ── keuzelijst bij 'Inplannen' door de beheerder */
 var ACTIVITEITEN=[
-  {naam:'PT-sessie',icon:'💪'},{naam:'Kinesitherapie',icon:'💆'},{naam:'Yoga (privé of groep)',icon:'🧘'},
+  {naam:'Groepsles',icon:'🤸'},{naam:'Kinesitherapie',icon:'💆'},{naam:'Yoga (privé of groep)',icon:'🧘'},
   {naam:'Groepstraining / bootcamp',icon:'🏋️'},{naam:'Pilates',icon:'🤸'},{naam:'Stretching & mobiliteit',icon:'🌿'},
   {naam:'Intake & meting',icon:'📋'},{naam:'Workshop / infosessie',icon:'💡'},{naam:'Evenement / privéfeest',icon:'🎉'},
   {naam:'Foto- of filmopname',icon:'📸'},{naam:'Vergadering / overleg',icon:'🗣️'},{naam:'Onderhoud / schoonmaak',icon:'🧹'}
@@ -161,7 +167,7 @@ function parseSlot(id,losjes){
   var m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})_([a-z]+)$/.exec(id||'');
   if(!m)return null;
   var datum=new Date(+m[1],+m[2]-1,+m[3]);
-  var tijd=m[4],lesId=m[5],les;
+  var tijd=m[4],lesId=m[5],les,item=null;
   if(lesId==='zaal'){
     var uur=+tijd.slice(0,2);
     if(!losjes&&(tijd.slice(3)!=='00'||uur<UUR_START||uur>UUR_EINDE||!zaalVrij(datum,uur)))return null;
@@ -169,12 +175,13 @@ function parseSlot(id,losjes){
   }else{
     les=LESSEN[lesId];
     if(!les)return null;
-    if(!losjes&&!(ROOSTER[datum.getDay()]||[]).some(function(r){return r[0]===tijd&&r[1]===lesId;}))return null;
+    item=(ROOSTER[datum.getDay()]||[]).find(function(r){return r[0]===tijd&&r[1]===lesId;});
+    if(!losjes&&!item)return null;
     if(!losjes&&isGesloten(datum,naarMin(tijd),naarMin(tijd)+les.duur))return null;
   }
   var p=tijd.split(':');
   var start=new Date(datum.getFullYear(),datum.getMonth(),datum.getDate(),+p[0],+p[1]);
-  return {id:id,datum:datum,tijd:tijd,eind:eindTijd(tijd,les.duur),lesId:lesId,les:les,start:start};
+  return {id:id,datum:datum,tijd:tijd,eind:eindTijd(tijd,les.duur),lesId:lesId,les:les,start:start,trainer:item?lesgeverVan(item):les.trainer};
 }
 // Is de zaal van uur:00 tot uur+1:00 vrij (geen overlap met een les)?
 function zaalVrij(datum,uur){
@@ -225,6 +232,19 @@ function bezetting(slot){
   return Math.min(slot.les.max,CACHE.bezet.reduce(function(n,b){return b.les===slot.lesId&&b.start===t?n+b.aantal:n;},0));
 }
 function vrijePlaatsen(slot){return slot.les.max-bezetting(slot);}
+// Bezetting zonder aangemeld te zijn (hoofdpagina): enkel aantallen per les en tijdstip
+function haalBezetting(van,tot){
+  return fetch(SUPABASE_URL+'/rest/v1/rpc/bezetting',{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({van:van.toISOString(),tot:tot.toISOString()})})
+    .then(function(r){if(!r.ok)throw r.status;return r.json();})
+    .then(function(d){return (d||[]).map(function(b){return {les:b.les,start:new Date(b.start).getTime(),aantal:b.aantal};});});
+}
+// Hoe vol is een les? Balkje met aantal (groepslessen) of vrij/volzet (1-op-1).
+function bezettingHtml(aantal,max){
+  if(max<=1)return '<span class="bez'+(aantal>=max?' vol':'')+'">'+(aantal>=max?'Volzet':'Vrij')+'</span>';
+  var pct=Math.min(100,Math.round(aantal/max*100));
+  return '<span class="bez'+(aantal>=max?' vol':pct>=75?' bijna':'')+'" title="'+aantal+' van '+max+' plaatsen bezet"><span class="bez-balk"><i style="width:'+pct+'%"></i></span><b>'+aantal+'/'+max+'</b></span>';
+}
 function isVoorbij(slot){return slot.start.getTime()<Date.now();}
 // Te laat om nog te boeken (minder dan REGELS.boekenTotMinVooraf voor de start)?
 function isTeLaat(slot){return slot.start.getTime()-Date.now()<REGELS.boekenTotMinVooraf*60000;}
@@ -307,7 +327,7 @@ function configVoorDatabase(rooster){
     regels:{betaaltermijnMin:REGELS.betaaltermijnMin,boekenTotMinVooraf:REGELS.boekenTotMinVooraf,
       annulerenTotUurVooraf:REGELS.annulerenTotUurVooraf,maxUrenPerWeek:REGELS.maxUrenPerWeek,zaalDuren:REGELS.zaalDuren},
     zaal:{prijs:ZAAL.prijs},
-    types:TYPES.reduce(function(r,t){r[t.id]={pro:!!t.pro,zaal:!!t.zaal};return r;},{})
+    types:TYPES.reduce(function(r,t){r[t.id]={pro:!!t.pro,zaal:!!t.zaal,lessen:t.lessen||[]};return r;},{})
   };
 }
 

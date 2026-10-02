@@ -1,7 +1,7 @@
 # La Vie en Rose – Sports Café · Aalst
 
-Website van La Vie en Rose: yoga, kinesitherapie, personal training en een bar,
-met online lessen boeken en zaalhuur voor professionals.
+Website van La Vie en Rose: yoga, kinesitherapie, groepslessen en een bar,
+met online lessen boeken en zaalhuur voor lesgevers (kinesisten, yoga-instructeurs, groepslesgevers).
 
 ## Pagina's
 
@@ -12,8 +12,8 @@ met online lessen boeken en zaalhuur voor professionals.
 | `login.html` | Aanmelden en account maken (met type persoon) |
 | `reserveren.html` | Reservatie bevestigen (enkel na aanmelden) |
 | `betalen.html` | Betaalpagina (online betalen nog niet actief; betalen aan de bar bevestigt) |
-| `account.html` | Mijn account: gegevens, naam/wachtwoord wijzigen, komende en voorbije reservaties (klik op je initialen) |
-| `beheer.html` | Beheerpagina: reservaties, **weekrooster slepen met de muis**, leden goedkeuren, regels naar database sturen |
+| `account.html` | Mijn account: gegevens, naam/wachtwoord wijzigen, komende en voorbije reservaties (klik op je initialen); goedgekeurde lesgevers zetten hier hun **eigen uren** in het rooster en zien hoe vol hun lessen zijn |
+| `beheer.html` | Beheerpagina: reservaties en bezetting per les, **weekrooster slepen met de muis**, leden goedkeuren, regels naar database sturen |
 | `fotos.html` | Fotogalerij (`Gallery.html` stuurt door naar deze pagina) |
 
 ## Waar pas je wat aan?
@@ -25,6 +25,16 @@ wijzigen. Ctrl+Z maakt ongedaan. Pas na **Publiceren** gaat het rooster naar de 
 gebruiken de website, het boekingssysteem en de server het meteen. Raakt een wijziging
 komende reservaties, dan krijg je eerst een lijst; die reservaties blijven bestaan.
 
+**Lesgevers** (kinesist, yoga-instructeur, groepslesgever) passen na goedkeuring hun eigen uren
+aan bij *Mijn account*, met dezelfde kalender. Ze kunnen enkel hun eigen lessoort plaatsen
+(`TYPES[].lessen`) en enkel hun eigen uren verschuiven; lessen van anderen zien ze grijs. De
+beheerder kiest per les in het rooster welke lesgever ze geeft (klik op de les → *Lesgever*).
+Een uur in het rooster is dan `[uur, les, id lesgever, naam lesgever]`.
+
+**Hoe vol zijn de lessen?** Op de boekingspagina en in de kalender op de hoofdpagina staat bij
+elke groepsles een balkje (bv. 5/16). In Beheer → Reservaties staat per les wie er komt, en
+lesgevers zien de bezetting van hun eigen lessen bij *Mijn account*.
+
 De rest staat bovenaan in **`assets/boeken.js`**:
 
 - `LESSEN`: lessoorten, begeleiding, duur, max. aantal personen en prijs
@@ -32,7 +42,7 @@ De rest staat bovenaan in **`assets/boeken.js`**:
 - `OPENINGSUREN` en `GESLOTEN`: wanneer niemand kan boeken of huren
 - `REGELS`: betaaltermijn, hoe lang op voorhand boeken/annuleren, max. uren per week, zaalduren
 - `ZAAL`: prijs per uur voor zaalhuur
-- `TYPES`: types personen en wie de zaal mag huren
+- `TYPES`: types personen, wie de zaal mag huren en welke lessen een lesgever zelf plant
 
 De hoofdpagina leest de openingsuren en lessen uit dit bestand en het rooster uit de database.
 
@@ -67,6 +77,8 @@ Accounts en reservaties staan in Supabase (project `asogwgjyurkcciaamhld`, regio
 - De beheerder kan in het rooster op elk vrij moment een eigen activiteit **inplannen**
   (status `intern`: geen betaling, geen weeklimiet, ook buiten de openingsuren; wel geen
   overlap met lessen of zaalhuur). Trainers zien dan "Zaal bezet", leden zien niets.
+- Lesgevers zetten hun uren via de functie `zet_mijn_uren`: de server vervangt enkel hun eigen
+  uren en controleert lessoort, openingsuren, gesloten periodes en overlap.
 
 **Lessen of regels gewijzigd in `assets/boeken.js`?** Open `beheer.html` → Instellingen →
 *Regels naar database sturen*, zodat de server dezelfde regels gebruikt (het rooster blijft dan

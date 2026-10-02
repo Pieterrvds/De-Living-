@@ -58,7 +58,7 @@ Object.keys(ROOSTER).sort().forEach(function(dow){
       'DTSTART;TZID=Europe/Brussels:'+lokaal(dag,tijd),
       'DTEND;TZID=Europe/Brussels:'+lokaal(dag,eind(tijd,les.duur)),
       'RRULE:FREQ=WEEKLY;BYDAY='+BYDAY[dow],
-      'SUMMARY:'+esc(les.icon+' '+les.naam+' – '+les.trainer),
+      'SUMMARY:'+esc(les.icon+' '+les.naam+' – '+vm.runInContext('lesgeverVan',ctx)(item)),
       'DESCRIPTION:'+esc(les.soort+' · € '+les.prijs+' · max. '+les.max+(les.max>1?' personen':' persoon')+'\nReserveer je plaats: '+SITE+'boeken.html'),
       'LOCATION:'+esc(ADRES),
       'URL:'+SITE+'boeken.html',

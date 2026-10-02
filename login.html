@@ -127,7 +127,7 @@
       <div class="sr right">
         <p class="eyebrow">Voor iedereen</p>
         <h2 class="side-title">Sporters, therapeuten<br>&amp; coaches</h2>
-        <p class="side-lead">Bij het aanmaken van je account kies je welk type gebruiker je bent. Professionals worden eerst door La Vie en Rose goedgekeurd; daarna kunnen ze ook boeken voor hun klant en (trainers, kinesisten, lesgevers) de zaal huren.</p>
+        <p class="side-lead">Bij het aanmaken van je account kies je welk type gebruiker je bent. Lesgevers worden eerst door La Vie en Rose goedgekeurd; daarna zetten ze hun eigen uren in het rooster, huren ze de zaal en boeken ze ook voor een klant.</p>
         <div class="type-list" id="typeLijst"></div>
         <div class="notice sage">🌿 Je eerste les is altijd gratis. Vragen? Stuur ons een berichtje via de <a href="index.html#contact">contactpagina</a>.</div>
       </div>
@@ -147,7 +147,7 @@ document.getElementById('typeKeuzes').innerHTML=TYPES.map(function(t,i){
     '<label for="type-'+t.id+'">'+t.icon+' '+esc(t.label)+'</label></div>';
 }).join('');
 document.getElementById('typeLijst').innerHTML=TYPES.map(function(t){
-  return '<div class="type-item"><span class="ic">'+t.icon+'</span><span>'+esc(t.label)+'<small>'+(t.pro?'Na goedkeuring: boek ook voor een klant'+(t.zaal?' en huur de zaal':''):'Boek je eigen lessen')+'</small></span></div>';
+  return '<div class="type-item"><span class="ic">'+t.icon+'</span><span>'+esc(t.label)+'<small>'+(t.pro?'Na goedkeuring: '+(t.lessen&&t.lessen.length?'zet je eigen uren in het rooster, ':'')+(t.zaal?'huur de zaal ':'')+'en boek voor een klant':'Boek je eigen lessen')+'</small></span></div>';
 }).join('');
 
 function toonPane(naam){

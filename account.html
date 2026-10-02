@@ -10,6 +10,7 @@
 <script src="assets/boeken.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
 <script src="assets/db.js"></script>
+<script src="assets/rooster-editor.js"></script>
 <style>
 .acc-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr);gap:2rem;align-items:start;}
 .profiel{padding:2rem;position:sticky;top:96px;}
@@ -44,6 +45,14 @@
 .schakel button.actief{background:var(--rose-d);color:white;}
 .res-voorbij .res-info{opacity:.75;}
 .res-regels a{color:var(--rose-d);font-weight:700;}
+.lesgever{margin-top:2rem;padding:2rem;}
+.lesgever .card-title{margin-bottom:.4rem;}
+.lg-intro{color:var(--espresso2);font-size:.92rem;line-height:1.6;margin-bottom:1.25rem;}
+.mijn-lessen{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.6rem;margin-bottom:1.75rem;}
+.ml{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.7rem .9rem;border-radius:14px;background:var(--bg);border-left:4px solid var(--c);}
+.ml-wat{font-size:.85rem;color:var(--espresso2);line-height:1.35;}
+.ml-wat b{display:block;color:var(--espresso);font-size:.88rem;}
+.lg-kop{font-size:.72rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--rose-d);margin:0 0 .6rem;}
 .leeg-res{padding:1.5rem 0;text-align:center;color:var(--muted);font-family:'Playfair Display',serif;font-style:italic;}
 .leeg-res .btn{margin-top:1rem;font-style:normal;}
 @media(max-width:900px){.acc-grid{grid-template-columns:1fr;}.profiel{position:static;order:2;}.profiel,.res-kaart{padding:1.5rem;}}
@@ -96,7 +105,7 @@ function render(){
       '<div class="p-naam">'+esc(user.naam)+'</div><div class="p-mail">'+esc(user.email)+'</div>'+typeBadge(user)+'</div></div>'+
     '<div class="p-rij"><span>Status</span><b>'+statusProfiel(user)+'</b></div>'+
     '<div class="p-rij"><span>Lid sinds</span><b>'+fmtLidSinds(user.aangemaakt)+'</b></div>'+
-    (wachtOpGoedkeuring(user)?'<div class="notice" style="margin-top:1rem;">Je account als '+esc(getType(user.type).label.toLowerCase())+' wacht nog op goedkeuring door La Vie en Rose. Daarna kan je o.a. voor klanten boeken'+(getType(user.type).zaal?' en de zaal huren':'')+'.</div>':'')+
+    (wachtOpGoedkeuring(user)?'<div class="notice" style="margin-top:1rem;">Je account als '+esc(getType(user.type).label.toLowerCase())+' wacht nog op goedkeuring door La Vie en Rose. Daarna kan je '+((getType(user.type).lessen||[]).length?'je eigen uren in het rooster zetten, ':'')+(getType(user.type).zaal?'de zaal huren ':'')+'en voor klanten boeken.</div>':'')+
     '<details class="p-blok"><summary>Naam wijzigen</summary><form onsubmit="bewaarNaam(event)">'+
       '<div class="fg"><label for="a-naam">Naam</label><input id="a-naam" maxlength="80" required value="'+esc(user.naam)+'" autocomplete="name"></div>'+
       '<div class="p-fout" id="naamFout"></div><button class="btn btn-primary btn-block" id="naamKnop">Bewaren</button></form></details>'+
@@ -128,8 +137,61 @@ function render(){
       :'<div class="leeg-res">'+(tab==='komend'?'Je hebt nog geen komende reservaties.<br><a class="btn btn-primary" href="boeken.html">🌹 Les boeken</a>':'Nog geen voorbije reservaties.')+'</div>')+
     '</div><div class="res-regels">Zelf annuleren kan tot '+REGELS.annulerenTotUurVooraf+' uur op voorhand, daarna via WhatsApp. Onbetaalde reservaties vervallen na '+REGELS.betaaltermijnMin+' minuten.</div></div>';
 
-  document.getElementById('inhoud').innerHTML='<div class="acc-grid">'+profiel+'<div>'+kpis+res+'</div></div>';
+  document.getElementById('inhoud').innerHTML='<div class="acc-grid">'+profiel+'<div>'+kpis+res+'</div></div>'+lesgeverHtml();
   reveal();
+  if(ed)ed.teken();
+}
+
+/* ── LESGEVERS: eigen uren in het rooster en hoe vol je lessen zijn ── */
+var ed=null;
+function eigenUur(x){return x[2]===user.id;}
+function lesgeverHtml(){
+  if(!eigenLessen(user).length)return '';
+  // eigen lessen in de komende 14 dagen, met bezetting
+  var rij=[],nu=new Date();
+  for(var i=0;i<14;i++){
+    var dag=addDays(new Date(nu.getFullYear(),nu.getMonth(),nu.getDate()),i);
+    (ROOSTER[dag.getDay()]||[]).filter(eigenUur).forEach(function(x){
+      var s=parseSlot(slotId(dag,x[0],x[1]));if(s&&!isVoorbij(s))rij.push(s);
+    });
+  }
+  return '<div class="card lesgever sr up"><h2 class="card-title">🗓️ Mijn lessen</h2>'+
+    '<p class="lg-intro">Als '+esc(getType(user.type).label.toLowerCase())+' zet je hier zelf je uren in het rooster. Leden zien ze meteen op de website en kunnen ze boeken. Hieronder zie je ook hoe vol je lessen zijn.</p>'+
+    '<div class="lg-kop">Komende 2 weken</div>'+
+    (rij.length?'<div class="mijn-lessen">'+rij.map(function(s){
+      return '<div class="ml les-'+s.lesId+'"><div class="ml-wat"><b>'+s.les.icon+' '+esc(s.les.naam)+'</b>'+DAGEN_KORT[s.datum.getDay()]+' '+s.datum.getDate()+' '+MAANDEN[s.datum.getMonth()].slice(0,3)+' · '+s.tijd+' – '+s.eind+'</div>'+bezettingHtml(bezetting(s),s.les.max)+'</div>';
+    }).join('')+'</div>'
+      :'<p class="lg-intro"><i>Je hebt nog geen eigen uren in het rooster. Sleep hieronder een les in de kalender, of vraag de beheerder om bestaande uren aan jou toe te wijzen.</i></p>')+
+    '<div class="lg-kop">Mijn uren aanpassen</div><div id="mijnUren"></div></div>';
+}
+function maakEditor(){
+  if(!eigenLessen(user).length){ed=null;return;}
+  ed=new RoosterEditor({el:'mijnUren',rooster:ROOSTER,lessen:eigenLessen(user),
+    magBewerken:function(x){return x.tid===user.id;},
+    eigenaar:{tid:user.id,tnaam:user.naam},
+    hulp:'Grijze lessen zijn van andere lesgevers. ',
+    publiceer:publiceerMijnUren});
+}
+function publiceerMijnUren(nieuw){
+  var eigen=[],weg=[];
+  Object.keys(nieuw).forEach(function(d){nieuw[d].filter(eigenUur).forEach(function(x){eigen.push([+d,x[0],x[1]]);});});
+  Object.keys(ed.origRooster).forEach(function(d){ed.origRooster[d].filter(eigenUur).forEach(function(x){
+    if(!eigen.some(function(e){return e[0]===+d&&e[1]===x[0]&&e[2]===x[1];}))weg.push(+d+'|'+x[0]+'|'+x[1]);});});
+  var opslaan=function(){
+    DB.zetMijnUren(eigen).then(function(){ed.laad(ROOSTER);return herlaad();})
+      .then(function(){showToast('✓ Je uren staan in het rooster');}).catch(function(e){showToast('⚠️ '+e);});
+  };
+  if(!weg.length)return opslaan();
+  // reservaties op uren die verdwijnen (enkel aantallen: namen zie je niet)
+  var nu=new Date();
+  DB.bezettingLijst(nu,addDays(nu,400)).then(function(l){
+    var n=0;l.forEach(function(b){var d=new Date(b.start);if(weg.indexOf(d.getDay()+'|'+pad(d.getHours())+':'+pad(d.getMinutes())+'|'+b.les)>=0)n+=b.aantal;});
+    if(!n)return opslaan();
+    ed.venster('<h2 class="card-title">⚠️ Er zijn al reservaties</h2><p style="color:var(--espresso2);line-height:1.6;font-size:.92rem;">Op uren die je verwijdert of verplaatst, staan nog <b>'+n+' komende reservatie'+(n>1?'s':'')+'</b>. Die blijven bestaan: de deelnemers rekenen op hun plaats. Laat La Vie en Rose weten wat er verandert, zodat we hen kunnen verwittigen.</p>'+
+      '<div class="m-knoppen"><button class="knop" id="mu-terug">Terug naar de kalender</button><button class="knop groen" id="mu-ok">Toch publiceren</button></div>');
+    document.getElementById('mu-terug').onclick=function(){ed.sluit();};
+    document.getElementById('mu-ok').onclick=function(){ed.sluit();opslaan();};
+  }).catch(function(e){showToast('⚠️ '+e);});
 }
 function kiesTab(t){tab=t;render();}
 
@@ -158,7 +220,8 @@ function bewaarWachtwoord(e){
     .catch(function(m){fout.textContent=m;k.disabled=false;k.textContent='Wachtwoord wijzigen';});
 }
 function herlaad(){
-  return DB.laadMijn().then(render).catch(function(e){
+  var nu=new Date();
+  return Promise.all([DB.laadMijn(),eigenLessen(user).length?DB.laadBezetting(nu,addDays(nu,15)):null]).then(render).catch(function(e){
     document.getElementById('inhoud').innerHTML='<div class="card" style="padding:2.5rem;text-align:center;"><h2 class="card-title">Geen verbinding</h2><p>'+esc(e)+'</p></div>';
   });
 }
@@ -166,7 +229,7 @@ function herlaad(){
 // Toegangscontrole: niet aangemeld → eerst naar de aanmeldpagina.
 klaar(function(u){
   user=u;if(!requireLogin())return;
-  renderNav();herlaad();
+  renderNav();maakEditor();herlaad();
 });
 </script>
 </body>

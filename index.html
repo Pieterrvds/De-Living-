@@ -162,11 +162,14 @@ gap:normal;}
 .kev{font-size:.62rem;font-weight:700;padding:2px 5px;border-radius:6px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .kev.yoga{background:rgba(90,122,74,.15);color:var(--sage);}
 .kev.kine{background:rgba(184,134,42,.14);color:var(--gold);}
-.kev.pt{background:rgba(192,120,120,.15);color:var(--rose-d);}
+.kev.groep{background:rgba(192,120,120,.15);color:var(--rose-d);}
+.kev i{font-style:normal;font-weight:800;opacity:.75;}
+.kev.vol{opacity:.55;}
+.kev.vol i{color:#A04545;opacity:1;}
 .kal-leg{padding:1rem 2rem;display:flex;gap:1.5rem;flex-wrap:wrap;background:var(--beige);border-top:1px solid var(--border);}
 .kl{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--espresso2);}
 .kp{width:10px;height:10px;border-radius:3px;}
-.kp.yoga{background:rgba(90,122,74,.4);}.kp.kine{background:rgba(184,134,42,.4);}.kp.pt{background:rgba(192,120,120,.4);}
+.kp.yoga{background:rgba(90,122,74,.4);}.kp.kine{background:rgba(184,134,42,.4);}.kp.groep{background:rgba(192,120,120,.4);}
 
 /* ═══════════════════════ LESSEN ═══════════════════════ */
 #lessen{background:var(--vanilla);}
@@ -383,7 +386,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
       <span class="hero-word rose-word" style="animation-delay:.86s;">en</span>&nbsp;<span class="hero-word rose-word" style="animation-delay:1.04s;">Rose</span>
     </h1>
     <p class="hero-subtitle">Bewegen, rusten &amp; genieten — onder één dak</p>
-    <p class="hero-loc">Yoga &nbsp;·&nbsp; Kinesitherapie &nbsp;·&nbsp; Personal Training &nbsp;·&nbsp; Bar</p>
+    <p class="hero-loc">Yoga &nbsp;·&nbsp; Kinesitherapie &nbsp;·&nbsp; Groepslessen &nbsp;·&nbsp; Bar</p>
     <div class="hero-ctas">
       <a href="#lessen" class="btn-rose">✦ Ontdek onze lessen</a>
       <a href="boeken.html" class="btn-glass">🌹 Les boeken</a>
@@ -428,11 +431,11 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
         <h2 class="sec-title sr d1">Een thuis voor<br>lichaam &amp; geest</h2>
         <blockquote class="about-quote sr d2">"La vie en rose — het leven door een roze bril zien.<br>Dat is precies wat we hier creëren."</blockquote>
         <p class="about-body sr d3">La Vie en Rose is niet zomaar een sportcafé. Het is een plek waar warm hout, veel planten en de geur van verse koffie je verwelkomen — zoals thuiskomen in een Frans landhuisje.</p>
-        <p class="about-body sr d4">We bieden bewuste beweging via yoga, kinesitherapie en personal training. Daarna verwennen we je aan onze bar met verse smoothies, specialty koffie en gezonde snacks.</p>
+        <p class="about-body sr d4">We bieden bewuste beweging via yoga, kinesitherapie en groepslessen. Daarna verwennen we je aan onze bar met verse smoothies, specialty koffie en gezonde snacks.</p>
         <div class="about-chips sr d5">
           <span class="chip">🌹 Yoga</span>
           <span class="chip">💆 Kinesitherapie</span>
-          <span class="chip">💪 Personal Training</span>
+          <span class="chip">🤸 Groepslessen</span>
           <span class="chip">☕ Verse bar</span>
           <span class="chip">🌿 Huiselijk</span>
         </div>
@@ -536,21 +539,21 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
         </div>
       </div>
       <div class="les-card sr d3">
-        <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=85" alt="Personal Training" loading="lazy"></div>
+        <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=85" alt="Groepsles" loading="lazy"></div>
         <div class="les-body">
-          <div class="les-ey">1-op-1 Training</div>
-          <div class="les-name">Personal Training</div>
-          <p class="les-desc">Jouw doelen, jouw tempo. Een coach die je begeleidt, aanmoedigt en uitdaagt — met een volledig op maat programma.</p>
+          <div class="les-ey">Samen sporten</div>
+          <div class="les-name">Groepslessen</div>
+          <p class="les-desc">Samen zweten, lachen en sterker worden. Pieter begeleidt je in een kleine groep, met oefeningen op jouw niveau.</p>
           <div class="les-buls">
-            <div class="les-bul"><div class="bul-dot"></div>Intake &amp; doelenmeting</div>
             <div class="les-bul"><div class="bul-dot"></div>Kracht · conditie · mobiliteit</div>
-            <div class="les-bul"><div class="bul-dot"></div>Voedingsadvies inbegrepen</div>
-            <div class="les-bul"><div class="bul-dot"></div>Flexibele uurregeling</div>
+            <div class="les-bul"><div class="bul-dot"></div>Max. <span data-bron="max-groep">12</span> personen</div>
+            <div class="les-bul"><div class="bul-dot"></div>Voor elk niveau</div>
+            <div class="les-bul"><div class="bul-dot"></div>Begeleid door Pieter</div>
           </div>
           <div class="les-btns">
             <a href="boeken.html" class="les-btn">🌹 Boek een les</a>
             <!-- Fictief WhatsApp-nummer: vervang door het echte nummer van de lesgever -->
-            <a href="https://wa.me/32470000003?text=Hallo!%20Ik%20heb%20een%20vraag%20over%20personal%20training%20bij%20La%20Vie%20en%20Rose." target="_blank" rel="noopener" class="les-btn wa-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Contacteer je coach</a>
+            <a href="https://wa.me/32470000003?text=Hallo!%20Ik%20heb%20een%20vraag%20over%20de%20groepslessen%20bij%20La%20Vie%20en%20Rose." target="_blank" rel="noopener" class="les-btn wa-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Contacteer Pieter</a>
           </div>
         </div>
       </div>
@@ -691,7 +694,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
         <div class="form-ttl">Stuur ons een bericht</div>
         <div class="fg"><label>Naam</label><input type="text" placeholder="Jouw naam" id="cn"></div>
         <div class="fg"><label>E-mail</label><input type="email" placeholder="jouw@email.be" id="ce"></div>
-        <div class="fg"><label>Interesse</label><select id="cs"><option value="">Kies een onderwerp...</option><option>Yoga</option><option>Kinesitherapie</option><option>Personal Training</option><option>Evenementen</option><option>Algemene vraag</option></select></div>
+        <div class="fg"><label>Interesse</label><select id="cs"><option value="">Kies een onderwerp...</option><option>Yoga</option><option>Kinesitherapie</option><option>Groepslessen</option><option>Evenementen</option><option>Algemene vraag</option></select></div>
         <div class="fg"><label>Bericht</label><textarea placeholder="Stel gerust een vraag..." id="cb"></textarea></div>
         <button class="form-btn" onclick="submitForm()">Verstuur bericht 🌹</button>
         <div class="form-note">Je eerste les is altijd gratis. Kom gewoon langs — wij zorgen voor de rest.</div>
@@ -720,7 +723,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
 /* ══ CIJFERS UIT HET ROOSTER ══ — vóór de teller-animatie invullen, en opnieuw zodra
    het rooster uit de database binnen is (dat pas je aan in Beheer → Rooster). */
 function vulCijfers(){
-  var bron={'disciplines':Object.keys(LESSEN).length,'lessen-per-week':lessenPerWeek(),'max-yoga':LESSEN.yoga.max};
+  var bron={'disciplines':Object.keys(LESSEN).length,'lessen-per-week':lessenPerWeek(),'max-yoga':LESSEN.yoga.max,'max-groep':LESSEN.groep.max};
   document.querySelectorAll('[data-bron]').forEach(function(el){
     var v=bron[el.getAttribute('data-bron')];if(v==null)return;
     if(el.hasAttribute('data-target')){
@@ -922,7 +925,7 @@ function bouwRooster(){
   rooster={};
   Object.keys(ROOSTER).forEach(function(dow){
     rooster[dow]=ROOSTER[dow].filter(function(r){return !weekdagGesloten(+dow,naarMin(r[0]),naarMin(r[0])+LESSEN[r[1]].duur);})
-      .map(function(r){var les=LESSEN[r[1]];return {t:r[1],l:les.icon+' '+(les.kort||les.naam)+' '+r[0]};});
+      .map(function(r){var les=LESSEN[r[1]];return {t:r[1],tijd:r[0],l:les.icon+' '+(les.kort||les.naam)+' '+r[0],wie:lesgeverVan(r)};});
   });
 }
 bouwRooster();
@@ -942,13 +945,28 @@ function renderKal(){
     var isT=c.cur&&today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===c.day;
     var dow=c.cur?new Date(y,m,c.day).getDay():-1;
     var ev=c.cur?(rooster[dow]||[]):[];
-    var evH=ev.map(function(e){return'<div class="kev '+e.t+'">'+e.l+'</div>';}).join('');
+    var evH=ev.map(function(e){
+      // hoe vol? (enkel voor komende lessen, zodra de bezetting geladen is)
+      var p=e.tijd.split(':'),t=new Date(y,m,c.day,+p[0],+p[1]).getTime(),max=LESSEN[e.t].max,n=BEZ&&t>Date.now()?(BEZ[e.t+'|'+t]||0):null;
+      var vol=n!==null&&n>=max,extra=n===null?'':max>1?' <i>'+(vol?'vol':n+'/'+max)+'</i>':vol?' <i>vol</i>':'';
+      var tip=LESSEN[e.t].naam+' '+e.tijd+' · '+e.wie+(n===null?'':' · '+(max>1?n+' van '+max+' plaatsen bezet':vol?'volzet':'vrij'));
+      return'<div class="kev '+e.t+(vol?' vol':'')+'" title="'+esc(tip)+'">'+e.l+extra+'</div>';}).join('');
     var nH=isT?'<div class="kdn"><span>'+c.day+'</span></div>':'<div class="kdn">'+c.day+'</div>';
     html+='<div class="kal-day'+(!c.cur?' other':'')+(isT?' today':'')+'">'+nH+evH+'</div>';
   });
   document.getElementById('kalGrid').innerHTML=html;
 }
-function changeMonth(d){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+d,1);renderKal();}
+function changeMonth(d){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+d,1);BEZ=null;renderKal();laadBez();}
+// Bezetting van de getoonde maand (enkel aantallen, geen namen)
+var BEZ=null;
+function laadBez(){
+  var y=calDate.getFullYear(),m=calDate.getMonth(),van=new Date(y,m,1),tot=new Date(y,m+1,1);
+  if(tot<=new Date())return;
+  haalBezetting(van,tot).then(function(l){
+    if(calDate.getFullYear()!==y||calDate.getMonth()!==m)return;
+    BEZ={};l.forEach(function(b){BEZ[b.les+'|'+b.start]=(BEZ[b.les+'|'+b.start]||0)+b.aantal;});renderKal();
+  }).catch(function(){});
+}
 
 /* ══ FORM ══ */
 function submitForm(){
@@ -973,7 +991,7 @@ document.getElementById('kalLeg').innerHTML=Object.keys(LESSEN).map(function(k){
 document.getElementById('openingsuren').innerHTML=openingsurenTekst();
 renderKal();
 // Actueel rooster uit de database: kalender en cijfers opnieuw tekenen
-laadRooster().then(function(ok){if(ok){bouwRooster();renderKal();vulCijfers();}});
+laadRooster().then(function(ok){if(ok){bouwRooster();renderKal();vulCijfers();}laadBez();});
 
 /* ══ EVENEMENTEN: horizontaal scrollen ══ */
 (function(){

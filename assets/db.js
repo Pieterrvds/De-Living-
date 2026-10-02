@@ -89,11 +89,19 @@ function naarBoeking(r){
     profiel:r.profielen||null};
 }
 // Bezetting (van iedereen, enkel aantallen) in een periode
-DB.laadBezetting=async function(van,tot){
+DB.bezettingLijst=async function(van,tot){
   if(!sb)throw GEEN_VERBINDING;
   var r=await sb.rpc('bezetting',{van:van.toISOString(),tot:tot.toISOString()});
   if(r.error)throw nlFout(r.error);
-  CACHE.bezet=(r.data||[]).map(function(b){return {les:b.les,start:new Date(b.start).getTime(),eind:new Date(b.eind).getTime(),aantal:b.aantal,mijn:b.mijn};});
+  return (r.data||[]).map(function(b){return {les:b.les,start:new Date(b.start).getTime(),eind:new Date(b.eind).getTime(),aantal:b.aantal,mijn:b.mijn};});
+};
+DB.laadBezetting=async function(van,tot){CACHE.bezet=await DB.bezettingLijst(van,tot);};
+// Lesgever: eigen uren in het rooster zetten (de server controleert alles). uren = [[weekdag, 'HH:MM', les], …]
+DB.zetMijnUren=async function(uren){
+  if(!sb)throw GEEN_VERBINDING;
+  var r=await sb.rpc('zet_mijn_uren',{uren:uren});
+  if(r.error)throw nlFout(r.error);
+  await laadRooster(true);
 };
 // Eigen reservaties
 DB.laadMijn=async function(){

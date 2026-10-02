@@ -33,7 +33,7 @@ create table if not exists public.profielen (
 create table if not exists public.boekingen (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references public.profielen(id) on delete cascade,
-  les        text not null,                      -- yoga, kine, pt, … of 'zaal'
+  les        text not null,                      -- yoga, kine, groep, … of 'zaal'
   start      timestamptz not null,
   eind       timestamptz not null,
   voor_wie   text not null default '',
@@ -351,6 +351,74 @@ begin
   on conflict (id) do update set config = excluded.config, bijgewerkt = now();
 end $$;
 
+-- Goedgekeurde lesgever: eigen uren in het rooster zetten (Mijn account → Mijn uren).
+-- uren = [[weekdag 0–6, 'HH:MM', les], …]. Enkel de eigen uren worden vervangen; lessen van
+-- anderen blijven staan. Openingsuren, gesloten periodes en overlap worden gecontroleerd.
+create or replace function public.zet_mijn_uren(uren jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  p    profielen;
+  c    jsonb;
+  mag  jsonb;
+  r    jsonb := '{}'::jsonb;
+  x    jsonb;
+  y    jsonb;
+  d    int;
+  s    int;
+  e    int;
+  dag  text[] := array['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+begin
+  select * into p from profielen where id = auth.uid();
+  if p.id is null then raise exception 'Meld je eerst aan.'; end if;
+  -- één wijziging tegelijk
+  select config into c from instellingen where id = 1 for update;
+  mag := c->'types'->p.type->'lessen';
+  if not coalesce((c->'types'->p.type->>'pro')::boolean, false) or not p.goedgekeurd
+     or mag is null or jsonb_typeof(mag) <> 'array' or jsonb_array_length(mag) = 0 then
+    raise exception 'Enkel goedgekeurde lesgevers kunnen hun uren aanpassen.';
+  end if;
+  if jsonb_typeof(uren) is distinct from 'array' or jsonb_array_length(uren) > 40 then
+    raise exception 'Ongeldige uren.';
+  end if;
+  -- rooster zonder de eigen uren
+  for d in 0..6 loop
+    r := r || jsonb_build_object(d::text, coalesce((
+      select jsonb_agg(z order by n) from jsonb_array_elements(coalesce(c->'rooster'->(d::text), '[]'::jsonb)) with ordinality t(z, n)
+       where z->>2 is distinct from p.id::text), '[]'::jsonb));
+  end loop;
+  -- eigen uren controleren en toevoegen
+  for x in select * from jsonb_array_elements(uren) loop
+    if jsonb_typeof(x) <> 'array' or coalesce(x->>0, '') !~ '^[0-6]$'
+       or coalesce(x->>1, '') !~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' then
+      raise exception 'Ongeldig uur.';
+    end if;
+    d := (x->>0)::int;
+    if not mag ? (x->>2) or c->'lessen'->(x->>2) is null then
+      raise exception 'Je kan geen % in het rooster zetten.', coalesce(c->'lessen'->(x->>2)->>'naam', x->>2);
+    end if;
+    s := hm(x->>1);
+    e := s + (c->'lessen'->(x->>2)->>'duur')::int;
+    y := c->'openingsuren'->(d::text);
+    if y is null or s < hm(y->>0) or e > hm(y->>1) then
+      raise exception 'Op % om % zijn we gesloten.', dag[d + 1], x->>1;
+    end if;
+    for y in select * from jsonb_array_elements(coalesce(c->'gesloten'->(d::text), '[]'::jsonb)) loop
+      if hm(y->>0) < e and hm(y->>1) > s then raise exception 'Op % om % zijn we gesloten.', dag[d + 1], x->>1; end if;
+    end loop;
+    for y in select * from jsonb_array_elements(r->(d::text)) loop
+      if hm(y->>0) < e and hm(y->>0) + (c->'lessen'->(y->>1)->>'duur')::int > s then
+        raise exception 'Op % om % is er al een les (% om %).', dag[d + 1], x->>1, c->'lessen'->(y->>1)->>'naam', y->>0;
+      end if;
+    end loop;
+    r := jsonb_set(r, array[d::text], (r->(d::text)) || jsonb_build_array(jsonb_build_array(x->>1, x->>2, p.id::text, p.naam)));
+  end loop;
+  -- per dag op uur sorteren
+  for d in 0..6 loop
+    r := jsonb_set(r, array[d::text], coalesce((select jsonb_agg(z order by z->>0) from jsonb_array_elements(r->(d::text)) z), '[]'::jsonb));
+  end loop;
+  update instellingen set config = jsonb_set(config, '{rooster}', r), bijgewerkt = now() where id = 1;
+end $$;
+
 -- Beheerder: een account volledig verwijderen (met profiel en reservaties)
 create or replace function public.verwijder_gebruiker(uid uuid) returns void
 language plpgsql security definer set search_path = public, auth as $$
@@ -364,10 +432,30 @@ end $$;
 
 revoke all on function public.zet_instellingen(jsonb)   from anon;
 revoke all on function public.verwijder_gebruiker(uuid) from anon;
+revoke all on function public.zet_mijn_uren(jsonb)      from anon;
 grant execute on function public.bezetting(timestamptz, timestamptz) to anon, authenticated;
 
 -- ── STARTWAARDEN ───────────────────────────────────────────────────────
 insert into public.beheerders (email) values ('pieterv-d-s@hotmail.com') on conflict do nothing;
 
-insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":16,"prijs":15},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40},"pt":{"naam":"Personal Training","duur":60,"max":1,"prijs":60}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","pt"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","pt"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","pt"]]},"openingsuren":{"0":["09:00","18:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["09:00","18:00"]},"gesloten":{"0":[["13:00","24:00"]],"1":[["19:00","24:00"]],"4":[["19:00","24:00"]]},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20},"types":{"lid":{"pro":false,"zaal":false},"personal-trainer":{"pro":true,"zaal":true},"kinesist":{"pro":true,"zaal":true},"dietist":{"pro":true,"zaal":false},"lesgever":{"pro":true,"zaal":true}}}'::jsonb)
+insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":16,"prijs":15},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["09:00","18:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["09:00","18:00"]},"gesloten":{"0":[["13:00","24:00"]],"1":[["19:00","24:00"]],"4":[["19:00","24:00"]]},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]}}}'::jsonb)
 on conflict (id) do nothing;
+
+-- ── OMSCHAKELING oktober 2026 ──────────────────────────────────────────
+-- Personal training wordt groepsles; types zijn nu kinesist, yoga-instructeur en groepslesgever.
+-- Veilig bij opnieuw uitvoeren: verandert enkel iets aan een database met de oude indeling.
+update public.instellingen set
+  config = jsonb_set(jsonb_set(jsonb_set(config,
+    '{lessen}', ((config->'lessen') - 'pt') || jsonb_build_object('groep', coalesce(config->'lessen'->'groep', '{"naam":"Groepsles","duur":60,"max":12,"prijs":15}'::jsonb))),
+    '{rooster}', coalesce((select jsonb_object_agg(d.key, coalesce((
+        select jsonb_agg(case when z->>1 = 'pt' then jsonb_set(z, '{1}', '"groep"') else z end order by n)
+          from jsonb_array_elements(d.value) with ordinality t(z, n)), '[]'::jsonb))
+      from jsonb_each(config->'rooster') d), '{}'::jsonb)),
+    '{types}', '{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]}}'::jsonb),
+  bijgewerkt = now()
+where id = 1 and (config->'lessen' ? 'pt' or not (config->'types' ? 'groepslesgever'));
+
+alter table public.profielen disable trigger controleer_gewijzigd_profiel;
+update public.profielen set type = 'groepslesgever' where type in ('personal-trainer', 'lesgever');
+update public.profielen set type = 'lid', goedgekeurd = true where type = 'dietist';
+alter table public.profielen enable trigger controleer_gewijzigd_profiel;
