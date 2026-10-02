@@ -447,6 +447,12 @@ language sql stable security definer set search_path = public as $$
    group by b.les, b.start, b.eind
 $$;
 
+-- Aantal leden (accounts) voor de teller op de hoofdpagina: enkel een getal, geen namen
+create or replace function public.aantal_leden() returns int
+language sql stable security definer set search_path = public as $$
+  select count(*)::int from profielen
+$$;
+
 -- Beheerder: rooster en regels bijwerken vanuit assets/boeken.js
 create or replace function public.zet_instellingen(nieuw jsonb) returns void
 language plpgsql security definer set search_path = public as $$
@@ -705,6 +711,7 @@ revoke all on function public.beurten_overzicht()       from anon;
 revoke all on function public.deelnemers(timestamptz, timestamptz) from anon;
 revoke all on function public.schrijf_uit(uuid, boolean) from anon;
 grant execute on function public.bezetting(timestamptz, timestamptz) to anon, authenticated;
+grant execute on function public.aantal_leden() to anon, authenticated;
 
 -- ── STARTWAARDEN ───────────────────────────────────────────────────────
 insert into public.beheerders (email) values ('pieterv-d-s@hotmail.com') on conflict do nothing;

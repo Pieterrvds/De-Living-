@@ -260,14 +260,15 @@ a.wk-les:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(61,32,7,.1
 .ev-arrow{width:48px;height:48px;border-radius:50%;border:1.5px solid var(--border);background:var(--vanilla);color:var(--espresso2);font-size:1.4rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s,color .2s,border-color .2s,transform .2s,opacity .2s;}
 .ev-arrow:hover:not(:disabled){background:var(--rose-d);border-color:var(--rose-d);color:white;transform:scale(1.08);}
 .ev-arrow:disabled{opacity:.35;cursor:default;}
-.ev-progress{flex:1;height:3px;border-radius:3px;background:rgba(61,32,7,.1);overflow:hidden;}
-.ev-progress-fill{height:100%;width:25%;border-radius:3px;background:linear-gradient(90deg,var(--rose-d),var(--gold-l));}
-/* Horizontale track: loopt tot aan de rand van het scherm, start uitgelijnd met de inhoud */
-.ev-track{--pad:max(2rem,calc((100vw - 1100px)/2));display:flex;gap:1.5rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:var(--pad);padding:2.5rem var(--pad) 4.5rem;margin:-1.5rem -2rem -2.5rem;scrollbar-width:none;cursor:grab;position:relative;z-index:1;outline:none;}
-.ev-track::-webkit-scrollbar{display:none;}
-.ev-track.dragging{cursor:grabbing;scroll-snap-type:none;}
+.ev-progress{flex:1;height:3px;border-radius:3px;background:rgba(61,32,7,.1);overflow:hidden;position:relative;}
+.ev-progress-fill{position:absolute;top:0;height:100%;width:25%;border-radius:3px;background:linear-gradient(90deg,var(--rose-d),var(--gold-l));}
+/* Lopende band: kaarten schuiven traag van rechts naar links, in een eindeloze lus (JS onderaan) */
+.ev-track{--pad:max(2rem,calc((100vw - 1100px)/2));overflow:hidden;padding:2.5rem var(--pad) 4.5rem;margin:-1.5rem -2rem -2.5rem;cursor:grab;position:relative;z-index:1;outline:none;touch-action:pan-y;user-select:none;-webkit-user-select:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%);}
+.ev-rail{display:flex;gap:1.5rem;width:max-content;will-change:transform;}
+.ev-track.dragging{cursor:grabbing;}
 .ev-track.dragging .ev-card{pointer-events:none;}
-.ev-card{flex:0 0 clamp(280px,30vw,370px);height:480px;border-radius:28px;position:relative;overflow:hidden;scroll-snap-align:start;box-shadow:0 14px 36px rgba(61,32,7,.18);text-decoration:none;color:#FDF8EE;isolation:isolate;transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s;}
+.ev-card{flex:0 0 clamp(280px,30vw,370px);height:480px;border-radius:28px;position:relative;overflow:hidden;box-shadow:0 14px 36px rgba(61,32,7,.18);text-decoration:none;color:#FDF8EE;isolation:isolate;transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s;}
 .ev-card:hover{transform:translateY(-10px);box-shadow:0 24px 48px rgba(61,32,7,.26);}
 .ev-bg{position:absolute;inset:-6% -14%;z-index:-2;background-size:cover;background-position:center;filter:saturate(.9);transition:scale .9s cubic-bezier(.22,1,.36,1),filter .5s;will-change:transform;}
 .ev-card:hover .ev-bg{scale:1.08;filter:saturate(1.08);}
@@ -362,7 +363,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
   .nb-content{grid-template-columns:1fr;gap:0;}
   .nb-stat{border-right:none;border-bottom:1px solid rgba(253,248,238,.1);}
   .ev-card{flex-basis:78vw;height:440px;}
-  .ev-track{gap:1rem;}
+  .ev-rail{gap:1rem;}
   .cursor,.cursor-ring{display:none;}
 }
 @media(max-width:900px){ /* weekrooster: dagen onder elkaar */
@@ -468,7 +469,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
   <div class="stats-card">
     <div class="stat-cell sr scale d1"><span class="stat-n" data-target="3" data-bron="disciplines">0</span><span class="stat-l">Disciplines</span></div>
     <div class="stat-cell sr scale d2"><span class="stat-n" data-target="15" data-bron="lessen-per-week">0</span><span class="stat-l">Lessen per week</span></div>
-    <div class="stat-cell sr scale d3"><span class="stat-n" data-target="300" data-suffix="+">0</span><span class="stat-l">Actieve leden</span></div>
+    <div class="stat-cell sr scale d3"><span class="stat-n" data-target="0" data-bron="leden">0</span><span class="stat-l">Leden</span></div>
     <div class="stat-cell sr scale d4"><span class="stat-n" data-target="100" data-suffix="%">0</span><span class="stat-l">Goed gevoel</span></div>
   </div>
 </div>
@@ -642,15 +643,16 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
         <p class="binnenkort-melding">⏳ <b>Binnenkort</b> · Onze eerste evenementen worden nog aangekondigd. Hieronder alvast een voorproefje. Volg ons op Instagram om niets te missen.</p>
         <div class="ev-ctrl">
           <button class="ev-arrow" id="evPrev" aria-label="Vorig evenement">&#8249;</button>
-          <div class="ev-progress"><div class="ev-progress-fill" id="evProg"></div></div>
+          <div class="ev-progress"><div class="ev-progress-fill" id="evProg"></div><div class="ev-progress-fill" id="evProg2"></div></div>
           <button class="ev-arrow" id="evNext" aria-label="Volgend evenement">&#8250;</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Horizontaal scrollbare evenementen (foto's zijn voorbeelden) -->
-  <div class="ev-track sr right" id="evTrack" tabindex="0" aria-label="Evenementen, scroll horizontaal">
+  <!-- Evenementen als lopende band (foto's zijn voorbeelden) -->
+  <div class="ev-track sr right" id="evTrack" tabindex="0" aria-label="Evenementen, schuiven traag voorbij">
+      <div class="ev-rail" id="evRail">
         <article class="ev-card">
           <div class="ev-bg" style="background-image:url('https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=900&amp;q=80'),linear-gradient(135deg,#5A7A4A,#839E72);"></div>
           <div class="ev-shade"></div>
@@ -691,6 +693,56 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
             <p class="ev-desc">Lezingen over voeding, ademwerk en blessurepreventie. Kennis delen is onze passie.</p>
           </div>
         </article>
+        <article class="ev-card">
+          <div class="ev-bg" style="background-image:url('https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=900&amp;q=80'),linear-gradient(135deg,#7A8F5A,#A9BC86);"></div>
+          <div class="ev-shade"></div>
+          <div class="ev-top"><span class="ev-num">05</span><span class="ev-chip">Op zondag</span></div>
+          <div class="ev-body">
+            <div class="ev-icon">🥑</div>
+            <h3 class="ev-name">Yoga &amp; Brunch</h3>
+            <p class="ev-desc">Na een zachte les samen genieten van een gezonde brunch aan onze bar.</p>
+          </div>
+        </article>
+        <article class="ev-card">
+          <div class="ev-bg" style="background-image:url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=900&amp;q=80'),linear-gradient(135deg,#8C6A8A,#C9A3B9);"></div>
+          <div class="ev-shade"></div>
+          <div class="ev-top"><span class="ev-num">06</span><span class="ev-chip">Op vrijdagavond</span></div>
+          <div class="ev-body">
+            <div class="ev-icon">🔔</div>
+            <h3 class="ev-name">Klankschalen &amp; Meditatie</h3>
+            <p class="ev-desc">Diepe ontspanning op de tonen van klankschalen. Liggend, met een warm dekentje.</p>
+          </div>
+        </article>
+        <article class="ev-card">
+          <div class="ev-bg" style="background-image:url('https://images.unsplash.com/photo-1588286840104-8957b019727f?w=900&amp;q=80'),linear-gradient(135deg,#4E7A6A,#8DB3A2);"></div>
+          <div class="ev-shade"></div>
+          <div class="ev-top"><span class="ev-num">07</span><span class="ev-chip">In de zomer</span></div>
+          <div class="ev-body">
+            <div class="ev-icon">☀️</div>
+            <h3 class="ev-name">Yoga in het park</h3>
+            <p class="ev-desc">Samen yoga in open lucht, op het gras. Breng je eigen matje mee.</p>
+          </div>
+        </article>
+        <article class="ev-card">
+          <div class="ev-bg" style="background-image:url('https://images.unsplash.com/photo-1559234935-7c2d2e7c1c0e?w=900&amp;q=80'),linear-gradient(135deg,#6B4226,#A87B4F);"></div>
+          <div class="ev-shade"></div>
+          <div class="ev-top"><span class="ev-num">08</span><span class="ev-chip">Op zaterdag</span></div>
+          <div class="ev-body">
+            <div class="ev-icon">☕</div>
+            <h3 class="ev-name">Koffie- &amp; sapproeverij</h3>
+            <p class="ev-desc">Proef onze cold brew en verse sappen, met uitleg van ons barteam.</p>
+          </div>
+        </article>
+        <article class="ev-card">
+          <div class="ev-bg" style="background-image:url('https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=900&amp;q=80'),linear-gradient(135deg,#C07878,#E8C4A0);"></div>
+          <div class="ev-shade"></div>
+          <div class="ev-top"><span class="ev-num">09</span><span class="ev-chip">Eén keer per jaar</span></div>
+          <div class="ev-body">
+            <div class="ev-icon">🎉</div>
+            <h3 class="ev-name">Opendeurdag</h3>
+            <p class="ev-desc">Kom kennismaken: proeflessen, een rondleiding en iets lekkers van de bar.</p>
+          </div>
+        </article>
         <a class="ev-card ev-ig" href="https://instagram.com/lavieenrose.aalst" target="_blank" rel="noopener">
           <div class="ev-body">
             <div class="ev-ig-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="34" height="34" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></div>
@@ -699,6 +751,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
             <span class="ev-ig-go">@lavieenrose.aalst →</span>
           </div>
         </a>
+      </div>
   </div>
 
   <div class="inner">
@@ -783,13 +836,13 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
 /* ══ CIJFERS UIT HET ROOSTER ══ — vóór de teller-animatie invullen, en opnieuw zodra
    het rooster uit de database binnen is (dat pas je aan in Beheer → Rooster). */
 function vulCijfers(){
-  var bron={'disciplines':Object.keys(LESSEN).length,'lessen-per-week':lessenPerWeek(true),'max-yoga':LESSEN.yoga.max,'max-groep':LESSEN.groep.max};
+  var bron={'disciplines':Object.keys(LESSEN).length,'lessen-per-week':lessenPerWeek(true),'max-yoga':LESSEN.yoga.max,'max-groep':LESSEN.groep.max,'leden':window.AANTAL_LEDEN};
   document.querySelectorAll('[data-bron]').forEach(function(el){
     var v=bron[el.getAttribute('data-bron')];if(v==null)return;
     if(el.hasAttribute('data-target')){
       var oud=el.getAttribute('data-target');el.setAttribute('data-target',v);
       // teller al (deels) afgelopen? dan meteen de juiste waarde tonen
-      if(el.classList.contains('stat-n')&&el.textContent!=='0'&&String(oud)!==String(v))el.textContent=v+(el.getAttribute('data-suffix')||'');
+      if(el.classList.contains('stat-n')&&el.hasAttribute('data-geteld')&&String(oud)!==String(v))el.textContent=v+(el.getAttribute('data-suffix')||'');
     }
     if(!el.classList.contains('stat-n'))el.textContent=v;
   });
@@ -952,16 +1005,17 @@ if(tiltEl){
 
 /* ══ COUNTER ANIMATION ══ */
 function animCount(el){
-  var target=parseInt(el.getAttribute('data-target'))||0;
   var suffix=el.getAttribute('data-suffix')||'';
   var dur=1800, start=null, startVal=0;
   function step(ts){
     if(!start)start=ts;
+    // doel elke keer opnieuw lezen: het aantal leden kan tijdens het tellen binnenkomen
+    var target=parseInt(el.getAttribute('data-target'))||0;
     var prog=Math.min((ts-start)/dur,1);
     var ease=1-Math.pow(1-prog,4);
     el.textContent=Math.round(startVal+(target-startVal)*ease)+suffix;
     if(prog<1)requestAnimationFrame(step);
-    else el.textContent=target+suffix;
+    else{el.textContent=target+suffix;el.setAttribute('data-geteld','');}
   }
   requestAnimationFrame(step);
 }
@@ -1066,49 +1120,121 @@ document.getElementById('openingsuren').innerHTML=openingsurenTekst();
 renderKal();
 // Actueel rooster uit de database: kalender en cijfers opnieuw tekenen
 laadRooster().then(function(ok){if(ok){bouwRooster();renderKal();vulCijfers();}laadBez();});
+// Echt aantal leden (accounts) uit de database
+if(window.DB&&DB.aantalLeden)DB.aantalLeden().then(function(n){window.AANTAL_LEDEN=n;vulCijfers();}).catch(function(){});
 
-/* ══ EVENEMENTEN: horizontaal scrollen ══ */
+/* ══ EVENEMENTEN: lopende band ══
+   De kaarten schuiven traag van rechts naar links. Een kopie van de reeks erachter zorgt
+   voor een naadloze lus. Muis erop = zacht vertragen tot stilstand; slepen en de pijltjes werken ook. */
 (function(){
-  var track=document.getElementById('evTrack');if(!track)return;
-  var prev=document.getElementById('evPrev'),next=document.getElementById('evNext'),prog=document.getElementById('evProg');
-  var cards=track.querySelectorAll('.ev-card');
-  function step(){return cards[0].getBoundingClientRect().width+parseFloat(getComputedStyle(track).columnGap||24);}
-  prev.addEventListener('click',function(){track.scrollBy({left:-step(),behavior:'smooth'});});
-  next.addEventListener('click',function(){track.scrollBy({left:step(),behavior:'smooth'});});
-  function update(){
-    // eindpunt = waar de laatste kaart vastklikt (niet noodzakelijk het uiterste scrollpunt)
-    var last=cards[cards.length-1];
-    var max=Math.min(track.scrollWidth-track.clientWidth,last.offsetLeft-parseFloat(getComputedStyle(track).paddingLeft));
-    var pct=max>0?Math.min(1,track.scrollLeft/max):1;
-    // schuifbalk: breedte = zichtbaar deel, positie = hoe ver je gescrold bent
-    var w=Math.min(1,track.clientWidth/track.scrollWidth)*100;
-    prog.style.width=w+'%';prog.style.marginLeft=(pct*(100-w))+'%';
-    prev.disabled=track.scrollLeft<=2;next.disabled=track.scrollLeft>=max-2;
-    // subtiele parallax van de achtergrondfoto's
-    var mid=window.innerWidth/2;
-    track.querySelectorAll('.ev-bg').forEach(function(bg){
-      var r=bg.parentElement.getBoundingClientRect();
-      bg.style.transform='translateX('+(((r.left+r.width/2)-mid)*-0.06)+'px)';
-    });
+  var track=document.getElementById('evTrack'),rail=document.getElementById('evRail');if(!track||!rail)return;
+  var prev=document.getElementById('evPrev'),next=document.getElementById('evNext');
+  var prog=document.getElementById('evProg'),prog2=document.getElementById('evProg2');
+  var orig=Array.prototype.slice.call(rail.children);
+  // twee kopieën: genoeg om ook brede schermen altijd te vullen
+  for(var k=0;k<2;k++)orig.forEach(function(c){
+    var kl=c.cloneNode(true);kl.setAttribute('aria-hidden','true');
+    if(kl.tagName==='A')kl.tabIndex=-1;rail.appendChild(kl);
+    // zelfde cursor-effect als de originele kaarten
+    if(window.cur&&window.ring){
+      kl.addEventListener('mouseenter',function(){cur.classList.add('hover');ring.classList.add('hover');});
+      kl.addEventListener('mouseleave',function(){cur.classList.remove('hover');ring.classList.remove('hover');});
+    }
+  });
+  var kaarten=Array.prototype.slice.call(rail.children),bgs=kaarten.map(function(c){return c.querySelector('.ev-bg');});
+  var stil=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SNEL=stil?0:24;              // pixels per seconde: heel traag
+  var pos=0,v=SNEL,S=1,stap=1,pad=0,midden=[],breedte=0;
+  var boven=false,focus=false,zichtbaar=true,anim=null,sleep=null;
+  function meet(){
+    S=orig.length?kaarten[orig.length].offsetLeft-kaarten[0].offsetLeft:1;
+    stap=kaarten[1].offsetLeft-kaarten[0].offsetLeft;
+    pad=parseFloat(getComputedStyle(track).paddingLeft)||0;
+    midden=kaarten.map(function(c){return c.offsetLeft+c.offsetWidth/2;});
+    breedte=track.clientWidth;
   }
-  track.addEventListener('scroll',update,{passive:true});
-  window.addEventListener('resize',update);
-  update();
-  // slepen met de muis
-  var down=false,startX=0,startL=0,moved=false;
-  track.addEventListener('mousedown',function(e){down=true;moved=false;startX=e.pageX;startL=track.scrollLeft;});
-  window.addEventListener('mousemove',function(e){
-    if(!down)return;var dx=e.pageX-startX;
-    if(Math.abs(dx)>5){moved=true;track.classList.add('dragging');}
-    if(moved){track.scrollLeft=startL-dx;e.preventDefault();}
+  function mod(x){return((x%S)+S)%S;}
+  function teken(){
+    var x=mod(pos);
+    rail.style.transform='translate3d('+(-x)+'px,0,0)';
+    // subtiele parallax van de achtergrondfoto's (zonder lay-out op te vragen)
+    var mid=breedte/2;
+    for(var i=0;i<bgs.length;i++){
+      var c=pad+midden[i]-x;
+      if(bgs[i]&&c>-600&&c<breedte+600)bgs[i].style.transform='translateX('+((c-mid)*-0.06)+'px)';
+    }
+    // voortgangsbalk loopt mee rond
+    var w=Math.min(1,breedte/S)*100,f=x/S*100;
+    prog.style.width=prog2.style.width=w+'%';prog.style.left=f+'%';prog2.style.left=(f-100)+'%';
+  }
+  var vorige=0;
+  function frame(t){
+    var dt=vorige?Math.min(.05,(t-vorige)/1000):0;vorige=t;
+    if(zichtbaar&&!document.hidden){
+      if(anim){
+        var p=Math.min(1,(t-anim.t0)/anim.duur),e=p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+        pos=anim.van+(anim.naar-anim.van)*e;if(p>=1){anim=null;v=0;}
+      }else if(!sleep){
+        var doel=(boven||focus)?0:SNEL;
+        v+=(doel-v)*Math.min(1,dt*2);   // zacht versnellen / vertragen (ook na een zwiep)
+        pos+=v*dt;
+      }
+      teken();
+    }
+    requestAnimationFrame(frame);
+  }
+  function schuif(r){
+    var van=anim?anim.naar:pos;
+    // uitlijnen op een kaartrand, dan één kaart verder
+    var basis=Math.round(van/stap)*stap;
+    anim={van:pos,naar:basis+r*stap,t0:performance.now(),duur:800};
+  }
+  prev.addEventListener('click',function(){schuif(-1);});
+  next.addEventListener('click',function(){schuif(1);});
+  track.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'){schuif(1);e.preventDefault();}
+    if(e.key==='ArrowLeft'){schuif(-1);e.preventDefault();}
   });
-  window.addEventListener('mouseup',function(){
-    if(!down)return;down=false;
-    if(moved){var sl=track.scrollLeft;track.classList.remove('dragging');track.scrollLeft=sl;
-      var s=step(),i=Math.round(sl/s);track.scrollTo({left:i*s,behavior:'smooth'});}
+  track.addEventListener('mouseenter',function(){boven=true;});
+  track.addEventListener('mouseleave',function(){boven=false;});
+  track.addEventListener('focusin',function(){focus=true;});
+  track.addEventListener('focusout',function(){focus=false;});
+  // slepen met muis of vinger (verticaal scrollen van de pagina blijft werken)
+  var verschoven=false;
+  track.addEventListener('pointerdown',function(e){
+    if(e.button>0)return;
+    sleep={x:e.clientX,y:e.clientY,pos:pos,id:e.pointerId,actief:false,lx:e.clientX,lt:performance.now(),snel:0};
+    verschoven=false;
   });
-  track.addEventListener('click',function(e){if(moved){e.preventDefault();moved=false;}},true);
+  track.addEventListener('pointermove',function(e){
+    if(!sleep||e.pointerId!==sleep.id)return;
+    var dx=e.clientX-sleep.x;
+    if(!sleep.actief){
+      if(Math.abs(dx)<6)return;
+      if(Math.abs(e.clientY-sleep.y)>Math.abs(dx)){sleep=null;return;}   // verticaal: laat de pagina scrollen
+      sleep.actief=true;verschoven=true;anim=null;track.classList.add('dragging');
+      try{track.setPointerCapture(e.pointerId);}catch(_){}
+    }
+    pos=sleep.pos-dx;
+    var nu=performance.now(),d=nu-sleep.lt;
+    if(d>0){sleep.snel=sleep.snel*.6+(-(e.clientX-sleep.lx)/d*1000)*.4;sleep.lx=e.clientX;sleep.lt=nu;}
+  });
+  function los(e){
+    if(!sleep||(e&&e.pointerId!==sleep.id))return;
+    if(sleep.actief){v=Math.max(-2500,Math.min(2500,sleep.snel));track.classList.remove('dragging');}
+    sleep=null;
+  }
+  track.addEventListener('pointerup',los);
+  track.addEventListener('pointercancel',los);
+  track.addEventListener('lostpointercapture',function(e){if(e.target===track)los(e);});
+  track.addEventListener('click',function(e){if(verschoven){e.preventDefault();e.stopPropagation();verschoven=false;}},true);
   track.addEventListener('dragstart',function(e){e.preventDefault();});
+  // enkel bewegen als de band in beeld is
+  if('IntersectionObserver' in window)new IntersectionObserver(function(en){zichtbaar=en[0].isIntersecting;},{rootMargin:'100px'}).observe(track);
+  window.addEventListener('resize',function(){meet();teken();});
+  meet();teken();requestAnimationFrame(frame);
+  // foto's en lettertypes kunnen de maten nog veranderen
+  window.addEventListener('load',function(){meet();teken();});
 })();
 </script>
 </body>

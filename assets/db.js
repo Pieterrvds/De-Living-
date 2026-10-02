@@ -97,6 +97,13 @@ DB.bezettingLijst=async function(van,tot){
   return (r.data||[]).map(function(b){return {les:b.les,start:new Date(b.start).getTime(),eind:new Date(b.eind).getTime(),aantal:b.aantal,mijn:b.mijn};});
 };
 DB.laadBezetting=async function(van,tot){CACHE.bezet=await DB.bezettingLijst(van,tot);};
+// Aantal accounts (voor de teller "Leden" op de hoofdpagina)
+DB.aantalLeden=async function(){
+  if(!sb)throw GEEN_VERBINDING;
+  var r=await sb.rpc('aantal_leden');
+  if(r.error)throw nlFout(r.error);
+  return r.data||0;
+};
 // Lesgever: eigen uren in het rooster zetten (de server controleert alles). uren = [[weekdag, 'HH:MM', les], …]
 DB.zetMijnUren=async function(uren){
   if(!sb)throw GEEN_VERBINDING;
