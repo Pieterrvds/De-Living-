@@ -312,15 +312,24 @@ create trigger controleer_nieuwe_boeking before insert on public.boekingen
 -- ── CONTROLE BIJ EEN WIJZIGING ─────────────────────────────────────────
 -- Enkel de status kan veranderen:
 --  • lid: 'wacht-op-betaling' → 'bevestigd' (betalen aan de bar), zolang niet vervallen
---  • beheerder: elke status
+--  • beheerder: elke status, en het tijdstip (een reservatie verplaatsen als een les verschuift)
 create or replace function public.controleer_wijziging() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare
   nieuw text := new.status;
+  ns    timestamptz := new.start;
+  ne    timestamptz := new.eind;
 begin
   new := old;
   new.status := nieuw;
-  if is_admin() then return new; end if;
+  if is_admin() then
+    if ns is distinct from old.start or ne is distinct from old.eind then
+      if ns is null or ne is null or ne <= ns then raise exception 'Ongeldig tijdstip.'; end if;
+      new.start := ns;
+      new.eind  := ne;
+    end if;
+    return new;
+  end if;
   if old.user_id is distinct from auth.uid() then raise exception 'Niet toegestaan.'; end if;
   if not (old.status = 'wacht-op-betaling' and nieuw = 'bevestigd') then raise exception 'Niet toegestaan.'; end if;
   if not telt(old) then raise exception 'Je reservatie is vervallen.'; end if;

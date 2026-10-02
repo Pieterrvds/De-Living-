@@ -54,6 +54,7 @@
 .inst{padding:2rem;}
 .inst p{color:var(--espresso2);line-height:1.7;margin-bottom:1rem;}
 .inst pre{background:var(--cream);border-radius:14px;padding:1rem;font-size:.78rem;overflow:auto;max-height:260px;margin:1rem 0;}
+.wees{grid-column:1/-1;font-size:.8rem;font-weight:800;color:#A04545;}
 .bz{margin-bottom:1.5rem;padding:.4rem 1.25rem 1rem;}
 .bz summary{cursor:pointer;font-weight:800;color:var(--espresso);padding:.8rem 0;}
 .bz-rij{display:grid;grid-template-columns:minmax(0,1.3fr) 110px minmax(0,1.5fr);gap:1rem;align-items:center;padding:.55rem .75rem;border-left:4px solid var(--c);border-radius:10px;background:var(--bg);margin-bottom:.4rem;}
@@ -146,7 +147,8 @@ function paneelReservaties(){
       return '<div class="rij"><div class="uur">'+i.tijd+' – '+eindTijd(i.tijd,b.duur)+'</div>'+
         '<div class="wat">'+i.les.icon+' '+esc(i.les.naam)+(b.voorWie?'<small>voor '+esc(b.voorWie)+'</small>':'')+'</div>'+
         '<div class="wie">'+esc(p.naam||'?')+' '+(p.type?typeBadge(p):'')+'<small>'+esc(p.email||'')+(b.opmerking?' · “'+esc(b.opmerking)+'”':'')+'</small></div>'+
-        '<div class="acties"><span class="status '+st+'">'+statusLabel(b)+'</span><span class="bedrag">'+fmtEuro(b.bedrag)+'</span>'+
+        (wees(b)?'<div class="wees">⚠️ Dit uur staat niet meer in het rooster</div>':'')+
+        '<div class="acties">'+(wees(b)?'<button class="knop" onclick="verplaatsVraag(\''+b.id+'\')">🔁 Verplaats</button>':'')+'<span class="status '+st+'">'+statusLabel(b)+'</span><span class="bedrag">'+fmtEuro(b.bedrag)+'</span>'+
         (b.status!=='betaald'&&b.status!=='intern'?'<button class="knop groen" onclick="zetBetaald(\''+b.id+'\')">✓ Betaald</button>':'')+
         '<button class="knop rood" onclick="annuleer(\''+b.id+'\')">'+(b.status==='intern'?'Verwijderen':'Annuleren')+'</button></div></div>';
     }).join('')+'</div></div>';
@@ -162,6 +164,21 @@ function bezettingOverzicht(){
       bezettingHtml(wie.length,s.les.max)+'<div class="bz-wie">'+(wie.length?wie.map(function(b){return esc((b.profiel&&b.profiel.naam)||'?')+(b.voorWie?' (voor '+esc(b.voorWie)+')':'');}).join(', '):'<i>nog niemand</i>')+'</div></div>');
   });
   return '<details class="card bz" open><summary>📊 Bezetting van de lessen deze week</summary>'+(rijen.length?rijen.join(''):'<div class="leeg">Geen lessen in deze week.</div>')+'</details>';
+}
+// Les-reservatie op een uur dat niet (meer) in het rooster staat?
+function wees(b){var les=b.slotId.split('_')[1];return les!=='zaal'&&b.status!=='intern'&&!parseSlot(b.slotId);}
+function verplaatsVraag(id){
+  var b=boekingen.find(function(x){return x.id===id;});if(!b)return;
+  var i=lesInfo(b),les=b.slotId.split('_')[1],ma=mondayOf(i.datum),opties=[];
+  for(var k=0;k<7;k++)slotsVoorDag(addDays(ma,k)).forEach(function(s){if(s.lesId===les)opties.push(s);});
+  ed.venster('<h2 class="card-title">Reservatie verplaatsen</h2><p style="color:var(--espresso2);">'+esc((b.profiel||{}).naam||'?')+' · '+fmtDatum(i.datum)+' om '+i.tijd+'. Kies het nieuwe uur in dezelfde week:</p>'+
+    (opties.length?opties.map(function(s){return '<button class="knop" style="width:100%;justify-content:flex-start;margin-top:.5rem;" onclick="verplaats(\''+id+'\',\''+s.id+'\')">'+s.les.icon+' '+fmtDatum(s.datum)+' · '+s.tijd+' · '+esc(lesNaam(s.lesId,s.stijl))+'</button>';}).join('')
+      :'<p>Er is die week geen '+esc(i.les.naam.toLowerCase())+' meer in het rooster.</p>')+
+    '<div class="m-knoppen" style="margin-top:1rem;"><button class="knop" onclick="ed.sluit()">Annuleren</button></div>');
+}
+function verplaats(id,slotId){
+  var b=boekingen.find(function(x){return x.id===id;}),s=parseSlot(slotId);if(!b||!s)return;
+  DB.admin.verplaats(id,s.start,b.duur).then(function(){ed.sluit();showToast('✓ Verplaatst naar '+fmtDatum(s.datum).toLowerCase()+' '+s.tijd);}).then(laadWeek).then(render).catch(fout);
 }
 function zetBetaald(id){DB.admin.zetStatus(id,'betaald').then(function(){showToast('✓ Gemarkeerd als betaald');}).then(laadWeek).then(render).catch(fout);}
 function annuleer(id){
@@ -226,27 +243,49 @@ function tekenTabs(){var t=document.querySelector('#inhoud .tabs');if(t)t.outerH
 // Rooster vergelijken (volgorde en lege dagen tellen niet)
 function roosterSleutel(r){var l=[];for(var d=0;d<7;d++)(r&&r[d]||[]).forEach(function(x){l.push(d+'|'+x[0]+'|'+x[1]+'|'+(x[2]||''));});return l.sort().join(',');}
 /* Publiceren: eerst nagaan welke komende reservaties geraakt worden */
+// Welke wekelijkse lessen zijn verschoven (zelfde les, ander uur of andere dag)? oud "dow|uu:mm|les" → nieuw
+function verschuivingen(){
+  var v={};
+  ed.orig.forEach(function(o){
+    var w=ed.zoek(o.uid);
+    if(w&&w.les===o.les&&(w.dow!==o.dow||w.min!==o.min))v[o.dow+'|'+tijdTekst(o.min)+'|'+o.les]={dow:w.dow,min:w.min};
+  });
+  return v;
+}
+// Nieuw tijdstip van een reservatie als haar les verschuift (in dezelfde week, ma–zo)
+function nieuwStart(b,naar){
+  var d=new Date(b.slotId.slice(0,10)+'T00:00'),dag=addDays(d,((naar.dow+6)%7)-((d.getDay()+6)%7));
+  return new Date(dag.getFullYear(),dag.getMonth(),dag.getDate(),0,naar.min);
+}
+/* Publiceren: reservaties van verschoven lessen gaan mee; andere geraakte reservaties eerst tonen */
 function rePubliceer(nieuw){
-  var nu=new Date();
+  var nu=new Date(),schuif=verschuivingen();
   DB.admin.boekingen(nu,addDays(nu,400)).then(function(lijst){
-    var vrij=Date.now();
+    var vrij=Date.now(),mee=[];
     var geraakt=lijst.filter(function(b){return !(b.status==='wacht-op-betaling'&&vervaltOm(b)<=vrij);}).map(function(b){
       var d=new Date(b.slotId.slice(0,10)+'T00:00'),dow=d.getDay(),t=b.slotId.slice(11,16),les=b.slotId.split('_')[1],van=naarMin(t),tot=van+b.duur;
       if(les!=='zaal'&&b.status!=='intern'){
+        var naar=schuif[dow+'|'+t+'|'+les];
+        if(naar){mee.push({b:b,start:nieuwStart(b,naar)});return null;}
         return (nieuw[dow]||[]).some(function(x){return x[0]===t&&x[1]===les;})?null:{b:b,reden:'staat niet meer in het rooster'};
       }
       var x=(nieuw[dow]||[]).find(function(x){var s=naarMin(x[0]);return s<tot&&s+LESSEN[x[1]].duur>van;});
       return x?{b:b,reden:'overlapt met '+LESSEN[x[1]].naam+' om '+x[0]}:null;
     }).filter(Boolean);
-    if(!geraakt.length)return reOpslaan(nieuw);
-    ed.venster('<h2 class="card-title">⚠️ '+geraakt.length+' komende reservatie'+(geraakt.length>1?'s':'')+' geraakt</h2>'+
-      '<p style="color:var(--espresso2);line-height:1.6;font-size:.92rem;">Deze reservaties blijven bestaan: de klant ziet ze nog bij <i>Mijn reservaties</i> en de plaats blijft vastgelegd. Laat de klant weten wat er verandert, of annuleer de reservatie daarna in het tabblad <b>Reservaties</b>.</p>'+
-      '<div class="m-lijst">'+geraakt.map(function(g){var b=g.b,i=lesInfo(b),p=b.profiel||{};
-        return '<div><b>'+fmtDatum(i.datum)+' '+i.tijd+'</b> · '+i.les.icon+' '+esc(i.les.naam)+' · '+esc(p.naam||'?')+' <small>('+statusLabel(b).toLowerCase()+')</small><br><small>'+esc(g.reden)+'</small></div>';}).join('')+'</div>'+
-      '<div class="m-knoppen"><button class="knop" onclick="ed.sluit()">Terug naar de kalender</button><button class="knop groen" onclick="ed.sluit();reOpslaan(ed.naarRooster())">Toch publiceren</button></div>');
+    window._mee=mee;
+    if(!geraakt.length&&!mee.length)return reOpslaan(nieuw,[]);
+    var rij=function(b,extra){var i=lesInfo(b),p=b.profiel||{};
+      return '<div><b>'+fmtDatum(i.datum)+' '+i.tijd+'</b> · '+i.les.icon+' '+esc(i.les.naam)+' · '+esc(p.naam||'?')+'<br><small>'+extra+'</small></div>';};
+    ed.venster((mee.length?'<h2 class="card-title">🔁 '+mee.length+' reservatie'+(mee.length>1?'s gaan':' gaat')+' mee</h2>'+
+        '<p style="color:var(--espresso2);line-height:1.6;font-size:.92rem;">Deze lessen verschuif je; de reservaties verhuizen automatisch mee naar het nieuwe uur. De klant ziet het nieuwe uur bij <i>Mijn reservaties</i>. Laat het de klant gerust ook even weten.</p>'+
+        '<div class="m-lijst">'+mee.map(function(m){return rij(m.b,'→ wordt '+fmtDatum(m.start).toLowerCase()+' om '+pad(m.start.getHours())+':'+pad(m.start.getMinutes()));}).join('')+'</div>':'')+
+      (geraakt.length?'<h2 class="card-title">⚠️ '+geraakt.length+' komende reservatie'+(geraakt.length>1?'s':'')+' geraakt</h2>'+
+        '<p style="color:var(--espresso2);line-height:1.6;font-size:.92rem;">Deze reservaties blijven bestaan op het oude uur. Verplaats ze daarna in het tabblad <b>Reservaties</b> (knop <i>Verplaats</i>) of annuleer ze.</p>'+
+        '<div class="m-lijst">'+geraakt.map(function(g){return rij(g.b,esc(g.reden));}).join('')+'</div>':'')+
+      '<div class="m-knoppen"><button class="knop" onclick="ed.sluit()">Terug naar de kalender</button><button class="knop groen" onclick="ed.sluit();reOpslaan(ed.naarRooster(),window._mee)">Publiceren</button></div>');
   }).catch(fout);
 }
-function reOpslaan(nieuw){
+function reOpslaan(nieuw,mee){
   // Altijd de nieuwste instellingen ophalen, zodat enkel het rooster verandert
   DB.admin.instellingen().then(function(d){
     var nu=d&&d.config&&d.config.rooster;
@@ -258,8 +297,14 @@ function reOpslaan(nieuw){
     }
     var cfg=Object.assign({},d&&d.config||configVoorDatabase(nieuw),{rooster:nieuw});
     return DB.admin.zetInstellingen(cfg).then(laadInst).then(function(){
-      zetRooster(dbInst.config.rooster);ed.laad(dbInst.config.rooster);render();
-      showToast('✓ Rooster gepubliceerd: de website gebruikt het nieuwe rooster meteen');
+      // reservaties van verschoven lessen mee verplaatsen
+      return Promise.all((mee||[]).map(function(m){return DB.admin.verplaats(m.b.id,m.start,m.b.duur);}));
+    }).then(function(){
+      zetRooster(dbInst.config.rooster);ed.laad(dbInst.config.rooster);
+      return laadWeek().catch(function(){});
+    }).then(function(){
+      render();
+      showToast('✓ Rooster gepubliceerd'+((mee||[]).length?' · '+mee.length+' reservatie'+(mee.length>1?'s':'')+' verplaatst':''));
     });
   }).catch(fout);
 }

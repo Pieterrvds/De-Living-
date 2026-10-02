@@ -165,6 +165,9 @@ DB.admin={
     return d.map(naarBoeking);
   },
   profielen:async function(){return _ok(await sb.from('profielen').select('*').order('aangemaakt',{ascending:false}));},
+  // reservatie naar een ander tijdstip verplaatsen (zelfde duur)
+  verplaats:async function(id,start,duurMin){var e=new Date(start.getTime()+duurMin*60000);
+    var d=_ok(await sb.from('boekingen').update({start:start.toISOString(),eind:e.toISOString()}).eq('id',id).select());if(!d.length)throw 'Niet gevonden.';},
   zetStatus:async function(id,status){_ok(await sb.from('boekingen').update({status:status}).eq('id',id).select());},
   annuleer:async function(id){var d=_ok(await sb.from('boekingen').delete().eq('id',id).select());if(!d.length)throw 'Niet gevonden.';},
   wijzigProfiel:async function(id,velden){var d=_ok(await sb.from('profielen').update(velden).eq('id',id).select());if(!d.length)throw 'Niet toegestaan.';},
