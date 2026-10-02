@@ -33,21 +33,8 @@ DTSTART;TZID=Europe/Brussels:20261004T100000
 DTEND;TZID=Europe/Brussels:20261004T110000
 RRULE:FREQ=WEEKLY;BYDAY=SU
 SUMMARY:🧘 Yoga – Gwen Deryck
-DESCRIPTION:Groepsles · € 15 · max. 16 personen\nReserveer je plaats: h
+DESCRIPTION:Groepsles · € 15 · max. 25 personen\nReserveer je plaats: h
  ttps://pieterrvds.github.io/De-Living-/boeken.html
-LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
-URL:https://pieterrvds.github.io/De-Living-/boeken.html
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:lvr-kine-su-1130@pieterrvds.github.io
-DTSTAMP:20260928T000000Z
-DTSTART;TZID=Europe/Brussels:20261004T113000
-DTEND;TZID=Europe/Brussels:20261004T121500
-RRULE:FREQ=WEEKLY;BYDAY=SU
-SUMMARY:💆 Kinesitherapie – Onze kinesist
-DESCRIPTION:Individuele begeleiding · € 40 · max. 1 persoon\nReserveer 
- je plaats: https://pieterrvds.github.io/De-Living-/boeken.html
 LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
 URL:https://pieterrvds.github.io/De-Living-/boeken.html
 TRANSP:TRANSPARENT
@@ -59,21 +46,8 @@ DTSTART;TZID=Europe/Brussels:20260928T090000
 DTEND;TZID=Europe/Brussels:20260928T100000
 RRULE:FREQ=WEEKLY;BYDAY=MO
 SUMMARY:🧘 Yoga – Gwen Deryck
-DESCRIPTION:Groepsles · € 15 · max. 16 personen\nReserveer je plaats: h
+DESCRIPTION:Groepsles · € 15 · max. 25 personen\nReserveer je plaats: h
  ttps://pieterrvds.github.io/De-Living-/boeken.html
-LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
-URL:https://pieterrvds.github.io/De-Living-/boeken.html
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:lvr-kine-tu-0900@pieterrvds.github.io
-DTSTAMP:20260928T000000Z
-DTSTART;TZID=Europe/Brussels:20260929T090000
-DTEND;TZID=Europe/Brussels:20260929T094500
-RRULE:FREQ=WEEKLY;BYDAY=TU
-SUMMARY:💆 Kinesitherapie – Onze kinesist
-DESCRIPTION:Individuele begeleiding · € 40 · max. 1 persoon\nReserveer 
- je plaats: https://pieterrvds.github.io/De-Living-/boeken.html
 LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
 URL:https://pieterrvds.github.io/De-Living-/boeken.html
 TRANSP:TRANSPARENT
@@ -85,21 +59,8 @@ DTSTART;TZID=Europe/Brussels:20260930T120000
 DTEND;TZID=Europe/Brussels:20260930T130000
 RRULE:FREQ=WEEKLY;BYDAY=WE
 SUMMARY:🧘 Yoga – Gwen Deryck
-DESCRIPTION:Groepsles · € 15 · max. 16 personen\nReserveer je plaats: h
+DESCRIPTION:Groepsles · € 15 · max. 25 personen\nReserveer je plaats: h
  ttps://pieterrvds.github.io/De-Living-/boeken.html
-LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
-URL:https://pieterrvds.github.io/De-Living-/boeken.html
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:lvr-kine-we-1700@pieterrvds.github.io
-DTSTAMP:20260928T000000Z
-DTSTART;TZID=Europe/Brussels:20260930T170000
-DTEND;TZID=Europe/Brussels:20260930T174500
-RRULE:FREQ=WEEKLY;BYDAY=WE
-SUMMARY:💆 Kinesitherapie – Onze kinesist
-DESCRIPTION:Individuele begeleiding · € 40 · max. 1 persoon\nReserveer 
- je plaats: https://pieterrvds.github.io/De-Living-/boeken.html
 LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
 URL:https://pieterrvds.github.io/De-Living-/boeken.html
 TRANSP:TRANSPARENT
@@ -111,21 +72,8 @@ DTSTART;TZID=Europe/Brussels:20260930T193000
 DTEND;TZID=Europe/Brussels:20260930T203000
 RRULE:FREQ=WEEKLY;BYDAY=WE
 SUMMARY:🧘 Yoga – Gwen Deryck
-DESCRIPTION:Groepsles · € 15 · max. 16 personen\nReserveer je plaats: h
+DESCRIPTION:Groepsles · € 15 · max. 25 personen\nReserveer je plaats: h
  ttps://pieterrvds.github.io/De-Living-/boeken.html
-LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
-URL:https://pieterrvds.github.io/De-Living-/boeken.html
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:lvr-kine-th-1600@pieterrvds.github.io
-DTSTAMP:20260928T000000Z
-DTSTART;TZID=Europe/Brussels:20261001T160000
-DTEND;TZID=Europe/Brussels:20261001T164500
-RRULE:FREQ=WEEKLY;BYDAY=TH
-SUMMARY:💆 Kinesitherapie – Onze kinesist
-DESCRIPTION:Individuele begeleiding · € 40 · max. 1 persoon\nReserveer 
- je plaats: https://pieterrvds.github.io/De-Living-/boeken.html
 LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
 URL:https://pieterrvds.github.io/De-Living-/boeken.html
 TRANSP:TRANSPARENT
@@ -137,7 +85,7 @@ DTSTART;TZID=Europe/Brussels:20261002T070000
 DTEND;TZID=Europe/Brussels:20261002T080000
 RRULE:FREQ=WEEKLY;BYDAY=FR
 SUMMARY:🧘 Yoga – Gwen Deryck
-DESCRIPTION:Groepsles · € 15 · max. 16 personen\nReserveer je plaats: h
+DESCRIPTION:Groepsles · € 15 · max. 25 personen\nReserveer je plaats: h
  ttps://pieterrvds.github.io/De-Living-/boeken.html
 LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
 URL:https://pieterrvds.github.io/De-Living-/boeken.html
@@ -150,7 +98,7 @@ DTSTART;TZID=Europe/Brussels:20261003T100000
 DTEND;TZID=Europe/Brussels:20261003T110000
 RRULE:FREQ=WEEKLY;BYDAY=SA
 SUMMARY:🧘 Yoga – Gwen Deryck
-DESCRIPTION:Groepsles · € 15 · max. 16 personen\nReserveer je plaats: h
+DESCRIPTION:Groepsles · € 15 · max. 25 personen\nReserveer je plaats: h
  ttps://pieterrvds.github.io/De-Living-/boeken.html
 LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
 URL:https://pieterrvds.github.io/De-Living-/boeken.html
