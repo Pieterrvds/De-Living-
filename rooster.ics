@@ -66,19 +66,6 @@ URL:https://pieterrvds.github.io/De-Living-/boeken.html
 TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
-UID:lvr-pt-mo-1800@pieterrvds.github.io
-DTSTAMP:20260928T000000Z
-DTSTART;TZID=Europe/Brussels:20260928T180000
-DTEND;TZID=Europe/Brussels:20260928T190000
-RRULE:FREQ=WEEKLY;BYDAY=MO
-SUMMARY:💪 Personal Training – Pieter
-DESCRIPTION:1-op-1 training · € 60 · max. 1 persoon\nReserveer je plaat
- s: https://pieterrvds.github.io/De-Living-/boeken.html
-LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
-URL:https://pieterrvds.github.io/De-Living-/boeken.html
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
 UID:lvr-kine-tu-0900@pieterrvds.github.io
 DTSTAMP:20260928T000000Z
 DTSTART;TZID=Europe/Brussels:20260929T090000
@@ -113,19 +100,6 @@ RRULE:FREQ=WEEKLY;BYDAY=WE
 SUMMARY:💆 Kinesitherapie – Onze kinesist
 DESCRIPTION:Individuele begeleiding · € 40 · max. 1 persoon\nReserveer 
  je plaats: https://pieterrvds.github.io/De-Living-/boeken.html
-LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
-URL:https://pieterrvds.github.io/De-Living-/boeken.html
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:lvr-pt-we-1800@pieterrvds.github.io
-DTSTAMP:20260928T000000Z
-DTSTART;TZID=Europe/Brussels:20260930T180000
-DTEND;TZID=Europe/Brussels:20260930T190000
-RRULE:FREQ=WEEKLY;BYDAY=WE
-SUMMARY:💪 Personal Training – Pieter
-DESCRIPTION:1-op-1 training · € 60 · max. 1 persoon\nReserveer je plaat
- s: https://pieterrvds.github.io/De-Living-/boeken.html
 LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
 URL:https://pieterrvds.github.io/De-Living-/boeken.html
 TRANSP:TRANSPARENT
@@ -178,19 +152,6 @@ RRULE:FREQ=WEEKLY;BYDAY=SA
 SUMMARY:🧘 Yoga – Gwen Deryck
 DESCRIPTION:Groepsles · € 15 · max. 16 personen\nReserveer je plaats: h
  ttps://pieterrvds.github.io/De-Living-/boeken.html
-LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
-URL:https://pieterrvds.github.io/De-Living-/boeken.html
-TRANSP:TRANSPARENT
-END:VEVENT
-BEGIN:VEVENT
-UID:lvr-pt-sa-1600@pieterrvds.github.io
-DTSTAMP:20260928T000000Z
-DTSTART;TZID=Europe/Brussels:20261003T160000
-DTEND;TZID=Europe/Brussels:20261003T170000
-RRULE:FREQ=WEEKLY;BYDAY=SA
-SUMMARY:💪 Personal Training – Pieter
-DESCRIPTION:1-op-1 training · € 60 · max. 1 persoon\nReserveer je plaat
- s: https://pieterrvds.github.io/De-Living-/boeken.html
 LOCATION:La Vie en Rose\, Hoogstraat 40\, 9308 Aalst
 URL:https://pieterrvds.github.io/De-Living-/boeken.html
 TRANSP:TRANSPARENT
