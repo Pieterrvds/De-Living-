@@ -44,6 +44,8 @@
 .les{display:block;}
 .les-dag{font-size:1.3rem;font-weight:800;color:var(--espresso);line-height:1.25;}
 .les-uur{font-size:1.15rem;margin-top:.2rem;}
+.les-stijl{display:inline-block;margin-top:.45rem;padding:.25rem .8rem;border-radius:50px;background:#EBF2E5;color:#2F5226;font-weight:800;font-size:1.1rem;}
+.les-uitleg{font-size:1.02rem;color:var(--espresso2);margin-top:.25rem;}
 .les-vrij{margin-top:.45rem;font-weight:800;color:#3F6B34;}
 .les-vrij.bijna{color:#8A5A12;}
 .les-vrij.vol{color:#9E3B3B;}
@@ -165,7 +167,7 @@ function teken(){
   var mijn=mijnReservaties();
   if(mijn.length){
     h+='<h2 class="yg-titel">Je reservaties</h2>'+mijn.map(function(b){var s=b.slot;
-      return '<div class="kaart res"><div class="les-dag">✓ '+dagLabel(s.datum)+'</div><div class="les-uur">'+s.tijd+' – '+boekingEind(b,s)+' · yoga met '+esc(voornaam(s.trainer))+'</div>'+
+      return '<div class="kaart res"><div class="les-dag">✓ '+dagLabel(s.datum)+'</div><div class="les-uur">'+s.tijd+' – '+boekingEind(b,s)+' · '+esc(lesNaam(s.lesId,s.stijl))+' met '+esc(voornaam(s.trainer))+'</div>'+
         '<button class="knop-groot wit" onclick="annuleerVraag(\''+b.id+'\')">Annuleren</button></div>';}).join('');
   }
   h+='<h2 class="yg-titel">Kies een les</h2>';
@@ -191,10 +193,12 @@ function beurtenHtml(){
   else if(saldo<=2)h+='<button class="knop-groot wit" onclick="kaartVraag()">🎟️ Bijna op? Nieuwe kaart aanvragen</button>';
   return h+'</div>';
 }
+// Soort yoga (bv. "Yin yoga") met een korte uitleg, zodat je weet wat je kan verwachten
+function stijlHtml(s){return s.stijl?'<div class="les-stijl">🧘 '+esc(s.stijl)+'</div><div class="les-uitleg">'+esc(stijlUitleg(s.lesId,s.stijl))+'</div>':'';}
 function lesHtml(s){
   var b=reservatieVoor(s.id),vrij=vrijePlaatsen(s);
   var h='<div class="kaart les'+(b?' ingeschreven':'')+'"><div class="les-dag">'+dagLabel(s.datum)+'</div>'+
-    '<div class="les-uur">'+s.tijd+' – '+s.eind+' · yoga met '+esc(voornaam(s.trainer))+'</div>';
+    '<div class="les-uur">'+s.tijd+' – '+s.eind+' · '+(s.stijl?'met ':'yoga met ')+esc(voornaam(s.trainer))+'</div>'+stijlHtml(s);
   if(b)h+='<div class="les-ok">✓ Je bent ingeschreven</div>';
   else if(vrij<=0)h+='<div class="les-vrij vol">Volzet</div>';
   else h+='<div class="les-vrij'+(vrij<=3?' bijna':'')+'">'+(vrij<=3?'Nog maar '+vrij+' plaats'+(vrij>1?'en':'')+' vrij!':'Nog '+vrij+' plaatsen vrij')+'</div>'+
@@ -216,7 +220,7 @@ function sluitBlad(){
 }
 document.getElementById('blad').addEventListener('click',function(e){if(e.target===this&&!bezig)sluitBlad();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!bezig)sluitBlad();});
-function lesBlok(s){return '<div class="blad-les"><div class="ic" aria-hidden="true">🧘</div><div><b>'+dagLabel(s.datum)+'</b><br>'+s.tijd+' tot '+s.eind+'<br>Yoga met '+esc(s.trainer)+'</div></div>';}
+function lesBlok(s){return '<div class="blad-les"><div class="ic" aria-hidden="true">🧘</div><div><b>'+dagLabel(s.datum)+'</b><br>'+s.tijd+' tot '+s.eind+'<br>'+esc(lesNaam(s.lesId,s.stijl))+' met '+esc(s.trainer)+(s.stijl?'<br><small>'+esc(stijlUitleg(s.lesId,s.stijl))+'</small>':'')+'</div></div>';}
 function ok(titel,tekst){blad('<div class="blad-midden"><div class="blad-ok" aria-hidden="true">✓</div><h2 id="bladTitel">'+titel+'</h2>'+tekst+'</div><button class="knop-groot groen" data-focus onclick="sluitBlad()">OK</button>');}
 function fout(e){
   var m=String(e||'');
@@ -243,7 +247,7 @@ function reserveer(s,knop){
   wachtKnop(knop,'Even geduld…');
   DB.maakBoeking(s,s.les.duur,'','').then(laad).then(function(){
     bezig=false;
-    ok('Gelukt!','<p>Je bent ingeschreven voor yoga op<br><b>'+dagLabel(s.datum).toLowerCase()+' om '+s.tijd+'</b>.</p><p>Je hebt nog '+(saldo===1?'1 beurt':saldo+' beurten')+'.</p>');
+    ok('Gelukt!','<p>Je bent ingeschreven voor '+esc(s.stijl||'yoga')+' op<br><b>'+dagLabel(s.datum).toLowerCase()+' om '+s.tijd+'</b>.</p><p>Je hebt nog '+(saldo===1?'1 beurt':saldo+' beurten')+'.</p>');
   }).catch(function(e){bezig=false;laad();fout(e);});
 }
 function annuleerVraag(id){

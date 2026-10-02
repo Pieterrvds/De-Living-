@@ -160,7 +160,7 @@ function lesgeverHtml(){
       (magBeurtenBeheren(user)?' Beurtenkaarten bevestigen en zien wie er komt doe je bij <a href="beurten.html">🎟️ Beurtenkaarten</a>.':'')+'</p>'+
     '<div class="lg-kop">Komende 2 weken</div>'+
     (rij.length?'<div class="mijn-lessen">'+rij.map(function(s){
-      return '<div class="ml les-'+s.lesId+'"><div class="ml-wat"><b>'+s.les.icon+' '+esc(s.les.naam)+'</b>'+DAGEN_KORT[s.datum.getDay()]+' '+s.datum.getDate()+' '+MAANDEN[s.datum.getMonth()].slice(0,3)+' · '+s.tijd+' – '+s.eind+'</div>'+bezettingHtml(bezetting(s),s.les.max)+'</div>';
+      return '<div class="ml les-'+s.lesId+'"><div class="ml-wat"><b>'+s.les.icon+' '+esc(lesNaam(s.lesId,s.stijl))+'</b>'+DAGEN_KORT[s.datum.getDay()]+' '+s.datum.getDate()+' '+MAANDEN[s.datum.getMonth()].slice(0,3)+' · '+s.tijd+' – '+s.eind+'</div>'+bezettingHtml(bezetting(s),s.les.max)+'</div>';
     }).join('')+'</div>'
       :'<p class="lg-intro"><i>Je hebt nog geen eigen uren in het rooster. Sleep hieronder een les in de kalender, of vraag de beheerder om bestaande uren aan jou toe te wijzen.</i></p>')+
     '<div class="lg-kop">Mijn uren aanpassen</div><div id="mijnUren"></div></div>';
@@ -175,7 +175,7 @@ function maakEditor(){
 }
 function publiceerMijnUren(nieuw){
   var eigen=[],weg=[];
-  Object.keys(nieuw).forEach(function(d){nieuw[d].filter(eigenUur).forEach(function(x){eigen.push([+d,x[0],x[1]]);});});
+  Object.keys(nieuw).forEach(function(d){nieuw[d].filter(eigenUur).forEach(function(x){eigen.push([+d,x[0],x[1],x[4]||'']);});});
   Object.keys(ed.origRooster).forEach(function(d){ed.origRooster[d].filter(eigenUur).forEach(function(x){
     if(!eigen.some(function(e){return e[0]===+d&&e[1]===x[0]&&e[2]===x[1];}))weg.push(+d+'|'+x[0]+'|'+x[1]);});});
   var opslaan=function(){

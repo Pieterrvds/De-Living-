@@ -51,6 +51,11 @@ Ook de evenementen en de foto's dragen een *binnenkort*-melding.
 3. Annuleren (tot 24 uur op voorhand) geeft de beurt terug. Daarna kan het via WhatsApp; Gwen
    kan dan iemand uitschrijven met of zonder beurt terug.
 
+**Soorten yoga.** `LESSEN.yoga.stijlen` bevat de 4 soorten (Hatha yoga, Vinyasa flow, Yin yoga,
+Yoga Nidra) met een korte uitleg. Gwen kiest per wekelijkse les de soort (sleep de juiste soort
+in de kalender bij *Mijn account*, of klik op een les → *Soort yoga*); de beheerder kan dat ook in
+Beheer → Rooster. Klanten zien de soort en de uitleg in het weekrooster en op de yogapagina.
+
 De kaarten en hun prijs staan in `BEURTENKAART.kaarten` (`prijs:null` = "vraag de prijs aan Gwen").
 
 De rest staat bovenaan in **`assets/boeken.js`**:

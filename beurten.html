@@ -199,7 +199,7 @@ function lessenHtml(){
   for(var i=0;i<15;i++){
     slotsVoorDag(addDays(v,i)).filter(function(s){return metBeurt(s.lesId);}).forEach(function(s){
       var t=s.start.getTime(),wie=deelnemers.filter(function(d){return d.les===s.lesId&&new Date(d.start).getTime()===t;});n++;
-      h+='<div class="kaart les-k'+(isVoorbij(s)?' voorbij':'')+'"><div class="k-rij"><div class="k-naam">'+s.les.icon+' '+DAGEN[s.datum.getDay()]+' '+s.datum.getDate()+' '+MAANDEN[s.datum.getMonth()]+' · '+s.tijd+'</div>'+bezettingHtml(wie.length,s.les.max)+'</div>'+
+      h+='<div class="kaart les-k'+(isVoorbij(s)?' voorbij':'')+'"><div class="k-rij"><div class="k-naam">'+s.les.icon+' '+DAGEN[s.datum.getDay()]+' '+s.datum.getDate()+' '+MAANDEN[s.datum.getMonth()]+' · '+s.tijd+(s.stijl?'<br><small>'+esc(s.stijl)+'</small>':'')+'</div>'+bezettingHtml(wie.length,s.les.max)+'</div>'+
         (wie.length?wie.map(function(d){return '<div class="dn"><span>'+esc(d.naam)+(d.beurt?'':' <small>(zonder beurt)</small>')+'</span>'+
           (isVoorbij(s)?'':'<button class="knop-link" onclick="uitschrijven(\''+d.id+'\')">Uitschrijven</button>')+'</div>';}).join('')
           :'<p class="k-sub">Nog niemand ingeschreven.</p>')+'</div>';

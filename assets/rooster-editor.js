@@ -44,13 +44,14 @@ RE.zichtbaar=function(){return !!document.getElementById(this.o.el);};
 RE.laad=function(rooster){
   var ed=this,l=[];
   Object.keys(rooster||{}).forEach(function(d){(rooster[d]||[]).forEach(function(x){
-    if(LESSEN[x[1]])l.push({uid:++ed.volg,dow:+d,min:naarMin(x[0]),les:x[1],tid:x[2]||'',tnaam:x[3]||''});});});
+    if(LESSEN[x[1]])l.push({uid:++ed.volg,dow:+d,min:naarMin(x[0]),les:x[1],tid:x[2]||'',tnaam:x[3]||'',stijl:stijlVan(x)});});});
   ed.orig=l;ed.werk=l.map(function(x){return Object.assign({},x);});ed.terug=[];ed.vooruit=[];
   ed.origRooster=ed.naarRooster(ed.orig);
 };
 RE.naarRooster=function(lijst){
   var r={};(lijst||this.werk).slice().sort(function(a,b){return a.min-b.min;}).forEach(function(x){
-    (r[x.dow]=r[x.dow]||[]).push(x.tid?[tijdTekst(x.min),x.les,x.tid,x.tnaam]:[tijdTekst(x.min),x.les]);});
+    var st=stijlGeldig(x.les,x.stijl)?x.stijl:'';
+    (r[x.dow]=r[x.dow]||[]).push(st?[tijdTekst(x.min),x.les,x.tid||'',x.tid?x.tnaam:'',st]:x.tid?[tijdTekst(x.min),x.les,x.tid,x.tnaam]:[tijdTekst(x.min),x.les]);});
   return r;
 };
 RE.zoek=function(uid){return this.werk.find(function(x){return x.uid===uid;});};
@@ -61,7 +62,7 @@ RE.ververs=function(){if(this.o.naWijziging)this.o.naWijziging();this.teken();};
 RE.ongedaan=function(){if(!this.terug.length)return;this.vooruit.push(JSON.stringify(this.werk));this.werk=JSON.parse(this.terug.pop());this.ververs();};
 RE.opnieuw=function(){if(!this.vooruit.length)return;this.terug.push(JSON.stringify(this.werk));this.werk=JSON.parse(this.vooruit.pop());this.ververs();};
 RE.terugzetten=function(){if(!this.aantal()||!confirm('Alle wijzigingen sinds de laatste publicatie wissen?'))return;this.stap();this.werk=this.orig.map(function(x){return Object.assign({},x);});this.ververs();};
-RE.anders=function(a,x){return a.dow!==x.dow||a.min!==x.min||a.les!==x.les||a.tid!==x.tid;};
+RE.anders=function(a,x){return a.dow!==x.dow||a.min!==x.min||a.les!==x.les||a.tid!==x.tid||(a.stijl||'')!==(x.stijl||'');};
 RE.aantal=function(){
   var ed=this,o={},w={};ed.orig.forEach(function(x){o[x.uid]=x;});ed.werk.forEach(function(x){w[x.uid]=x;});
   return ed.werk.filter(function(x){return !o[x.uid]||ed.anders(o[x.uid],x);}).length+ed.orig.filter(function(x){return !w[x.uid];}).length;
@@ -80,7 +81,10 @@ RE.teken=function(){
   var ed=this,el=document.getElementById(ed.o.el);if(!el)return;
   var n=ed.aantal(),hoogte=(RE_EIND-RE_START)*RE_PPM;
   var h='<div class="re-balk"><div class="re-palet"><span>Sleep een les in de kalender:</span>'+ed.o.lessen.map(function(k){
-      return '<button class="re-chip les-'+k+'" data-les="'+k+'" title="Sleep naar een dag en uur, of klik om toe te voegen">'+LESSEN[k].icon+' '+esc(LESSEN[k].kort||LESSEN[k].naam)+'<small>'+LESSEN[k].duur+' min</small></button>';}).join('')+'</div>'+
+      var titel=' title="Sleep naar een dag en uur, of klik om toe te voegen"';
+      if(LESSEN[k].stijlen)return LESSEN[k].stijlen.map(function(s){
+        return '<button class="re-chip les-'+k+'" data-les="'+k+'" data-stijl="'+esc(s.naam)+'"'+titel+'>'+LESSEN[k].icon+' '+esc(s.naam)+'<small>'+LESSEN[k].duur+' min</small></button>';}).join('');
+      return '<button class="re-chip les-'+k+'" data-les="'+k+'"'+titel+'>'+LESSEN[k].icon+' '+esc(LESSEN[k].kort||LESSEN[k].naam)+'<small>'+LESSEN[k].duur+' min</small></button>';}).join('')+'</div>'+
     '<div class="re-acties"><span class="re-status'+(n?' open':'')+'">'+(n?n+' niet-gepubliceerde wijziging'+(n>1?'en':''):'✓ Gepubliceerd')+'</span>'+
     '<button class="knop rond" data-actie="ongedaan" title="Ongedaan maken (Ctrl+Z)" aria-label="Ongedaan maken"'+(ed.terug.length?'':' disabled')+'>↶</button>'+
     '<button class="knop rond" data-actie="opnieuw" title="Opnieuw (Ctrl+Y)" aria-label="Opnieuw"'+(ed.vooruit.length?'':' disabled')+'>↷</button>'+
@@ -102,8 +106,8 @@ RE.teken=function(){
     ed.werk.filter(function(x){return x.dow===d;}).forEach(function(x){
       var l=LESSEN[x.les],mag=ed.mag(x),wie=ed.lesgever(x);
       c+='<button class="re-blok les-'+x.les+(ed.gewijzigd(x)?' nieuw':'')+(mag?'':' vast')+'" data-uid="'+x.uid+'" style="top:'+(x.min-RE_START)*RE_PPM+'px;height:'+l.duur*RE_PPM+'px" '+
-        'title="'+esc(l.naam+' · '+tijdTekst(x.min)+' – '+tijdTekst(x.min+l.duur)+' · '+wie+(mag?'':' (niet van jou)'))+'" aria-label="'+esc(l.naam+' op '+DAGEN[d]+' om '+tijdTekst(x.min)+' met '+wie)+'">'+
-        '<b>'+l.icon+' '+esc(l.kort||l.naam)+'</b><span>'+tijdTekst(x.min)+' – '+tijdTekst(x.min+l.duur)+'</span><small>'+esc(wie)+(isBinnenkort(x.les)?' · binnenkort':'')+'</small></button>';
+        'title="'+esc(lesNaam(x.les,x.stijl)+' · '+tijdTekst(x.min)+' – '+tijdTekst(x.min+l.duur)+' · '+wie+(mag?'':' (niet van jou)'))+'" aria-label="'+esc(l.naam+' op '+DAGEN[d]+' om '+tijdTekst(x.min)+' met '+wie)+'">'+
+        '<b>'+l.icon+' '+esc(x.stijl||l.kort||l.naam)+'</b><span>'+tijdTekst(x.min)+' – '+tijdTekst(x.min+l.duur)+'</span><small>'+esc(wie)+(isBinnenkort(x.les)?' · binnenkort':'')+'</small></button>';
     });
     return c+'</div>';
   }).join('')+'</div></div>';
@@ -122,7 +126,7 @@ RE.koppel=function(el){
     b.addEventListener('click',function(){
       if(ed.geenKlik){ed.geenKlik=false;return;}
       if(b.dataset.uid){var x=ed.zoek(+b.dataset.uid);if(vast)showToast('Dit uur is van '+ed.lesgever(x)+'. Je kan enkel je eigen uren verschuiven.');else ed.openBewerk(x.uid);}
-      else ed.openNieuw(b.dataset.les);
+      else ed.openNieuw(b.dataset.les,null,null,b.dataset.stijl);
     });
     if(b.dataset.uid&&!vast)b.addEventListener('keydown',function(e){ed.toets(e);});
   });
@@ -140,7 +144,7 @@ RE.start=function(e){
   var grijp=x?Math.max(0,(e.clientY-el.getBoundingClientRect().top)/RE_PPM):Math.min(15,LESSEN[les].duur/2);
   var beweeg=function(ev){ed.beweeg(ev);},stop=function(ev){
     el.removeEventListener('pointermove',beweeg);el.removeEventListener('pointerup',stop);el.removeEventListener('pointercancel',stop);ed.stop(ev);};
-  ed.sleep={el:el,uid:uid,les:les,grijp:grijp,x0:e.clientX,y0:e.clientY,bezig:false,doel:null};
+  ed.sleep={el:el,uid:uid,les:les,stijl:el.dataset.stijl||'',grijp:grijp,x0:e.clientX,y0:e.clientY,bezig:false,doel:null};
   try{el.setPointerCapture(e.pointerId);}catch(_){}
   el.addEventListener('pointermove',beweeg);el.addEventListener('pointerup',stop);el.addEventListener('pointercancel',stop);
 };
@@ -182,10 +186,10 @@ RE.stop=function(e){
   if(s.doel.fout){showToast('⚠️ '+s.doel.fout);return;}
   ed.stap();
   if(s.uid){var x=ed.zoek(s.uid);x.dow=s.doel.dow;x.min=s.doel.min;}
-  else ed.werk.push(ed.nieuwItem(s.doel.dow,s.doel.min,s.les));
+  else ed.werk.push(ed.nieuwItem(s.doel.dow,s.doel.min,s.les,s.stijl));
   ed.ververs();
 };
-RE.nieuwItem=function(dow,min,les){var e=this.o.eigenaar;return {uid:++this.volg,dow:dow,min:min,les:les,tid:e?e.tid:'',tnaam:e?e.tnaam:''};};
+RE.nieuwItem=function(dow,min,les,stijl){var e=this.o.eigenaar;return {uid:++this.volg,dow:dow,min:min,les:les,tid:e?e.tid:'',tnaam:e?e.tnaam:'',stijl:stijl||''};};
 RE.verwijder=function(uid){
   var x=this.zoek(uid);if(!x)return;
   this.stap();this.werk=this.werk.filter(function(i){return i.uid!==uid;});
@@ -207,13 +211,13 @@ RE.toets=function(e){
 /* Venster: les toevoegen of wijzigen */
 RE.venster=function(html){document.getElementById('reModalInhoud').innerHTML=html;RoosterEditor.venster().classList.add('open');};
 RE.sluit=function(){RoosterEditor.venster().classList.remove('open');};
-RE.openNieuw=function(les,dow,min){
+RE.openNieuw=function(les,dow,min,stijl){
   var ed=this;ed.bewerkUid=null;les=les||ed.o.lessen[0];
   if(dow==null){   // eerste vrije plaats vanaf maandag
     outer:for(var i=0;i<7;i++)for(var m=RE_START;m<RE_EIND;m+=RE_SNAP)if(!ed.probleem(RE_DAGVOLG[i],m,les)){dow=RE_DAGVOLG[i];min=m;break outer;}
     if(dow==null){dow=1;min=naarMin(OPENINGSUREN[1][0]);}
   }
-  var e=ed.o.eigenaar;ed.toonVenster('Les toevoegen',{les:les,dow:dow,min:min,tid:e?e.tid:''});
+  var e=ed.o.eigenaar;ed.toonVenster('Les toevoegen',{les:les,dow:dow,min:min,tid:e?e.tid:'',stijl:stijl||''});
 };
 RE.openBewerk=function(uid){var x=this.zoek(uid);if(!x)return;this.bewerkUid=uid;this.toonVenster('Les wijzigen',x);};
 RE.toonVenster=function(titel,x){
@@ -221,6 +225,7 @@ RE.toonVenster=function(titel,x){
   ed.venster('<h2 class="card-title">'+titel+'</h2>'+
     '<div class="fg"><label for="re-les">Les</label><select id="re-les">'+lessen.map(function(k){
       return '<option value="'+k+'"'+(k===x.les?' selected':'')+'>'+LESSEN[k].icon+' '+esc(LESSEN[k].naam)+' · '+LESSEN[k].duur+' min</option>';}).join('')+'</select></div>'+
+    '<div class="fg" id="re-stijl-v"><label for="re-stijl">Soort yoga</label><select id="re-stijl"></select></div>'+
     (ed.o.lesgevers?'<div class="fg"><label for="re-wie">Lesgever</label><select id="re-wie"></select></div>':'')+
     '<div class="m-rij"><div class="fg"><label for="re-dag">Dag</label><select id="re-dag">'+RE_DAGVOLG.map(function(d){return '<option value="'+d+'"'+(d===x.dow?' selected':'')+'>'+DAGEN[d]+'</option>';}).join('')+'</select></div>'+
     '<div class="fg"><label for="re-uur">Start</label><select id="re-uur">'+(function(){var s='';for(var m=RE_START;m<RE_EIND;m+=RE_SNAP)s+='<option value="'+m+'"'+(m===x.min?' selected':'')+'>'+tijdTekst(m)+'</option>';return s;})()+'</select></div></div>'+
@@ -234,13 +239,20 @@ RE.toonVenster=function(titel,x){
     s.innerHTML=h+l.map(function(p){return '<option value="'+p.id+'"'+(p.id===tid?' selected':'')+'>'+esc(p.naam)+'</option>';}).join('');
   };
   vulWie(x.tid);
-  ['re-les','re-dag','re-uur','re-wie'].forEach(function(id){var s=document.getElementById(id);if(s)s.addEventListener('change',function(){if(id==='re-les')vulWie(document.getElementById('re-wie')&&document.getElementById('re-wie').value);ed.vensterCheck();});});
+  var vulStijl=function(st){
+    var les=document.getElementById('re-les').value,l=LESSEN[les].stijlen||[];
+    document.getElementById('re-stijl-v').style.display=l.length?'':'none';
+    document.getElementById('re-stijl').innerHTML='<option value="">'+esc(LESSEN[les].naam)+' (geen soort)</option>'+
+      l.map(function(s){return '<option value="'+esc(s.naam)+'"'+(s.naam===st?' selected':'')+'>'+esc(s.naam)+' – '+esc(s.uitleg)+'</option>';}).join('');
+  };
+  vulStijl(x.stijl);
+  ['re-les','re-dag','re-uur','re-wie','re-stijl'].forEach(function(id){var s=document.getElementById(id);if(s)s.addEventListener('change',function(){if(id==='re-les'){vulWie(document.getElementById('re-wie')&&document.getElementById('re-wie').value);vulStijl(document.getElementById('re-stijl').value);}ed.vensterCheck();});});
   document.getElementById('re-annuleer').onclick=function(){ed.sluit();};
   document.getElementById('re-ok').onclick=function(){ed.vensterOk();};
   if(ed.bewerkUid)document.getElementById('re-weg').onclick=function(){var u=ed.bewerkUid;ed.sluit();ed.verwijder(u);};
   ed.vensterCheck();document.getElementById('re-les').focus();
 };
-RE.vensterWaarden=function(){var w=document.getElementById('re-wie');return {les:document.getElementById('re-les').value,dow:+document.getElementById('re-dag').value,min:+document.getElementById('re-uur').value,wie:w?w.value:null};};
+RE.vensterWaarden=function(){var w=document.getElementById('re-wie');return {les:document.getElementById('re-les').value,stijl:document.getElementById('re-stijl').value,dow:+document.getElementById('re-dag').value,min:+document.getElementById('re-uur').value,wie:w?w.value:null};};
 RE.vensterCheck=function(){
   var v=this.vensterWaarden(),f=this.probleem(v.dow,v.min,v.les,this.bewerkUid),el=document.getElementById('re-fout');
   el.textContent=f?'✕ '+f:'✓ '+DAGEN[v.dow]+' '+tijdTekst(v.min)+' – '+tijdTekst(v.min+LESSEN[v.les].duur);
@@ -251,7 +263,7 @@ RE.vensterOk=function(){
   var ed=this,v=ed.vensterWaarden();if(ed.probleem(v.dow,v.min,v.les,ed.bewerkUid))return;
   ed.stap();
   var x=ed.bewerkUid?ed.zoek(ed.bewerkUid):ed.nieuwItem(v.dow,v.min,v.les);
-  x.les=v.les;x.dow=v.dow;x.min=v.min;
+  x.les=v.les;x.dow=v.dow;x.min=v.min;x.stijl=stijlGeldig(v.les,v.stijl)?v.stijl:'';
   if(v.wie!==null){   // beheerder koos een lesgever
     var p=v.wie&&ed.o.lesgevers(v.les).find(function(p){return p.id===v.wie;});
     x.tid=v.wie||'';x.tnaam=p?p.naam:(v.wie?x.tnaam:'');

@@ -12,7 +12,14 @@ var SUPABASE_KEY='sb_publishable_baeXtXYJnKGuO265hWRkhw_iK4Q6NhO';
    'kort' is de korte naam in de maandkalender op de hoofdpagina.
    binnenkort:true = staat al op de website, maar online boeken kan nog niet ("binnenkort"). */
 var LESSEN={
-  yoga:{naam:'Yoga',kort:'Yoga',icon:'🧘',duur:60,trainer:'Gwen Deryck',max:25,prijs:15,soort:'Groepsles'},
+  yoga:{naam:'Yoga',kort:'Yoga',icon:'🧘',duur:60,trainer:'Gwen Deryck',max:25,prijs:15,soort:'Groepsles',
+    // soorten yoga: de lesgever kiest per wekelijkse les welke soort het is (Mijn account of Beheer → Rooster)
+    stijlen:[
+      {naam:'Hatha yoga',uitleg:'Rustig: houdingen en ademhaling'},
+      {naam:'Vinyasa flow',uitleg:'Vloeiend en wat actiever'},
+      {naam:'Yin yoga',uitleg:'Zacht en lang aanhouden, ontspannend'},
+      {naam:'Yoga Nidra',uitleg:'Liggend, diepe ontspanning'}
+    ]},
   kine:{naam:'Kinesitherapie',kort:'Kine',icon:'💆',duur:45,trainer:'Onze kinesist',max:1,prijs:40,soort:'Individuele begeleiding',binnenkort:true},
   groep:{naam:'Groepsles',kort:'Groep',icon:'🤸',duur:60,trainer:'Pieter',max:12,prijs:15,soort:'Groepsles',binnenkort:true}
 };
@@ -26,7 +33,7 @@ var BEURTENKAART={
 function metBeurt(lesId){return BEURTENKAART.lessen.indexOf(lesId)>=0;}
 // Kan dit online geboekt worden, of is het "binnenkort"?
 function isBinnenkort(lesId){return lesId==='zaal'?!!ZAAL.binnenkort:!!(LESSEN[lesId]||{}).binnenkort;}
-// Weekdag (0 = zondag … 6 = zaterdag) → lessen: [uur, les, (id lesgever), (naam lesgever)].
+// Weekdag (0 = zondag … 6 = zaterdag) → lessen: [uur, les, (id lesgever), (naam lesgever), (soort, bv. 'Yin yoga')].
 // Het echte rooster staat in de database: de beheerder past het aan in Beheer → Rooster en
 // goedgekeurde lesgevers passen hun eigen uren aan bij Mijn account (slepen met de muis).
 // Dit is enkel een reserve voor als de database even niet bereikbaar is.
@@ -47,10 +54,17 @@ function zetRooster(r){
   Object.keys(r||{}).forEach(function(k){
     if(!/^[0-6]$/.test(k)||!Array.isArray(r[k]))return;
     var l=r[k].filter(function(x){return Array.isArray(x)&&/^([01]\d|2[0-3]):[0-5]\d$/.test(x[0])&&LESSEN[x[1]];})
-      .map(function(x){return typeof x[2]==='string'&&x[2]?[x[0],x[1],x[2],String(x[3]||'')]:[x[0],x[1]];}).sort(function(a,b){return a[0]<b[0]?-1:a[0]>b[0]?1:0;});
+      .map(function(x){var st=stijlGeldig(x[1],x[4])?x[4]:'',t=typeof x[2]==='string'?x[2]:'';
+        return st?[x[0],x[1],t,t?String(x[3]||''):'',st]:t?[x[0],x[1],t,String(x[3]||'')]:[x[0],x[1]];}).sort(function(a,b){return a[0]<b[0]?-1:a[0]>b[0]?1:0;});
     if(l.length)ROOSTER[k]=l;
   });
 }
+// Soort yoga (stijl) van een uur in het rooster, en of die stijl bestaat voor die les
+function stijlGeldig(les,st){return !!(st&&LESSEN[les]&&(LESSEN[les].stijlen||[]).some(function(s){return s.naam===st;}));}
+function stijlVan(x){return x&&stijlGeldig(x[1],x[4])?x[4]:'';}
+function stijlUitleg(les,st){var s=((LESSEN[les]||{}).stijlen||[]).find(function(s){return s.naam===st;});return s?s.uitleg:'';}
+// Naam om te tonen: de soort yoga als die gekozen is, anders de les ("Yoga")
+function lesNaam(lesId,st){return st||(LESSEN[lesId]||{}).naam||lesId;}
 // Wie geeft deze les? (naam uit het rooster, anders de standaard bij de les)
 function lesgeverVan(x){return (x&&x[3])||(LESSEN[x[1]]||{}).trainer||'';}
 // Rooster uit de database halen (één keer per pagina). Lukt het niet, dan blijft het reserverooster staan.
@@ -195,7 +209,7 @@ function parseSlot(id,losjes){
   }
   var p=tijd.split(':');
   var start=new Date(datum.getFullYear(),datum.getMonth(),datum.getDate(),+p[0],+p[1]);
-  return {id:id,datum:datum,tijd:tijd,eind:eindTijd(tijd,les.duur),lesId:lesId,les:les,start:start,trainer:item?lesgeverVan(item):les.trainer};
+  return {id:id,datum:datum,tijd:tijd,eind:eindTijd(tijd,les.duur),lesId:lesId,les:les,start:start,trainer:item?lesgeverVan(item):les.trainer,stijl:stijlVan(item)};
 }
 // Is de zaal van uur:00 tot uur+1:00 vrij (geen overlap met een les)?
 function zaalVrij(datum,uur){
@@ -307,7 +321,7 @@ function magZelfAnnuleren(b,slot){
 }
 function waAnnuleerLink(b,slot){
   slot=slot||parseSlot(b.slotId,true);
-  var t='Hallo! Ik wil graag mijn reservatie annuleren: '+slot.les.naam+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.';
+  var t='Hallo! Ik wil graag mijn reservatie annuleren: '+lesNaam(slot.lesId,slot.stijl)+' op '+fmtDatum(slot.datum)+' om '+slot.tijd+'.';
   return 'https://wa.me/'+REGELS.whatsapp+'?text='+encodeURIComponent(t);
 }
 function fmtUren(u){return (Math.round(u*100)/100).toString().replace('.',',')+' uur';}
@@ -326,7 +340,7 @@ function reservatieRij(b,annuleerFn){
     else if(magZelfAnnuleren(b,s))actie='<button class="res-annuleer" onclick="'+annuleerFn+'(\''+b.id+'\')">'+(b.status==='intern'?'Verwijderen':'Annuleren')+'</button>';
     else actie='<a href="'+waAnnuleerLink(b,s)+'" target="_blank" rel="noopener" title="Minder dan '+REGELS.annulerenTotUurVooraf+' uur op voorhand">Annuleren via WhatsApp ↗</a>';
   }
-  return '<div class="res-rij"><div class="res-info"><b>'+s.les.icon+' '+esc(s.les.naam)+'</b> · '+fmtDatum(s.datum)+' · '+s.tijd+' – '+boekingEind(b,s)+
+  return '<div class="res-rij"><div class="res-info"><b>'+s.les.icon+' '+esc(lesNaam(s.lesId,s.stijl))+'</b> · '+fmtDatum(s.datum)+' · '+s.tijd+' – '+boekingEind(b,s)+
     (b.voorWie?' · voor '+esc(b.voorWie):'')+(b.bedrag&&b.status!=='intern'?' · '+fmtEuro(b.bedrag):'')+'</div>'+
     '<div class="res-acties"><span class="status '+(ok?'betaald':'wacht')+'">'+statusLabel(b)+'</span>'+actie+'</div></div>';
 }
@@ -337,7 +351,8 @@ function reservatieRij(b,annuleerFn){
 function configVoorDatabase(rooster){
   var m=function(o,f){var r={};Object.keys(o).forEach(function(k){r[k]=f(o[k],k);});return r;};
   return {
-    lessen:m(LESSEN,function(l){var x={naam:l.naam,duur:l.duur,max:l.max,prijs:l.prijs};if(l.binnenkort)x.binnenkort=true;return x;}),
+    lessen:m(LESSEN,function(l){var x={naam:l.naam,duur:l.duur,max:l.max,prijs:l.prijs};if(l.binnenkort)x.binnenkort=true;
+      if(l.stijlen)x.stijlen=l.stijlen.map(function(s){return s.naam;});return x;}),
     rooster:rooster||ROOSTER,openingsuren:OPENINGSUREN,gesloten:GESLOTEN,
     regels:{betaaltermijnMin:REGELS.betaaltermijnMin,boekenTotMinVooraf:REGELS.boekenTotMinVooraf,
       annulerenTotUurVooraf:REGELS.annulerenTotUurVooraf,maxUrenPerWeek:REGELS.maxUrenPerWeek,zaalDuren:REGELS.zaalDuren},

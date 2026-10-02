@@ -166,6 +166,7 @@ a.wk-les:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(61,32,7,.1
 .wk-uur{font-size:1.05rem;font-weight:800;}
 .wk-naam{font-size:.8rem;font-weight:700;}
 .wk-wie{font-size:.72rem;color:var(--espresso2);}
+.wk-uitleg{font-size:.7rem;color:var(--espresso2);font-style:italic;line-height:1.3;margin-top:.1rem;}
 .wk-aantal{margin-top:.35rem;font-size:.78rem;color:var(--espresso2);}
 .wk-aantal b{font-size:1.15rem;color:var(--sage);}
 .wk-balk{height:6px;border-radius:50px;background:rgba(61,32,7,.1);overflow:hidden;margin:.25rem 0;}
@@ -976,7 +977,7 @@ function bouwRooster(){
   Object.keys(ROOSTER).forEach(function(dow){
     // enkel lessen die je nu al online kan boeken (de rest staat als "binnenkort" in de legende)
     rooster[dow]=ROOSTER[dow].filter(function(r){return !isBinnenkort(r[1])&&!weekdagGesloten(+dow,naarMin(r[0]),naarMin(r[0])+LESSEN[r[1]].duur);})
-      .map(function(r){return {t:r[1],tijd:r[0],wie:lesgeverVan(r)};});
+      .map(function(r){return {t:r[1],tijd:r[0],wie:lesgeverVan(r),stijl:stijlVan(r)};});
   });
 }
 bouwRooster();
@@ -997,7 +998,7 @@ function renderKal(){
       var t=start.getTime(),voorbij=t-nu<REGELS.boekenTotMinVooraf*60000,aantal=BEZ?(BEZ[e.t+'|'+t]||0):null,max=les.max;
       var vol=aantal!==null&&aantal>=max,pct=aantal===null?0:Math.min(100,Math.round(aantal/max*100));
       var status=voorbij?'Voorbij':aantal===null?'…':vol?'Volzet':max-aantal<=3?'Nog '+(max-aantal)+' plaats'+(max-aantal>1?'en':'')+'!':'Nog '+(max-aantal)+' vrij';
-      var inhoud='<div class="wk-les-top"><span class="wk-uur">'+e.tijd+'</span><span class="wk-naam">'+les.icon+' '+esc(les.naam)+'</span></div>'+
+      var inhoud='<div class="wk-les-top"><span class="wk-uur">'+e.tijd+'</span><span class="wk-naam">'+les.icon+' '+esc(lesNaam(e.t,e.stijl))+'</span></div>'+(e.stijl?'<div class="wk-uitleg">'+esc(stijlUitleg(e.t,e.stijl))+'</div>':'')+
         '<div class="wk-wie">met '+esc(String(e.wie).split(' ')[0])+'</div>'+
         '<div class="wk-aantal"><b>'+(aantal===null?'–':aantal)+'</b> / '+max+' geboekt</div>'+
         '<div class="wk-balk"><i style="width:'+pct+'%"></i></div>'+

@@ -158,7 +158,7 @@ function bezettingOverzicht(){
   var rijen=[];
   for(var i=0;i<7;i++)slotsVoorDag(addDays(weekStart,i)).forEach(function(s){
     var wie=boekingen.filter(function(b){return b.slotId===s.id;});
-    rijen.push('<div class="bz-rij les-'+s.lesId+(isVoorbij(s)?' voorbij':'')+'"><div class="bz-wanneer"><b>'+DAGEN_KORT[s.datum.getDay()]+' '+s.datum.getDate()+'/'+(s.datum.getMonth()+1)+' · '+s.tijd+'</b>'+s.les.icon+' '+esc(s.les.naam)+' · '+esc(s.trainer)+'</div>'+
+    rijen.push('<div class="bz-rij les-'+s.lesId+(isVoorbij(s)?' voorbij':'')+'"><div class="bz-wanneer"><b>'+DAGEN_KORT[s.datum.getDay()]+' '+s.datum.getDate()+'/'+(s.datum.getMonth()+1)+' · '+s.tijd+'</b>'+s.les.icon+' '+esc(lesNaam(s.lesId,s.stijl))+' · '+esc(s.trainer)+'</div>'+
       bezettingHtml(wie.length,s.les.max)+'<div class="bz-wie">'+(wie.length?wie.map(function(b){return esc((b.profiel&&b.profiel.naam)||'?')+(b.voorWie?' (voor '+esc(b.voorWie)+')':'');}).join(', '):'<i>nog niemand</i>')+'</div></div>');
   });
   return '<details class="card bz" open><summary>📊 Bezetting van de lessen deze week</summary>'+(rijen.length?rijen.join(''):'<div class="leeg">Geen lessen in deze week.</div>')+'</details>';

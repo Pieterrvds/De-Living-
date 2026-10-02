@@ -414,7 +414,7 @@ begin
 end $$;
 
 -- Goedgekeurde lesgever: eigen uren in het rooster zetten (Mijn account → Mijn uren).
--- uren = [[weekdag 0–6, 'HH:MM', les], …]. Enkel de eigen uren worden vervangen; lessen van
+-- uren = [[weekdag 0–6, 'HH:MM', les, (soort, bv. 'Yin yoga')], …]. Enkel de eigen uren worden vervangen; lessen van
 -- anderen blijven staan. Openingsuren, gesloten periodes en overlap worden gecontroleerd.
 create or replace function public.zet_mijn_uren(uren jsonb) returns void
 language plpgsql security definer set search_path = public as $$
@@ -429,6 +429,7 @@ declare
   s    int;
   e    int;
   dag  text[] := array['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+  st   text;
 begin
   select * into p from profielen where id = auth.uid();
   if p.id is null then raise exception 'Meld je eerst aan.'; end if;
@@ -472,7 +473,13 @@ begin
         raise exception 'Op % om % is er al een les (% om %).', dag[d + 1], x->>1, c->'lessen'->(y->>1)->>'naam', y->>0;
       end if;
     end loop;
-    r := jsonb_set(r, array[d::text], (r->(d::text)) || jsonb_build_array(jsonb_build_array(x->>1, x->>2, p.id::text, p.naam)));
+    st := nullif(btrim(coalesce(x->>3, '')), '');
+    if st is not null and not coalesce(c->'lessen'->(x->>2)->'stijlen', '[]'::jsonb) ? st then
+      raise exception 'Onbekende soort: %.', st;
+    end if;
+    r := jsonb_set(r, array[d::text], (r->(d::text)) || jsonb_build_array(
+           case when st is null then jsonb_build_array(x->>1, x->>2, p.id::text, p.naam)
+                else jsonb_build_array(x->>1, x->>2, p.id::text, p.naam, st) end));
   end loop;
   -- per dag op uur sorteren
   for d in 0..6 loop
@@ -659,7 +666,7 @@ grant execute on function public.bezetting(timestamptz, timestamptz) to anon, au
 -- ── STARTWAARDEN ───────────────────────────────────────────────────────
 insert into public.beheerders (email) values ('pieterv-d-s@hotmail.com') on conflict do nothing;
 
-insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":25,"prijs":15},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40,"binnenkort":true},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15,"binnenkort":true}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["09:00","18:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["09:00","18:00"]},"gesloten":{"0":[["13:00","24:00"]],"1":[["19:00","24:00"]],"4":[["19:00","24:00"]]},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20,"binnenkort":true},"beurtenkaart":{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]}}}'::jsonb)
+insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":25,"prijs":15,"stijlen":["Hatha yoga","Vinyasa flow","Yin yoga","Yoga Nidra"]},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40,"binnenkort":true},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15,"binnenkort":true}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["09:00","18:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["09:00","18:00"]},"gesloten":{"0":[["13:00","24:00"]],"1":[["19:00","24:00"]],"4":[["19:00","24:00"]]},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20,"binnenkort":true},"beurtenkaart":{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]}}}'::jsonb)
 on conflict (id) do nothing;
 
 -- ── OMSCHAKELING oktober 2026 ──────────────────────────────────────────
@@ -695,3 +702,9 @@ update public.instellingen set
     || jsonb_build_object('beurtenkaart', '{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]}'::jsonb),
   bijgewerkt = now()
 where id = 1 and not (config ? 'beurtenkaart');
+
+-- ── OMSCHAKELING oktober 2026 (3): soorten yoga ───────────────────────
+-- De lesgever kiest per wekelijkse les de soort yoga. Gebeurt één keer.
+update public.instellingen
+   set config = jsonb_set(config, '{lessen,yoga,stijlen}', '["Hatha yoga", "Vinyasa flow", "Yin yoga", "Yoga Nidra"]'::jsonb), bijgewerkt = now()
+ where id = 1 and config->'lessen' ? 'yoga' and not (config->'lessen'->'yoga' ? 'stijlen');

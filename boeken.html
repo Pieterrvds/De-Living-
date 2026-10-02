@@ -182,7 +182,7 @@ function slotKnop(slot,mijn,i){
   // groepslessen: balkje met hoeveel plaatsen al bezet zijn
   var bez=!voorbij&&slot.les.max>1?bezettingHtml(bezetting(slot),slot.les.max):'';
   return '<button class="slot les-'+slot.lesId+(isMijn?' mine':'')+'" style="animation-delay:'+(i*0.04)+'s" '+(voorbij?'disabled':'')+
-    ' onclick="openSlot(\''+slot.id+'\')">'+tag+slot.les.icon+' '+esc(slot.les.naam)+
+    ' onclick="openSlot(\''+slot.id+'\')">'+tag+slot.les.icon+' '+esc(lesNaam(slot.lesId,slot.stijl))+
     '<small>'+slot.tijd+' – '+slot.eind+' · '+esc(String(slot.trainer||'').split(' ')[0])+'</small>'+bez+'</button>';
 }
 
@@ -370,7 +370,7 @@ function openSlot(id){
   el.className='modal les-'+s.lesId;
   el.innerHTML=
     '<div class="modal-top"><button class="modal-close" onclick="sluitModal()" aria-label="Sluiten">✕</button>'+
-    '<div class="modal-icon">'+s.les.icon+'</div><div class="modal-soort">'+esc(s.les.soort)+'</div><div class="modal-title">'+esc(s.les.naam)+'</div>'+
+    '<div class="modal-icon">'+s.les.icon+'</div><div class="modal-soort">'+esc(s.les.soort)+'</div><div class="modal-title">'+esc(lesNaam(s.lesId,s.stijl))+'</div>'+
     '<div class="modal-sub">'+fmtDatum(s.datum)+' · '+s.tijd+' – '+s.eind+'</div></div>'+
     '<div class="modal-body">'+
     '<div class="detail"><span>Begeleiding</span><b>'+esc(s.trainer||s.les.trainer)+'</b></div>'+
