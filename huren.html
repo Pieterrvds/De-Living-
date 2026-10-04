@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Huur ons café met terras (en eventueel de grote zaal) in Aalst voor je trouwfeest, babyborrel, verjaardag, jubileum of vergadering.">
+<meta name="theme-color" content="#FDF8EE">
+<title>Café huren voor je feest – La Vie en Rose</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700;800&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/boeken.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+<script src="assets/db.js"></script>
+<style>
+/* Café huren: vragenlijst in stappen – groot en duidelijk, gemaakt voor de gsm */
+.hu{padding:94px 16px 3rem;font-size:1.125rem;line-height:1.55;color:#2E1A08;}
+.hu-wrap{max-width:620px;margin:0 auto;}
+.hu-kop{text-align:center;margin:.25rem 0 1.25rem;}
+.hu-ic{font-size:2.6rem;line-height:1;}
+.hu-kop h1{font-family:'Playfair Display',serif;font-weight:700;font-size:2.1rem;line-height:1.15;color:var(--espresso);margin-top:.35rem;}
+.hu-kop p{color:var(--espresso2);margin-top:.4rem;font-size:1.05rem;}
+.ruimtes{display:flex;flex-wrap:wrap;justify-content:center;gap:.45rem;margin-top:.9rem;}
+.ruimte-chip{background:#fff;border:2px solid rgba(61,32,7,.12);border-radius:50px;padding:.3rem .85rem;font-size:.95rem;font-weight:700;color:var(--espresso);}
+.ruimte-chip.opt{border-style:dashed;}
+.kaart{background:#fff;border:2px solid rgba(61,32,7,.14);border-radius:22px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 6px 24px rgba(61,32,7,.07);}
+.kaart p+p{margin-top:.6rem;}
+.hu-titel{font-size:1.3rem;font-weight:800;color:var(--espresso);margin:1.75rem 0 .75rem;}
+/* stappen */
+.voortgang{display:flex;gap:.35rem;margin:0 0 .5rem;}
+.voortgang i{flex:1;height:7px;border-radius:7px;background:rgba(61,32,7,.12);}
+.voortgang i.af{background:#3F6B34;}
+.voortgang i.nu{background:#C07878;}
+.stap-nr{font-size:.95rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#7A4A2A;}
+.hstap h2{font-family:'Playfair Display',serif;font-size:1.75rem;font-weight:700;color:var(--espresso);line-height:1.2;margin:.2rem 0 .4rem;}
+.hstap .uitleg{color:var(--espresso2);margin-bottom:1rem;}
+.vraag{font-weight:800;font-size:1.1rem;color:var(--espresso);margin:1.4rem 0 .55rem;}
+.vraag small{font-weight:600;color:var(--muted);}
+/* keuzetegels */
+.tegels{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem;}
+.tegel{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.2rem;min-height:100px;padding:.8rem .6rem;background:#fff;border:2px solid rgba(61,32,7,.18);border-radius:18px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:1.05rem;font-weight:800;color:var(--espresso);transition:border-color .15s,background .15s,transform .15s;}
+.tegel .ic{font-size:2rem;line-height:1;}
+.tegel small{font-weight:600;font-size:.85rem;color:var(--muted);}
+.tegel:hover{border-color:#C07878;}
+.tegel.aan{border-color:#3F6B34;background:#F3F8EF;box-shadow:0 0 0 3px rgba(63,107,52,.18);}
+.opties{display:flex;flex-direction:column;gap:.55rem;}
+.optie{display:flex;align-items:flex-start;gap:.8rem;padding:.9rem 1rem;background:#fff;border:2px solid rgba(61,32,7,.18);border-radius:16px;cursor:pointer;text-align:left;font-family:'Nunito',sans-serif;font-size:1.05rem;color:#2E1A08;width:100%;}
+.optie .ic{font-size:1.6rem;line-height:1.2;flex-shrink:0;}
+.optie b{display:block;color:var(--espresso);font-size:1.1rem;}
+.optie span.sub{display:block;color:var(--espresso2);font-size:.97rem;}
+.optie .prijs{display:inline-block;margin-top:.35rem;font-weight:800;color:#3F6B34;}
+.optie.aan{border-color:#3F6B34;background:#F3F8EF;box-shadow:0 0 0 3px rgba(63,107,52,.18);}
+.optie .vink{margin-left:auto;width:28px;height:28px;border-radius:50%;border:2px solid rgba(61,32,7,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;}
+.optie.aan .vink{background:#3F6B34;border-color:#3F6B34;}
+.optie.aan .vink::after{content:'✓';}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;}
+.chip-k{padding:.6rem .95rem;border-radius:50px;background:#fff;border:2px solid rgba(61,32,7,.2);font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;color:var(--espresso);cursor:pointer;min-height:48px;}
+.chip-k.aan{background:#3F6B34;border-color:#3F6B34;color:#fff;}
+.tegel:focus-visible,.optie:focus-visible,.chip-k:focus-visible,.knop-groot:focus-visible,.veld input:focus-visible,.veld select:focus-visible,.veld textarea:focus-visible{outline:3px solid #1D4ED8;outline-offset:3px;}
+/* formulieren */
+.veld{margin-bottom:1rem;}
+.veld label{display:block;font-weight:800;margin-bottom:.35rem;font-size:1.05rem;}
+.veld input,.veld select,.veld textarea{width:100%;min-height:56px;font-family:'Nunito',sans-serif;font-size:1.15rem;padding:.65rem .9rem;border:2px solid rgba(61,32,7,.35);border-radius:14px;background:#fff;color:#2E1A08;}
+.veld textarea{min-height:110px;resize:vertical;line-height:1.45;}
+.veld input:focus,.veld select:focus,.veld textarea:focus{border-color:#3F6B34;outline:none;box-shadow:0 0 0 4px rgba(63,107,52,.2);}
+.veld .hint{font-size:.95rem;color:var(--espresso2);margin-top:.3rem;}
+.rij2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.vast{background:#F7F1E6;border-radius:14px;padding:.7rem .9rem;font-weight:700;}
+.akkoord{display:flex;gap:.75rem;align-items:flex-start;padding:1rem;border-radius:16px;background:#FFF6E0;border:2px solid #E3C77A;cursor:pointer;font-weight:600;color:#5A3E08;}
+.akkoord input{width:26px;height:26px;flex-shrink:0;margin-top:.15rem;accent-color:#3F6B34;}
+/* beschikbaarheid */
+.dagbalk{margin:.4rem 0 .3rem;}
+.dagbalk-baan{position:relative;height:38px;border-radius:12px;background:#EBF2E5;overflow:hidden;border:2px solid rgba(63,107,52,.25);}
+.dagbalk-baan .bz{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,#C9A3A3 0 6px,#B98C8C 6px 12px);}
+.dagbalk-baan .kz{position:absolute;top:5px;bottom:5px;border-radius:8px;background:rgba(63,107,52,.85);border:2px solid #2F5226;}
+.dagbalk-baan .kz.botst{background:rgba(158,59,59,.85);border-color:#7A2E2E;}
+.dagbalk-baan .nacht{position:absolute;top:0;bottom:0;border-left:2px dashed rgba(61,32,7,.35);}
+.dagbalk-uren{display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;color:var(--muted);margin-top:.2rem;}
+.legende{display:flex;flex-wrap:wrap;gap:.9rem;font-size:.9rem;color:var(--espresso2);margin-top:.4rem;}
+.legende i{display:inline-block;width:16px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:.3rem;}
+.bezet-lijst{margin:.6rem 0 0 0;list-style:none;font-size:1rem;color:var(--espresso2);}
+.bezet-lijst li{padding:.15rem 0;}
+.melding{margin-top:.9rem;padding:.9rem 1rem;border-radius:16px;font-weight:700;}
+.melding.ok{background:#EBF2E5;border:2px solid #3F6B34;color:#2F5226;}
+.melding.nee{background:#FBF0EE;border:2px solid #9E3B3B;color:#7A2E2E;}
+.melding.info{background:#F7F1E6;border:2px solid rgba(61,32,7,.15);color:var(--espresso2);font-weight:600;}
+/* knoppen */
+.knop-groot{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;min-height:60px;padding:.85rem 1.2rem;margin-top:.75rem;border-radius:16px;border:none;font-family:'Nunito',sans-serif;font-size:1.15rem;font-weight:800;cursor:pointer;text-decoration:none;text-align:center;}
+.knop-groot.groen{background:#3F6B34;color:#fff;box-shadow:0 6px 18px rgba(63,107,52,.28);}
+.knop-groot.groen:active{background:#2F5226;}
+.knop-groot.wit{background:#fff;color:var(--espresso);border:2px solid rgba(61,32,7,.35);}
+.knop-groot.rood{background:#9E3B3B;color:#fff;}
+.knop-groot:disabled{opacity:.6;cursor:wait;}
+.stap-knoppen{display:flex;gap:.75rem;margin-top:1.25rem;}
+.stap-knoppen .knop-groot{margin-top:0;}
+.stap-knoppen .terug{flex:0 0 34%;white-space:nowrap;padding-left:.6rem;padding-right:.6rem;}
+.knop-link{display:inline-block;background:none;border:none;padding:.6rem 0;min-height:48px;font-family:'Nunito',sans-serif;font-size:1.05rem;font-weight:800;color:#7A2E2E;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+.fout{color:#9E3B3B;font-weight:800;min-height:1.2em;margin:.5rem 0 0;}
+/* overzicht en aanvragen */
+.ovz{list-style:none;}
+.ovz li{display:flex;gap:.75rem;padding:.55rem 0;border-bottom:1px solid rgba(61,32,7,.1);}
+.ovz li:last-child{border-bottom:none;}
+.ovz .k{flex:0 0 38%;font-weight:800;color:var(--espresso);}
+.ovz .w{flex:1;color:#2E1A08;word-break:break-word;}
+.aanvraag .st{display:inline-block;font-weight:800;font-size:.95rem;padding:.2rem .75rem;border-radius:50px;margin-bottom:.4rem;}
+.st.aangevraagd{background:#FFF6E0;color:#8A5A12;}
+.st.bevestigd{background:#EBF2E5;color:#2F5226;}
+.st.geweigerd,.st.geannuleerd{background:#FBF0EE;color:#9E3B3B;}
+.st.ingetrokken{background:#F1ECE4;color:var(--muted);}
+.aanvraag .wat{font-size:1.2rem;font-weight:800;color:var(--espresso);}
+.aanvraag .antw{margin-top:.5rem;padding:.7rem .9rem;border-radius:14px;background:#F7F1E6;font-style:italic;}
+.klaar-ok{width:84px;height:84px;border-radius:50%;background:#3F6B34;color:#fff;font-size:2.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;}
+.hu-hulp{margin-top:2.25rem;text-align:center;}
+.hu-hulp h2{font-size:1.3rem;font-weight:800;color:var(--espresso);}
+.klein{font-size:1rem;color:var(--espresso2);margin-top:1rem;}
+.klein a{color:#7A2E2E;font-weight:700;}
+.leeg{color:var(--espresso2);text-align:center;padding:1rem 0;}
+@media(max-width:420px){.rij2{grid-template-columns:1fr;}.tegels{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body data-rustig>
+<script src="assets/site.js"></script>
+
+<main class="hu">
+  <div class="hu-wrap">
+    <header class="hu-kop">
+      <div class="hu-ic" aria-hidden="true">🎉</div>
+      <h1>Ons café huren voor je feest</h1>
+      <p>Trouwfeest, babyborrel, verjaardag, jubileum of vergadering: vier het bij La Vie en Rose in Aalst.</p>
+      <div class="ruimtes" id="ruimtes"></div>
+    </header>
+
+    <div id="mijn" aria-live="polite"></div>
+    <div id="stap" aria-live="polite"><p class="leeg">Even geduld…</p></div>
+
+    <section class="hu-hulp">
+      <h2>Vragen?</h2>
+      <p>Twijfel je over iets? Stuur ons gerust een berichtje.</p>
+      <a class="knop-groot wit" id="hulpWa" href="#" target="_blank" rel="noopener">💬 WhatsApp naar La Vie en Rose</a>
+      <p class="klein" id="huWie"></p>
+      <p class="klein"><a href="index.html">Naar de website van La Vie en Rose</a></p>
+    </section>
+  </div>
+</main>
+
+<script>
+/* ── GEGEVENS ── */
+var CONCEPT='lvr-huren';           // antwoorden bewaren (bv. als je even moet aanmelden)
+var STAPPEN=5;
+var user=null,stap=1,mijn=[],vrijStatus=null,vrijTeller=0,bezetDag=[],bezig=false;
+var A={soort:'',metZaal:null,gasten:'',kinderen:'',datum:'',van:'',tot:'',opstelling:'',catering:'',drank:'',extras:[],gelegenheid:'',opmerkingen:'',naam:'',telefoon:'',bedrijf:'',btw:'',akkoord:false};
+
+var OPSTELLING=[
+  {id:'staand',naam:'Staande receptie',icon:'🥂',sub:'Hoge tafels, gezellig rondlopen'},
+  {id:'zittend',naam:'Zittend aan tafels',icon:'🍽️',sub:'Bijvoorbeeld voor een diner of koffietafel'},
+  {id:'vergadering',naam:'Vergaderopstelling',icon:'💼',sub:'Tafels met stoelen, zicht op een scherm'},
+  {id:'gemengd',naam:'Gemengd',icon:'🔀',sub:'Deels zitten, deels staan'}
+];
+var CATERING=[
+  {id:'drank',naam:'Enkel drank van onze bar',icon:'🍹'},
+  {id:'hapjes',naam:'Drank en hapjes',icon:'🧆'},
+  {id:'buffet',naam:'Drank en een volledig buffet of diner',icon:'🍲'},
+  {id:'traiteur',naam:'Ik breng zelf een traiteur mee',icon:'🧑‍🍳'},
+  {id:'weetniet',naam:'Weet ik nog niet, ik wil graag advies',icon:'💬'}
+];
+var DRANK=[
+  {id:'verbruik',naam:'Afrekenen op verbruik',sub:'Je betaalt achteraf wat er gedronken is'},
+  {id:'forfait',naam:'Drankforfait per persoon',sub:'Vaste prijs per gast, onbeperkt drinken'},
+  {id:'weetniet',naam:'Weet ik nog niet',sub:'We bespreken het samen'}
+];
+var EXTRAS=[
+  {id:'muziek',naam:'🎵 Muziekinstallatie'},{id:'dj',naam:'🎧 Eigen DJ of band'},{id:'beamer',naam:'📽️ Beamer en scherm'},
+  {id:'micro',naam:'🎤 Microfoon'},{id:'kinderhoek',naam:'🧸 Kinderhoek'},{id:'decoratie',naam:'🎈 Zelf versieren'},{id:'taart',naam:'🎂 Eigen taart meebrengen'}
+];
+
+document.getElementById('hulpWa').href='https://wa.me/'+REGELS.whatsapp+'?text='+encodeURIComponent('Hallo! Ik heb een vraag over het huren van het café voor een evenement.');
+document.getElementById('ruimtes').innerHTML=
+  '<span class="ruimte-chip">'+VERHUUR.cafe.icon+' Café '+VERHUUR.cafe.m2+' m²</span>'+
+  '<span class="ruimte-chip">'+VERHUUR.terras.icon+' Terras '+VERHUUR.terras.m2+' m² inbegrepen</span>'+
+  '<span class="ruimte-chip opt">'+VERHUUR.zaal.icon+' Grote zaal '+VERHUUR.zaal.m2+' m² (optioneel)</span>';
+
+function bewaar(){try{localStorage.setItem(CONCEPT,JSON.stringify({a:A,stap:stap,t:Date.now()}));}catch(e){}}
+function herstel(){
+  try{var d=JSON.parse(localStorage.getItem(CONCEPT)||'null');
+    if(d&&d.a&&Date.now()-d.t<14*864e5){Object.keys(A).forEach(function(k){if(d.a[k]!==undefined)A[k]=d.a[k];});return d.stap||1;}}catch(e){}
+  return 0;
+}
+function wisConcept(){try{localStorage.removeItem(CONCEPT);}catch(e){}}
+
+/* ── TIJD ── */
+function minNaarTijd(m){m=((m%1440)+1440)%1440;return pad(Math.floor(m/60))+':'+pad(m%60);}
+function datumVan(iso){var p=iso.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function vroegsteDatum(){var d=new Date();d.setHours(0,0,0,0);return addDays(d,VERHUUR.minDagenVooraf+1);}
+function laatsteDatum(){var d=new Date();d.setHours(0,0,0,0);d.setMonth(d.getMonth()+18);return addDays(d,-1);}
+// start- en eindmoment (Date) van de keuze; het einde mag na middernacht vallen
+function periode(){
+  if(!A.datum||A.van===''||A.tot==='')return null;
+  var d=datumVan(A.datum),v=+A.van,t=+A.tot;
+  return {van:new Date(d.getFullYear(),d.getMonth(),d.getDate(),0,v),tot:new Date(d.getFullYear(),d.getMonth(),d.getDate(),0,t)};
+}
+function uren(){return A.van===''||A.tot===''?0:(+A.tot-+A.van)/60;}
+function fmtUren2(u){return (Math.round(u*10)/10).toString().replace('.',',')+(u===1?' uur':' uur');}
+function wanneerTekst(){
+  var p=periode();if(!p)return '';
+  var t=fmtDatum(p.van)+' van '+minNaarTijd(+A.van)+' tot '+minNaarTijd(+A.tot);
+  if(+A.tot>=1440)t+=' (volgende dag)';
+  return t;
+}
+function ruimteTekst(z){return z?'Café, terras en grote zaal ('+(VERHUUR.cafe.m2+VERHUUR.terras.m2+VERHUUR.zaal.m2)+' m²)':'Café en terras ('+(VERHUUR.cafe.m2+VERHUUR.terras.m2)+' m²)';}
+function prijsUurTekst(z){
+  var p=VERHUUR.prijzen;
+  if(p.cafeUur==null||(z&&p.zaalUur==null))return 'Prijs op aanvraag';
+  return fmtEuro(p.cafeUur+(z?p.zaalUur:0))+' per uur';
+}
+function richtprijsTekst(){
+  var pr=verhuurPrijs(uren(),!!A.metZaal);
+  return pr==null?'Prijs op aanvraag':'± '+fmtEuro(pr)+' huur voor '+fmtUren2(uren());
+}
+
+/* ── STAPPEN ── */
+function teken(){
+  var h='<div class="kaart hstap"><div class="voortgang" aria-hidden="true">';
+  for(var i=1;i<=STAPPEN;i++)h+='<i class="'+(i<stap?'af':i===stap?'nu':'')+'"></i>';
+  h+='</div><div class="stap-nr">Stap '+stap+' van '+STAPPEN+'</div>'+[stap1,stap2,stap3,stap4,stap5][stap-1]()+'<div class="fout" id="fout" role="alert"></div>'+knoppen()+'</div>';
+  document.getElementById('stap').innerHTML=h;
+  if(stap===3)naDatum();
+}
+function knoppen(){
+  if(stap===5)return '<div class="stap-knoppen"><button class="knop-groot wit terug" onclick="ga(-1)">← Terug</button>'+
+    (user?'<button class="knop-groot groen" id="verstuurKnop" onclick="verstuur()">Aanvraag versturen</button>':'')+'</div>';
+  return '<div class="stap-knoppen">'+(stap>1?'<button class="knop-groot wit terug" onclick="ga(-1)">← Terug</button>':'')+
+    '<button class="knop-groot groen" onclick="ga(1)">Volgende →</button></div>';
+}
+function ga(r){
+  if(r>0){var f=controle();if(f){document.getElementById('fout').textContent=f;return;}}
+  stap=Math.max(1,Math.min(STAPPEN,stap+r));bewaar();teken();
+  document.getElementById('stap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function controle(){
+  if(stap===1&&!A.soort)return 'Kies wat je wil vieren.';
+  if(stap===2){
+    if(A.metZaal===null)return 'Kies welke ruimte je wil huren.';
+    if(!(+A.gasten>=1&&+A.gasten<=500))return 'Vul in met hoeveel gasten je ongeveer komt.';
+    if(A.kinderen!==''&&!(+A.kinderen>=0&&+A.kinderen<=+A.gasten))return 'Het aantal kinderen kan niet groter zijn dan het aantal gasten.';
+  }
+  if(stap===3){
+    if(!A.datum)return 'Kies een datum.';
+    var d=datumVan(A.datum);
+    if(d<vroegsteDatum())return 'Vraag minstens '+VERHUUR.minDagenVooraf+' dagen op voorhand aan. Kies een latere datum.';
+    if(d>laatsteDatum())return 'Zo ver vooruit kan je nog niet aanvragen.';
+    if(A.van===''||A.tot==='')return 'Kies een begin- en einduur.';
+    if(vrijStatus&&vrijStatus.reden)return vrijStatus.reden;
+  }
+  if(stap===4){
+    if(!A.opstelling)return 'Kies hoe je de ruimte wil inrichten.';
+    if(!A.catering)return 'Kies wat je wil eten en drinken.';
+  }
+  return '';
+}
+function zet(k,v){A[k]=v;bewaar();}
+function kies(k,v,herteken){A[k]=v;bewaar();if(herteken!==false)teken();}
+
+// 1. Wat vier je?
+function stap1(){
+  return '<h2>Wat wil je vieren?</h2><p class="uitleg">Tik op je soort feest of bijeenkomst.</p><div class="tegels">'+
+    VERHUUR.soorten.map(function(s){
+      return '<button class="tegel'+(A.soort===s.naam?' aan':'')+'" aria-pressed="'+(A.soort===s.naam)+'" onclick="kies(\'soort\','+esc(JSON.stringify(s.naam))+',false);ga(1)"><span class="ic" aria-hidden="true">'+s.icon+'</span>'+esc(s.naam)+(s.uitleg?'<small>'+esc(s.uitleg)+'</small>':'')+'</button>';
+    }).join('')+'</div>';
+}
+// 2. Ruimte en gasten
+function stap2(){
+  var opt=function(z){var aan=A.metZaal===z;
+    return '<button class="optie'+(aan?' aan':'')+'" aria-pressed="'+aan+'" onclick="kies(\'metZaal\','+z+')"><span class="ic" aria-hidden="true">'+(z?'🏛️':'☕')+'</span><span>'+
+      '<b>'+(z?'Café + terras + grote zaal':'Café + terras')+'</b>'+
+      '<span class="sub">'+(z?VERHUUR.cafe.m2+' m² café, '+VERHUUR.terras.m2+' m² terras en '+VERHUUR.zaal.m2+' m² extra zaal. Ideaal voor grote groepen of om te dansen.':VERHUUR.cafe.m2+' m² café met '+VERHUUR.terras.m2+' m² terras. Gezellig voor de meeste feesten.')+'</span>'+
+      '<span class="prijs">'+prijsUurTekst(z)+'</span></span><span class="vink" aria-hidden="true"></span></button>';};
+  return '<h2>Welke ruimte?</h2><p class="uitleg">Het terras is altijd inbegrepen. De grote zaal kan je erbij nemen.</p>'+
+    '<div class="opties">'+opt(false)+opt(true)+'</div>'+
+    '<div class="rij2" style="margin-top:1.25rem;"><div class="veld"><label for="gasten">Aantal gasten</label><input id="gasten" type="number" inputmode="numeric" min="1" max="500" placeholder="bv. 60" value="'+esc(A.gasten)+'" oninput="zet(\'gasten\',this.value)"></div>'+
+    '<div class="veld"><label for="kinderen">Waarvan kinderen <small>(mag leeg)</small></label><input id="kinderen" type="number" inputmode="numeric" min="0" max="500" placeholder="bv. 10" value="'+esc(A.kinderen)+'" oninput="zet(\'kinderen\',this.value)"></div></div>'+
+    '<p class="veld hint">Een schatting is goed genoeg.</p>';
+}
+// 3. Datum en uren, met beschikbaarheid
+function stap3(){
+  var opties=function(lijst,gekozen,leeg){return '<option value="">'+leeg+'</option>'+lijst.map(function(m){return '<option value="'+m+'"'+(String(gekozen)===String(m)?' selected':'')+'>'+minNaarTijd(m)+(m>=1440?' (volgende dag)':'')+'</option>';}).join('');};
+  var beg=[];for(var m=7*60;m<=23*60+30;m+=30)beg.push(m);
+  var eind=[];if(A.van!==''){for(var e=+A.van+VERHUUR.minUren*60;e<=+A.van+18*60;e+=30)eind.push(e);}
+  return '<h2>Wanneer?</h2><p class="uitleg">Reken de tijd om te versieren en op te ruimen mee in je uren.</p>'+
+    '<div class="veld"><label for="datum">Datum</label><input id="datum" type="date" min="'+isoDate(vroegsteDatum())+'" max="'+isoDate(laatsteDatum())+'" value="'+esc(A.datum)+'" onchange="zet(\'datum\',this.value);naDatum()">'+
+    '<div class="hint">Minstens '+VERHUUR.minDagenVooraf+' dagen op voorhand.</div></div>'+
+    '<div class="rij2"><div class="veld"><label for="van">Van</label><select id="van" onchange="naVan(this.value)">'+opties(beg,A.van,'Kies…')+'</select></div>'+
+    '<div class="veld"><label for="tot">Tot</label><select id="tot" onchange="zet(\'tot\',this.value);naUren()"'+(A.van===''?' disabled':'')+'>'+opties(eind,A.tot,A.van===''?'Kies eerst "van"':'Kies…')+'</select></div></div>'+
+    '<p class="hint" style="margin-top:-.4rem;">Minstens '+VERHUUR.minUren+' uur.</p>'+
+    '<div id="beschik"></div><div id="vrij"></div>';
+}
+function naVan(v){
+  A.van=v;
+  if(v===''||A.tot===''||+A.tot<+v+VERHUUR.minUren*60||+A.tot>+v+18*60)A.tot=v===''?'':String(+v+Math.max(VERHUUR.minUren,4)*60);
+  bewaar();teken();
+}
+function naUren(){tekenBalk();controleerVrij();}
+function naDatum(){
+  if(!A.datum){document.getElementById('beschik').innerHTML='';document.getElementById('vrij').innerHTML='';return;}
+  var d=datumVan(A.datum),n=++vrijTeller;
+  document.getElementById('beschik').innerHTML='<p class="leeg">Beschikbaarheid laden…</p>';
+  haalVerhuur(d,addDays(d,2)).catch(function(){return [];}).then(function(ev){
+    if(n!==vrijTeller)return;
+    bezetDag=[];
+    // lessen op deze dag en de ochtend erna (zoals de server ze controleert)
+    [0,1].forEach(function(k){var dag=addDays(d,k);
+      (ROOSTER[dag.getDay()]||[]).forEach(function(r){var les=LESSEN[r[1]];if(!les||les.binnenkort)return;
+        var van=k*1440+naarMin(r[0]);bezetDag.push({van:van,tot:van+les.duur,wat:(les.icon||'🧘')+' '+lesNaam(r[1],stijlVan(r))});});});
+    ev.forEach(function(e){var van=Math.round((e.start-d.getTime())/60000),tot=Math.round((e.eind-d.getTime())/60000);bezetDag.push({van:van,tot:tot,wat:'🎉 Ander evenement'});});
+    bezetDag.sort(function(a,b){return a.van-b.van;});
+    tekenBalk();controleerVrij();
+  });
+}
+// Balk van 07:00 tot 07:00 de volgende dag: wat is bezet, wat kies je
+function tekenBalk(){
+  var el=document.getElementById('beschik');if(!el||!A.datum)return;
+  var B0=7*60,B1=B0+1440,pct=function(m){return Math.max(0,Math.min(100,(m-B0)/(B1-B0)*100));};
+  var h='<div class="vraag">Beschikbaarheid op '+fmtDatum(datumVan(A.datum)).toLowerCase()+'</div><div class="dagbalk"><div class="dagbalk-baan" role="img" aria-label="Tijdlijn van de dag">';
+  h+='<span class="nacht" style="left:'+pct(1440)+'%"></span>';
+  bezetDag.forEach(function(b){if(b.tot>B0&&b.van<B1)h+='<span class="bz" style="left:'+pct(b.van)+'%;width:'+(pct(b.tot)-pct(b.van))+'%"></span>';});
+  if(A.van!==''&&A.tot!==''){var botst=bezetDag.some(function(b){return b.van<+A.tot&&b.tot>+A.van;});
+    h+='<span class="kz'+(botst?' botst':'')+'" style="left:'+pct(+A.van)+'%;width:'+(pct(+A.tot)-pct(+A.van))+'%"></span>';}
+  h+='</div><div class="dagbalk-uren"><span>07:00</span><span>12:00</span><span>17:00</span><span>22:00</span><span>03:00</span><span>07:00</span></div></div>'+
+    '<div class="legende"><span><i style="background:#EBF2E5;border:1px solid #3F6B34"></i>Vrij</span><span><i style="background:#B98C8C"></i>Bezet</span>'+(A.van!==''&&A.tot!==''?'<span><i style="background:#3F6B34"></i>Jouw keuze</span>':'')+'</div>';
+  var zicht=bezetDag.filter(function(b){return b.tot>B0&&b.van<B1;});
+  h+=zicht.length?'<ul class="bezet-lijst">'+zicht.map(function(b){return '<li>Niet mogelijk: '+esc(b.wat)+', '+minNaarTijd(b.van)+' – '+minNaarTijd(b.tot)+(b.van>=1440?' (volgende dag)':'')+'</li>';}).join('')+'</ul>':
+    '<p class="bezet-lijst">Er staat nog niets gepland op deze dag. 🎉</p>';
+  el.innerHTML=h;
+}
+// Live controle bij de server (lessen, reservaties en bevestigde evenementen)
+function controleerVrij(){
+  var el=document.getElementById('vrij'),p=periode();if(!el)return;
+  vrijStatus=null;
+  if(!p){el.innerHTML='';return;}
+  var n=++vrijTeller,sleutel=A.datum+'|'+A.van+'|'+A.tot;
+  el.innerHTML='<div class="melding info">Even nakijken of dit vrij is…</div>';
+  DB.verhuur.vrij(p.van,p.tot).then(function(reden){
+    if(n!==vrijTeller)return;
+    vrijStatus={sleutel:sleutel,reden:reden||''};
+    el.innerHTML=reden?'<div class="melding nee">✗ '+esc(reden)+'</div>':
+      '<div class="melding ok">✓ Dit tijdslot is vrij: '+esc(wanneerTekst())+' ('+fmtUren2(uren())+').<br><span style="font-weight:600">'+esc(richtprijsTekst())+'</span></div>';
+  }).catch(function(){if(n===vrijTeller)el.innerHTML='<div class="melding info">We konden niet nakijken of dit vrij is. Je kan toch verder gaan; we controleren het bij je aanvraag.</div>';});
+}
+// 4. Wensen
+function stap4(){
+  var radio=function(k,lijst){return '<div class="opties">'+lijst.map(function(o){var aan=A[k]===o.id;
+    return '<button class="optie'+(aan?' aan':'')+'" aria-pressed="'+aan+'" onclick="kies(\''+k+'\',\''+o.id+'\')">'+(o.icon?'<span class="ic" aria-hidden="true">'+o.icon+'</span>':'')+
+      '<span><b>'+esc(o.naam)+'</b>'+(o.sub?'<span class="sub">'+esc(o.sub)+'</span>':'')+'</span><span class="vink" aria-hidden="true"></span></button>';}).join('')+'</div>';};
+  return '<h2>Jouw wensen</h2><p class="uitleg">Zo kunnen we alles goed voorbereiden. Je kan later nog alles bespreken.</p>'+
+    '<div class="vraag">Hoe wil je de ruimte inrichten?</div>'+radio('opstelling',OPSTELLING)+
+    '<div class="vraag">Eten en drinken</div>'+radio('catering',CATERING)+
+    '<div class="vraag">Hoe wil je de drank regelen?</div>'+radio('drank',DRANK)+
+    '<div class="vraag">Extra’s <small>(tik alles aan wat je nodig hebt)</small></div><div class="chips">'+EXTRAS.map(function(x){var aan=A.extras.indexOf(x.id)>=0;
+      return '<button class="chip-k'+(aan?' aan':'')+'" aria-pressed="'+aan+'" onclick="wisselExtra(\''+x.id+'\')">'+esc(x.naam)+'</button>';}).join('')+'</div>'+
+    '<div class="veld" style="margin-top:1.25rem;"><label for="gelegenheid">Voor wie of wat is het feest? <small>(mag leeg)</small></label><input id="gelegenheid" maxlength="150" placeholder="bv. 50 jaar getrouwd van Jan en Maria" value="'+esc(A.gelegenheid)+'" oninput="zet(\'gelegenheid\',this.value)"></div>'+
+    '<div class="veld"><label for="opmerkingen">Nog iets dat we moeten weten? <small>(mag leeg)</small></label><textarea id="opmerkingen" maxlength="1500" placeholder="bv. allergieën, een rolstoel, het thema van je feest…" oninput="zet(\'opmerkingen\',this.value)">'+esc(A.opmerkingen)+'</textarea></div>';
+}
+function wisselExtra(id){var i=A.extras.indexOf(id);if(i>=0)A.extras.splice(i,1);else A.extras.push(id);bewaar();teken();}
+// 5. Gegevens en overzicht
+function zakelijk(){return A.soort==='Vergadering'||A.soort==='Bedrijfsfeest'||!!A.bedrijf;}
+function stap5(){
+  var h='<h2>Jouw gegevens</h2>';
+  if(!user){
+    return h+'<p class="uitleg">Om je aanvraag te versturen heb je een gratis account nodig. Zo kan je ook zien of je aanvraag bevestigd is. Je antwoorden blijven bewaard.</p>'+
+      '<a class="knop-groot groen" href="login.html?next='+encodeURIComponent('huren.html?stap=5')+'" onclick="bewaar()">Aanmelden</a>'+
+      '<a class="knop-groot wit" href="login.html?tab=registreer&amp;next='+encodeURIComponent('huren.html?stap=5')+'" onclick="bewaar()">Nieuw? Maak een account</a>'+
+      '<div class="vraag" style="margin-top:1.75rem;">Overzicht van je aanvraag</div>'+overzicht();
+  }
+  if(!A.naam)A.naam=user.naam||'';
+  h+='<p class="uitleg">We nemen contact met je op om alles te bespreken.</p>'+
+    '<div class="veld"><label for="naam">Je naam</label><input id="naam" autocomplete="name" value="'+esc(A.naam)+'" oninput="zet(\'naam\',this.value)"></div>'+
+    '<div class="veld"><label for="telefoon">Je gsm-nummer</label><input id="telefoon" type="tel" inputmode="tel" autocomplete="tel" placeholder="bv. 0470 12 34 56" value="'+esc(A.telefoon)+'" oninput="zet(\'telefoon\',this.value)"></div>'+
+    '<div class="veld"><label>Je e-mailadres</label><div class="vast">'+esc(user.email)+'</div></div>';
+  if(zakelijk())h+='<div class="rij2"><div class="veld"><label for="bedrijf">Bedrijf <small>(mag leeg)</small></label><input id="bedrijf" autocomplete="organization" value="'+esc(A.bedrijf)+'" oninput="zet(\'bedrijf\',this.value)"></div>'+
+    '<div class="veld"><label for="btw">Btw-nummer <small>(mag leeg)</small></label><input id="btw" placeholder="BE0123.456.789" value="'+esc(A.btw)+'" oninput="zet(\'btw\',this.value)"></div></div>';
+  else h+='<button class="knop-link" onclick="A.bedrijf=\' \';teken()">Factuur op naam van een bedrijf?</button>';
+  h+='<div class="vraag">Overzicht</div>'+overzicht()+
+    '<label class="akkoord"><input type="checkbox" id="akkoord"'+(A.akkoord?' checked':'')+' onchange="zet(\'akkoord\',this.checked)"><span>Ik begrijp dat dit een <b>aanvraag</b> is. Het tijdslot is pas vastgelegd als La Vie en Rose het bevestigt.</span></label>';
+  return h;
+}
+function naamVan(lijst,id){var o=lijst.find(function(x){return x.id===id;});return o?o.naam:'';}
+function overzicht(){
+  var rij=function(k,w){return w?'<li><span class="k">'+k+'</span><span class="w">'+w+'</span></li>':'';};
+  var s=verhuurSoort(A.soort);
+  return '<ul class="ovz">'+
+    rij('Feest',esc(s.icon+' '+A.soort)+(A.gelegenheid?'<br><small>'+esc(A.gelegenheid)+'</small>':''))+
+    rij('Wanneer',esc(wanneerTekst()))+
+    rij('Ruimte',esc(ruimteTekst(!!A.metZaal)))+
+    rij('Gasten',esc(A.gasten+(A.kinderen!==''&&+A.kinderen>0?' (waarvan '+A.kinderen+' kinderen)':'')))+
+    rij('Inrichting',esc(naamVan(OPSTELLING,A.opstelling)))+
+    rij('Eten en drinken',esc(naamVan(CATERING,A.catering)))+
+    rij('Drank',esc(naamVan(DRANK,A.drank)))+
+    rij('Extra’s',esc(A.extras.map(function(id){return naamVan(EXTRAS,id);}).join(', ')))+
+    rij('Opmerkingen',esc(A.opmerkingen))+
+    rij('Richtprijs',esc(richtprijsTekst())+'<br><small>Zaalhuur, zonder eten en drinken. De definitieve prijs krijg je bij de bevestiging.</small>')+
+  '</ul>';
+}
+function verstuur(){
+  if(bezig)return;
+  var fout=document.getElementById('fout');fout.textContent='';
+  A.naam=(A.naam||'').trim();A.telefoon=(A.telefoon||'').trim();A.bedrijf=(A.bedrijf||'').trim();
+  if(A.naam.length<2){fout.textContent='Vul je naam in.';return;}
+  if(A.telefoon.replace(/\D/g,'').length<8){fout.textContent='Vul je gsm-nummer in, bijvoorbeeld 0470 12 34 56.';return;}
+  if(!A.akkoord){fout.textContent='Vink aan dat je begrijpt dat dit een aanvraag is.';return;}
+  var p=periode();if(!p){stap=3;teken();return;}
+  var knop=document.getElementById('verstuurKnop');bezig=true;knop.disabled=true;knop.textContent='Even geduld…';
+  DB.verhuur.vraag({van:p.van,tot:p.tot,metZaal:!!A.metZaal,soort:A.soort,gasten:+A.gasten,naam:A.naam,telefoon:A.telefoon,gegevens:{
+    kinderen:A.kinderen===''?null:+A.kinderen,opstelling:naamVan(OPSTELLING,A.opstelling),catering:naamVan(CATERING,A.catering),drank:naamVan(DRANK,A.drank),
+    extras:A.extras.map(function(id){return naamVan(EXTRAS,id);}),gelegenheid:A.gelegenheid.trim(),opmerkingen:A.opmerkingen.trim(),bedrijf:A.bedrijf,btw:(A.btw||'').trim(),
+    richtprijs:verhuurPrijs(uren(),!!A.metZaal)}}).then(function(){
+    bezig=false;wisConcept();
+    document.getElementById('stap').innerHTML='<div class="kaart" style="text-align:center;"><div class="klaar-ok" aria-hidden="true">✓</div>'+
+      '<h2 style="font-family:\'Playfair Display\',serif;font-size:1.75rem;color:var(--espresso);">Je aanvraag is verstuurd!</h2>'+
+      '<p style="margin-top:.6rem;">Bedankt, '+esc(A.naam.split(' ')[0])+'. We bekijken je aanvraag voor <b>'+esc(wanneerTekst())+'</b> en nemen zo snel mogelijk contact met je op.</p>'+
+      '<p>Hierboven bij <b>Mijn aanvragen</b> zie je wanneer ze bevestigd is.</p>'+
+      '<button class="knop-groot wit" onclick="opnieuw()">Nog een aanvraag doen</button><a class="knop-groot wit" href="index.html">Naar de website</a></div>';
+    laadMijn().then(function(){document.getElementById('mijn').scrollIntoView({behavior:'smooth'});});
+  }).catch(function(e){bezig=false;knop.disabled=false;knop.textContent='Aanvraag versturen';fout.textContent=e;});
+}
+function opnieuw(){Object.keys(A).forEach(function(k){A[k]=k==='extras'?[]:k==='metZaal'?null:k==='akkoord'?false:'';});stap=1;vrijStatus=null;teken();}
+
+/* ── MIJN AANVRAGEN ── */
+var STATUS={aangevraagd:'⏳ Wacht op antwoord',bevestigd:'✓ Bevestigd',geweigerd:'✗ Niet mogelijk',geannuleerd:'Geannuleerd',ingetrokken:'Ingetrokken'};
+function laadMijn(){
+  if(!user)return Promise.resolve();
+  return DB.verhuur.mijn().then(function(l){mijn=l;tekenMijn();}).catch(function(){});
+}
+function tekenMijn(){
+  var nu=Date.now(),l=mijn.filter(function(v){return new Date(v.eind).getTime()>nu-864e5;});
+  if(!l.length){document.getElementById('mijn').innerHTML='';return;}
+  document.getElementById('mijn').innerHTML='<h2 class="hu-titel">Mijn aanvragen</h2>'+l.map(function(v){
+    var s=verhuurSoort(v.soort),van=new Date(v.start),tot=new Date(v.eind),volgende=tot.toDateString()!==van.toDateString();
+    return '<div class="kaart aanvraag"><span class="st '+v.status+'">'+STATUS[v.status]+'</span>'+
+      '<div class="wat">'+s.icon+' '+esc(v.soort)+'</div>'+
+      '<div>'+fmtDatum(van)+' · '+pad(van.getHours())+':'+pad(van.getMinutes())+' – '+pad(tot.getHours())+':'+pad(tot.getMinutes())+(volgende?' (volgende dag)':'')+'</div>'+
+      '<div style="color:var(--espresso2)">'+esc(ruimteTekst(v.met_zaal))+' · '+v.gasten+' gasten</div>'+
+      (v.prijs!=null&&v.status==='bevestigd'?'<div style="font-weight:800;margin-top:.3rem;">Prijs: '+fmtEuro(+v.prijs)+'</div>':'')+
+      (v.antwoord?'<div class="antw">“'+esc(v.antwoord)+'”</div>':'')+
+      (v.status==='aangevraagd'?'<button class="knop-link" onclick="intrekken(\''+v.id+'\')">Aanvraag intrekken</button>':'')+'</div>';
+  }).join('');
+}
+function intrekken(id){
+  if(!confirm('Wil je deze aanvraag intrekken?'))return;
+  DB.verhuur.intrekken(id).then(function(){showToast('Aanvraag ingetrokken');return laadMijn();}).catch(function(e){showToast('⚠️ '+e);});
+}
+
+/* ── STARTEN ── */
+klaar(function(u){
+  user=u;
+  var s=herstel();
+  if(/[?&]stap=5/.test(location.search)&&s&&A.soort)stap=5;
+  else if(s&&A.soort)stap=Math.min(s,STAPPEN);
+  // een bewaarde datum die intussen te vroeg is, opnieuw laten kiezen
+  if(A.datum&&datumVan(A.datum)<vroegsteDatum()){A.datum='';if(stap>3)stap=3;}
+  teken();laadMijn();
+  document.getElementById('huWie').innerHTML=user?'Aangemeld als <b>'+esc(user.naam||user.email)+'</b> · <a href="account.html">Mijn account</a>':'';
+});
+</script>
+</body>
+</html>

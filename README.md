@@ -9,13 +9,14 @@ met online lessen boeken en zaalhuur voor lesgevers (kinesisten, yoga-instructeu
 |---|---|
 | `index.html` | Hoofdpagina (over ons, rooster, lessen, evenementen, contact) |
 | `yoga.html` | **Yoga reserveren**: eenvoudige pagina voor de gsm (grote tekst en knoppen), met aanmelden, beurtenkaart en reservaties op één plek |
+| `huren.html` | **Café huren voor een evenement** (trouwfeest, babyborrel, verjaardag, vergadering, …): vragenlijst in 5 stappen met live controle of het tijdslot vrij is, en *Mijn aanvragen* met de status |
 | `beurten.html` | Beurtenkaarten voor de yoga-lesgever en de beheerder: betalingen bevestigen, beurten geven, deelnemers per les |
 | `boeken.html` | Volledig weekrooster (alle lessen; wat nog niet kan staat als "binnenkort") |
 | `login.html` | Aanmelden en account maken (met type persoon) |
 | `reserveren.html` | Reservatie bevestigen (enkel na aanmelden) |
 | `betalen.html` | Betaalpagina (online betalen nog niet actief; betalen aan de bar bevestigt) |
 | `account.html` | Mijn account: gegevens, naam/wachtwoord wijzigen, komende en voorbije reservaties (klik op je initialen); goedgekeurde lesgevers zetten hier hun **eigen uren** in het rooster en zien hoe vol hun lessen zijn |
-| `beheer.html` | Beheerpagina: reservaties en bezetting per les, **weekrooster slepen met de muis**, leden goedkeuren, regels naar database sturen |
+| `beheer.html` | Beheerpagina: reservaties en bezetting per les, **weekrooster slepen met de muis**, leden goedkeuren, **aanvragen om het café te huren** bevestigen of weigeren (tabblad 🎉 Evenementen) |
 | `fotos.html` | Fotogalerij (`Gallery.html` stuurt door naar deze pagina) |
 
 ## Waar pas je wat aan?
@@ -56,6 +57,23 @@ Yoga Nidra) met een korte uitleg. Gwen kiest per wekelijkse les de soort (sleep 
 in de kalender bij *Mijn account*, of klik op een les → *Soort yoga*); de beheerder kan dat ook in
 Beheer → Rooster. Klanten zien de soort en de uitleg in het weekrooster en op de yogapagina.
 
+**Café huren (evenementen-café).** Klanten huren het café (120 m²) met terras (80 m², altijd
+inbegrepen), optioneel met de grote zaal (+112 m²), voor een eigen evenement:
+
+1. De klant vult op `huren.html` de vragenlijst in: soort feest, ruimte en aantal gasten, datum en
+   uren (de pagina toont meteen wat er die dag al gepland is), inrichting, eten en drinken, extra's en
+   contactgegevens. Om te versturen is een (gratis) account nodig; de antwoorden blijven bewaard tijdens
+   het aanmelden.
+2. De beheerder ziet de aanvraag in **Beheer → 🎉 Evenementen** (met bel-, WhatsApp- en mailknop),
+   vult de prijs en een bericht in en klikt *Bevestigen* of *Weigeren*. De klant ziet het antwoord bij
+   *Mijn aanvragen* op `huren.html`.
+3. Een aanvraag mag nooit overlappen met een les (behalve *binnenkort*-lessen), een reservatie of een
+   bevestigd evenement; de server controleert dat bij de aanvraag én bij het bevestigen. Lessen die
+   later toch in een verhuurd tijdslot vallen, verdwijnen van de website en kunnen niet geboekt worden.
+
+De prijzen per uur (leeg = prijs op aanvraag), het minimum aantal uren en hoeveel dagen op voorhand
+pas je aan in Beheer → 🎉 Evenementen → *Prijzen en regels*. De soorten feest staan in `VERHUUR.soorten`.
+
 De kaarten en hun prijs staan in `BEURTENKAART.kaarten` (`prijs:null` = "vraag de prijs aan Gwen").
 
 De rest staat bovenaan in **`assets/boeken.js`**:
@@ -66,6 +84,7 @@ De rest staat bovenaan in **`assets/boeken.js`**:
 - `REGELS`: betaaltermijn, hoe lang op voorhand boeken/annuleren, max. uren per week, zaalduren
 - `ZAAL`: prijs per uur voor zaalhuur (en of het al online kan)
 - `BEURTENKAART`: welke lessen je met een beurt boekt en welke kaarten er zijn
+- `VERHUUR`: ruimtes (m²), soorten feest en reserveprijzen voor het café huren
 - `TYPES`: types personen, wie de zaal mag huren en welke lessen een lesgever zelf plant
 
 De hoofdpagina leest de openingsuren en lessen uit dit bestand en het rooster uit de database.

@@ -64,6 +64,27 @@
 .bz-wie{font-size:.8rem;color:var(--espresso2);}
 .bz-wie i{color:var(--muted);}
 @media(max-width:900px){.bz-rij{grid-template-columns:1fr auto;}.bz-wie{grid-column:1/-1;}}
+.evk{padding:1.25rem 1.4rem;margin-bottom:1rem;}
+.evk.aangevraagd{border-left:5px solid var(--gold);}
+.evk.bevestigd{border-left:5px solid var(--sage);}
+.evk.uit{opacity:.62;}
+.evk-kop{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap;}
+.evk-wat{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--espresso);}
+.evk-wanneer{font-weight:800;color:var(--espresso2);margin-top:.15rem;}
+.evk-grid{display:grid;grid-template-columns:1fr 1fr;gap:.35rem 1.5rem;margin:.9rem 0 .4rem;font-size:.92rem;color:var(--espresso2);}
+.evk-grid b{color:var(--espresso);}
+.evk-contact{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0;}
+.evk-botst{margin:.6rem 0;padding:.6rem .9rem;border-radius:12px;background:#FBF0EE;color:#9E3B3B;font-weight:800;font-size:.88rem;}
+.evk-antw{margin:.5rem 0;padding:.6rem .9rem;border-radius:12px;background:var(--cream);font-style:italic;font-size:.9rem;}
+.evk-form{display:grid;grid-template-columns:160px 1fr;gap:.6rem;margin-top:.9rem;padding-top:.9rem;border-top:1px solid var(--border);}
+.evk-form input,.evk-form textarea,.evp input{border:1.5px solid var(--border);border-radius:12px;padding:.55rem .8rem;font-family:'Nunito',sans-serif;font-size:.95rem;background:var(--vanilla);width:100%;}
+.evk-form textarea{min-height:44px;resize:vertical;}
+.evk-knoppen{grid-column:1/-1;display:flex;gap:.5rem;flex-wrap:wrap;}
+.evp{padding:1rem 1.4rem;margin-bottom:1.25rem;}
+.evp summary{cursor:pointer;font-weight:800;color:var(--espresso);padding:.4rem 0;}
+.evp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin:.75rem 0;}
+.evp label{display:block;font-size:.78rem;font-weight:800;color:var(--muted);margin-bottom:.25rem;}
+@media(max-width:900px){.evk-grid,.evk-form{grid-template-columns:1fr;}.evp-grid{grid-template-columns:1fr 1fr;}}
 .geen-toegang{padding:3rem 2.5rem;text-align:center;max-width:540px;margin:0 auto;}
 
 .geen-toegang p{color:var(--espresso2);margin-bottom:1.5rem;line-height:1.7;}
@@ -104,7 +125,7 @@ var weekStart=mondayOf(new Date()),filter='alle',boekingen=[],profielen=[],zoekt
 
 function tabs(actief){
   var wacht=profielen.filter(wachtOpGoedkeuring).length;
-  return '<div class="tabs">'+[['res','📅 Reservaties'],['rooster','🗓️ Rooster'+(reAantalWijzigingen()?' <span class="teller">'+reAantalWijzigingen()+'</span>':'')],['leden','👥 Leden'+(wacht?' <span class="teller">'+wacht+'</span>':'')]].map(function(t){
+  return '<div class="tabs">'+[['res','📅 Reservaties'],['rooster','🗓️ Rooster'+(reAantalWijzigingen()?' <span class="teller">'+reAantalWijzigingen()+'</span>':'')],['leden','👥 Leden'+(wacht?' <span class="teller">'+wacht+'</span>':'')],['ev','🎉 Evenementen'+(evNieuw()?' <span class="teller">'+evNieuw()+'</span>':'')]].map(function(t){
     return '<button class="tab'+(t[0]===actief?' actief':'')+'" onclick="toonTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+
     '<a class="tab" href="beurten.html" style="text-decoration:none;">🎟️ Beurtenkaarten ↗</a></div>';
 }
@@ -316,10 +337,83 @@ function reOpslaan(nieuw,mee){
 var dbInst=null;
 function laadInst(){return DB.admin.instellingen().then(function(d){dbInst=d;});}
 
+/* ── EVENEMENTEN ── Aanvragen om het café te huren (huren.html): bevestigen, weigeren, annuleren */
+var verhuur=[],evFilter='nieuw';
+function laadVerhuur(){return DB.verhuur.alle().then(function(d){verhuur=d||[];}).catch(function(){verhuur=[];});}
+function evNieuw(){return verhuur.filter(function(v){return v.status==='aangevraagd'&&new Date(v.start)>new Date();}).length;}
+var EV_STATUS={aangevraagd:['wacht','Nieuwe aanvraag'],bevestigd:['betaald','Bevestigd'],geweigerd:['intern','Geweigerd'],geannuleerd:['intern','Geannuleerd'],ingetrokken:['intern','Ingetrokken door klant']};
+function evTijd(v){
+  var a=new Date(v.start),b=new Date(v.eind),u=(b-a)/36e5;
+  return fmtDatum(a)+' '+a.getFullYear()+' · '+pad(a.getHours())+':'+pad(a.getMinutes())+' – '+pad(b.getHours())+':'+pad(b.getMinutes())+
+    (b.toDateString()!==a.toDateString()?' (volgende dag)':'')+' · '+fmtUren(u);
+}
+function waNummer(t){var d=String(t||'').replace(/\D/g,'');if(d.indexOf('00')===0)d=d.slice(2);else if(d.charAt(0)==='0')d='32'+d.slice(1);return d;}
+function paneelEvenementen(){
+  var nu=new Date(),pr=VERHUUR.prijzen;
+  var lijst=verhuur.filter(function(v){var komend=new Date(v.eind)>nu;
+    return evFilter==='nieuw'?v.status==='aangevraagd'&&komend:evFilter==='komend'?v.status==='bevestigd'&&komend:true;});
+  if(evFilter==='alles')lijst=lijst.slice().reverse();
+  var f=function(id,t,n){return '<button class="knop'+(evFilter===id?' groen':'')+'" onclick="evFilter=\''+id+'\';render()">'+t+(n!=null?' ('+n+')':'')+'</button>';};
+  var h='<div class="balk"><div class="balk-l">'+f('nieuw','⏳ Nieuwe aanvragen',evNieuw())+
+    f('komend','✓ Komende evenementen',verhuur.filter(function(v){return v.status==='bevestigd'&&new Date(v.eind)>nu;}).length)+f('alles','Alles')+'</div>'+
+    '<div class="balk-r"><a class="knop" href="huren.html" target="_blank">Aanvraagformulier bekijken ↗</a></div></div>';
+  h+='<details class="card evp"'+(pr.cafeUur==null?' open':'')+'><summary>💶 Prijzen en regels voor de verhuur</summary>'+
+    '<p style="font-size:.88rem;color:var(--espresso2);margin-top:.4rem;">Klanten zien deze prijzen als richtprijs. Laat een prijs leeg voor "prijs op aanvraag". Het terras is altijd inbegrepen.</p>'+
+    '<div class="evp-grid"><div><label for="pCafe">Café + terras (€/uur)</label><input id="pCafe" type="number" min="0" step="1" value="'+(pr.cafeUur==null?'':pr.cafeUur)+'"></div>'+
+    '<div><label for="pZaal">Grote zaal erbij (+ €/uur)</label><input id="pZaal" type="number" min="0" step="1" value="'+(pr.zaalUur==null?'':pr.zaalUur)+'"></div>'+
+    '<div><label for="pMin">Minimum uren</label><input id="pMin" type="number" min="1" max="12" step=".5" value="'+VERHUUR.minUren+'"></div>'+
+    '<div><label for="pDagen">Minimum dagen op voorhand</label><input id="pDagen" type="number" min="0" max="90" value="'+VERHUUR.minDagenVooraf+'"></div></div>'+
+    '<button class="knop groen" onclick="bewaarVerhuurRegels()">Opslaan</button></details>';
+  if(!lijst.length)return h+'<div class="card leeg">'+(evFilter==='nieuw'?'Geen nieuwe aanvragen. 🎉':evFilter==='komend'?'Nog geen bevestigde evenementen.':'Nog geen aanvragen.')+'</div>';
+  return h+lijst.map(evKaart).join('');
+}
+function evKaart(v){
+  var g=v.gegevens||{},s=verhuurSoort(v.soort),st=EV_STATUS[v.status]||['intern',v.status],open=v.status==='aangevraagd'||v.status==='bevestigd';
+  var voorbij=new Date(v.eind)<new Date(),wa=waNummer(v.telefoon),em=v.profielen&&v.profielen.email;
+  var rij=function(k,w){return w?'<div><b>'+k+':</b> '+esc(w)+'</div>':'';};
+  // overlap met andere open aanvragen of bevestigde evenementen
+  var botst=open?verhuur.filter(function(x){return x.id!==v.id&&(x.status==='aangevraagd'||x.status==='bevestigd')&&x.start<v.eind&&x.eind>v.start;}):[];
+  var richt=g.richtprijs!=null?g.richtprijs:verhuurPrijs((new Date(v.eind)-new Date(v.start))/36e5,v.met_zaal);
+  var h='<div class="card evk '+v.status+(open&&!voorbij?'':' uit')+'"><div class="evk-kop"><div><div class="evk-wat">'+s.icon+' '+esc(v.soort)+(g.gelegenheid?' <small style="font-family:Nunito,sans-serif;font-weight:600;font-size:.9rem;color:var(--muted)">· '+esc(g.gelegenheid)+'</small>':'')+'</div>'+
+    '<div class="evk-wanneer">'+evTijd(v)+'</div></div><span class="status '+st[0]+'">'+st[1]+(voorbij?' · voorbij':'')+'</span></div>'+
+    '<div class="evk-grid">'+rij('Ruimte',v.met_zaal?'Café + terras + grote zaal':'Café + terras')+rij('Gasten',v.gasten+(g.kinderen?' (waarvan '+g.kinderen+' kinderen)':''))+
+      rij('Inrichting',g.opstelling)+rij('Eten en drinken',g.catering)+rij('Drank',g.drank)+rij('Extra’s',(g.extras||[]).join(', '))+
+      rij('Bedrijf',[g.bedrijf,g.btw].filter(Boolean).join(' · '))+rij('Richtprijs',richt!=null?fmtEuro(+richt):'')+rij('Aangevraagd op',new Date(v.aangemaakt).toLocaleDateString('nl-BE'))+'</div>'+
+    (g.opmerkingen?'<div class="evk-antw" style="font-style:normal">💬 '+esc(g.opmerkingen)+'</div>':'')+
+    '<div class="evk-contact"><b style="align-self:center;margin-right:.25rem;">'+esc(v.naam)+'</b><a class="knop" href="tel:'+esc(v.telefoon.replace(/[^\d+]/g,''))+'">📞 '+esc(v.telefoon)+'</a>'+
+      (wa?'<a class="knop" target="_blank" rel="noopener" href="https://wa.me/'+wa+'">💬 WhatsApp</a>':'')+(em?'<a class="knop" href="mailto:'+esc(em)+'?subject='+encodeURIComponent('Je aanvraag bij La Vie en Rose: '+v.soort)+'">✉️ '+esc(em)+'</a>':'')+'</div>'+
+    botst.map(function(x){return '<div class="evk-botst">⚠️ Overlapt met '+(x.status==='bevestigd'?'het bevestigde evenement':'de aanvraag')+' "'+esc(x.soort)+'" van '+esc(x.naam)+' ('+evTijd(x)+')</div>';}).join('')+
+    (v.prijs!=null&&v.status==='bevestigd'?'<div><b>Afgesproken prijs:</b> '+fmtEuro(+v.prijs)+'</div>':'')+
+    (v.antwoord?'<div class="evk-antw">Jouw bericht: “'+esc(v.antwoord)+'”</div>':'');
+  if(open&&!voorbij){
+    h+='<div class="evk-form"><label for="pr-'+v.id+'" style="align-self:center;font-weight:800;">Prijs (€)</label><input id="pr-'+v.id+'" type="number" min="0" step="1" value="'+(v.prijs!=null?+v.prijs:richt!=null?richt:'')+'" placeholder="mag leeg">'+
+      '<label for="an-'+v.id+'" style="align-self:center;font-weight:800;">Bericht aan de klant</label><textarea id="an-'+v.id+'" maxlength="1000" placeholder="bv. Leuk! We bellen je deze week om alles te bespreken.">'+esc(v.antwoord||'')+'</textarea>'+
+      '<div class="evk-knoppen">'+(v.status==='aangevraagd'?'<button class="knop groen" onclick="evZet(\''+v.id+'\',\'bevestigd\')">✓ Bevestigen</button><button class="knop rood" onclick="evZet(\''+v.id+'\',\'geweigerd\')">✗ Weigeren</button>':
+        '<button class="knop groen" onclick="evZet(\''+v.id+'\',\'bevestigd\')">Prijs en bericht bijwerken</button><button class="knop rood" onclick="evZet(\''+v.id+'\',\'geannuleerd\')">Evenement annuleren</button>')+'</div></div>';
+  }
+  return h+'</div>';
+}
+function evZet(id,status){
+  var v=verhuur.find(function(x){return x.id===id;}),pr=document.getElementById('pr-'+id).value,an=document.getElementById('an-'+id).value.trim();
+  if(status==='geweigerd'&&!confirm('Aanvraag van '+v.naam+' weigeren?'+(an?'':'\nTip: schrijf er een kort bericht bij, dat ziet de klant.')))return;
+  if(status==='geannuleerd'&&!confirm('Het bevestigde evenement van '+v.naam+' annuleren? Laat het de klant zeker ook persoonlijk weten.'))return;
+  DB.verhuur.zetStatus(id,status,pr===''?null:+pr,an).then(function(){
+    showToast(status==='bevestigd'?(v.status==='bevestigd'?'✓ Bijgewerkt':'✓ Bevestigd: het café is dan verhuurd'):status==='geweigerd'?'Aanvraag geweigerd':'Evenement geannuleerd');
+  }).then(laadVerhuur).then(render).catch(fout);
+}
+function bewaarVerhuurRegels(){
+  var num=function(id){var x=document.getElementById(id).value;return x===''?null:+x;};
+  var nieuw={prijzen:{cafeUur:num('pCafe'),zaalUur:num('pZaal')},minUren:num('pMin')||2,minDagenVooraf:num('pDagen')==null?7:num('pDagen')};
+  // altijd de nieuwste instellingen ophalen, zodat enkel de verhuur verandert
+  DB.admin.instellingen().then(function(d){
+    return DB.admin.zetInstellingen(Object.assign({},d.config,{verhuur:nieuw}));
+  }).then(laadInst).then(function(){zetVerhuur(nieuw);showToast('✓ Prijzen en regels opgeslagen');render();}).catch(fout);
+}
+
 /* ── ALGEMEEN ── */
 function fout(e){showToast('⚠️ '+e);}
 function render(){
-  var inh=huidigeTab==='res'?paneelReservaties():huidigeTab==='rooster'?paneelRooster():paneelLeden();
+  var inh=huidigeTab==='res'?paneelReservaties():huidigeTab==='rooster'?paneelRooster():huidigeTab==='ev'?paneelEvenementen():paneelLeden();
   document.getElementById('inhoud').innerHTML=tabs(huidigeTab)+'<div class="paneel actief">'+inh+'</div>';
   if(huidigeTab==='rooster'&&ed)ed.teken();
 }
@@ -331,9 +425,12 @@ klaar(function(u){
     document.getElementById('inhoud').innerHTML='<div class="card geen-toegang"><h2 class="card-title">Geen toegang</h2><p>Deze pagina is enkel voor de beheerder van La Vie en Rose.</p><a class="btn btn-primary" href="boeken.html">Naar het rooster</a></div>';
     return;
   }
-  Promise.all([laadWeek(),laadLeden(),laadInst()]).then(function(){
+  Promise.all([laadWeek(),laadLeden(),laadInst(),laadVerhuur()]).then(function(){
     if(dbInst&&dbInst.config&&dbInst.config.rooster){zetRooster(dbInst.config.rooster);zetUren(dbInst.config);maakEditor(dbInst.config.rooster);}
+    if(dbInst&&dbInst.config)zetVerhuur(dbInst.config.verhuur);
     if(/[?&]tab=rooster/.test(location.search))huidigeTab='rooster';
+    if(/[?&]tab=ev/.test(location.search))huidigeTab='ev';
+    if(evNieuw())showToast('🎉 '+(evNieuw()===1?'1 nieuwe aanvraag':evNieuw()+' nieuwe aanvragen')+' om het café te huren');
     if(profielen.some(wachtOpGoedkeuring))showToast('👥 Er '+(profielen.filter(wachtOpGoedkeuring).length===1?'wacht 1 professional':'wachten '+profielen.filter(wachtOpGoedkeuring).length+' professionals')+' op goedkeuring');
     render();
   }).catch(fout);

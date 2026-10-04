@@ -71,6 +71,7 @@ function zetUren(c){
   if(c.gesloten&&typeof c.gesloten==='object'){Object.keys(GESLOTEN).forEach(function(k){delete GESLOTEN[k];});
     Object.keys(c.gesloten).forEach(function(k){if(/^[0-6]$/.test(k)&&Array.isArray(c.gesloten[k])&&c.gesloten[k].length)GESLOTEN[k]=c.gesloten[k].map(function(g){return [g[0],g[1]];});});}
   if(c.openingsuren&&typeof c.openingsuren==='object'){Object.keys(c.openingsuren).forEach(function(k){if(/^[0-6]$/.test(k))OPENINGSUREN[k]=c.openingsuren[k];});}
+  if(c.verhuur)zetVerhuur(c.verhuur);
 }
 // Naam van een uur/reservatie (soort yoga, de les, of de ingeplande activiteit)
 function slotNaam(s){return s.stijl||s.les.naam;}
@@ -184,7 +185,7 @@ var MAANDEN=['januari','februari','maart','april','mei','juni','juli','augustus'
 
 /* ── GEGEVENS UIT DE DATABASE ── (gevuld door assets/db.js)
    bezet: bezetting van alle leden (enkel aantallen) · mijn: eigen reservaties */
-var CACHE={bezet:[],mijn:[]};
+var CACHE={bezet:[],mijn:[],verhuur:[]};
 
 /* ── DATUM & SLOTS ── */
 function pad(n){return(n<10?'0':'')+n;}
@@ -258,7 +259,9 @@ function lessenPerWeek(boekbaar){
   },0);
 }
 function slotsVoorDag(datum){
-  return (ROOSTER[datum.getDay()]||[]).map(function(r){return parseSlot(slotId(datum,r[0],r[1]));}).filter(Boolean);
+  // lessen op een moment dat het café verhuurd is voor een evenement, vallen weg
+  return (ROOSTER[datum.getDay()]||[]).map(function(r){return parseSlot(slotId(datum,r[0],r[1]));})
+    .filter(function(s){return s&&!verhuurdOp(s.start.getTime(),s.start.getTime()+s.les.duur*60000);});
 }
 // Bezetting van een les of zaaluur volgens de database.
 function bezetting(slot){
@@ -283,6 +286,54 @@ function bezettingHtml(aantal,max){
 function isVoorbij(slot){return slot.start.getTime()<Date.now();}
 // Te laat om nog te boeken (minder dan REGELS.boekenTotMinVooraf voor de start)?
 function isTeLaat(slot){return slot.start.getTime()-Date.now()<REGELS.boekenTotMinVooraf*60000;}
+
+/* ── CAFÉ HUREN VOOR EEN EVENEMENT ──
+   Klanten vragen een tijdslot aan via huren.html (vragenlijst); de beheerder bevestigt of weigert
+   in Beheer → Evenementen. Café + terras zijn altijd inbegrepen, de grote zaal is optioneel.
+   Prijzen per uur (null = prijs op aanvraag) en de regels past de beheerder aan in Beheer → Evenementen;
+   ze staan in de database. Hieronder de reservewaarden. */
+var VERHUUR={
+  cafe:{naam:'Café',m2:120,icon:'☕'},
+  terras:{naam:'Terras',m2:80,icon:'🌿'},
+  zaal:{naam:'Grote zaal',m2:112,icon:'🏛️'},
+  prijzen:{cafeUur:null,zaalUur:null},   // € per uur; zaalUur komt bovenop het café
+  minUren:2,
+  minDagenVooraf:7,
+  soorten:[
+    {naam:'Trouwfeest',icon:'💍'},
+    {naam:'Babyborrel',icon:'🍼'},
+    {naam:'Verjaardagsfeest',icon:'🎂'},
+    {naam:'Huwelijksjubileum',icon:'🥂',uitleg:'bv. 25 of 50 jaar getrouwd'},
+    {naam:'Communie of lentefeest',icon:'🌸'},
+    {naam:'Vergadering',icon:'💼'},
+    {naam:'Bedrijfsfeest',icon:'🏢'},
+    {naam:'Koffietafel',icon:'🕊️',uitleg:'na een afscheid'},
+    {naam:'Ander feest',icon:'✨'}
+  ]
+};
+function zetVerhuur(v){
+  if(!v||typeof v!=='object')return;
+  var getal=function(x){return x===null||x===''||x===undefined||isNaN(+x)?null:+x;};
+  if(v.prijzen)VERHUUR.prijzen={cafeUur:getal(v.prijzen.cafeUur),zaalUur:getal(v.prijzen.zaalUur)};
+  if(+v.minUren>0)VERHUUR.minUren=+v.minUren;
+  if(+v.minDagenVooraf>=0)VERHUUR.minDagenVooraf=+v.minDagenVooraf;
+}
+function verhuurSoort(naam){return VERHUUR.soorten.find(function(s){return s.naam===naam;})||{naam:naam,icon:'🎉'};}
+// Richtprijs voor een aantal uren (null als er (nog) geen prijs ingesteld is)
+function verhuurPrijs(uren,metZaal){
+  var p=VERHUUR.prijzen;
+  if(p.cafeUur==null||(metZaal&&p.zaalUur==null))return null;
+  return Math.round(uren*(p.cafeUur+(metZaal?p.zaalUur:0))*100)/100;
+}
+// Is het café (een deel van) deze periode verhuurd? (ms, enkel bevestigde evenementen)
+function verhuurdOp(van,tot){return CACHE.verhuur.some(function(v){return v.start<tot&&v.eind>van;});}
+// Bevestigde evenementen (enkel begin en einde) zonder aangemeld te zijn
+function haalVerhuur(van,tot){
+  return fetch(SUPABASE_URL+'/rest/v1/rpc/verhuur_bezet',{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({van:van.toISOString(),tot:tot.toISOString()})})
+    .then(function(r){if(!r.ok)throw r.status;return r.json();})
+    .then(function(d){return (d||[]).map(function(v){return {start:new Date(v.start).getTime(),eind:new Date(v.eind).getTime()};});});
+}
 
 /* ── ACCOUNT ── */
 // Ingelogde gebruiker (profiel uit de database) of null. Gevuld door assets/db.js.
@@ -364,7 +415,8 @@ function configVoorDatabase(rooster){
       annulerenTotUurVooraf:REGELS.annulerenTotUurVooraf,maxUrenPerWeek:REGELS.maxUrenPerWeek,zaalDuren:REGELS.zaalDuren},
     zaal:ZAAL.binnenkort?{prijs:ZAAL.prijs,binnenkort:true}:{prijs:ZAAL.prijs},
     beurtenkaart:{lessen:BEURTENKAART.lessen.slice(),kaarten:BEURTENKAART.kaarten.map(function(k){return {beurten:k.beurten,prijs:k.prijs};})},
-    types:TYPES.reduce(function(r,t){r[t.id]={pro:!!t.pro,zaal:!!t.zaal,lessen:t.lessen||[]};return r;},{})
+    types:TYPES.reduce(function(r,t){r[t.id]={pro:!!t.pro,zaal:!!t.zaal,lessen:t.lessen||[]};return r;},{}),
+    verhuur:{prijzen:{cafeUur:VERHUUR.prijzen.cafeUur,zaalUur:VERHUUR.prijzen.zaalUur},minUren:VERHUUR.minUren,minDagenVooraf:VERHUUR.minDagenVooraf}
   };
 }
 

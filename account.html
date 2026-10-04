@@ -113,7 +113,7 @@ function render(){
       '<div class="fg"><label for="a-nieuw">Nieuw wachtwoord</label><input type="password" id="a-nieuw" required minlength="6" autocomplete="new-password"></div>'+
       '<div class="fg"><label for="a-herhaal">Herhaal nieuw wachtwoord</label><input type="password" id="a-herhaal" required minlength="6" autocomplete="new-password"></div>'+
       '<div class="p-fout" id="pwFout"></div><button class="btn btn-primary btn-block" id="pwKnop">Wachtwoord wijzigen</button></form></details>'+
-    '<div class="p-knoppen">'+(user.isAdmin?'<a class="btn btn-outline" href="beheer.html">⚙️ Beheer</a>':'')+(magBeurtenBeheren(user)?'<a class="btn btn-outline" href="beurten.html">🎟️ Beurtenkaarten</a>':'')+
+    '<div class="p-knoppen">'+(user.isAdmin?'<a class="btn btn-outline" href="beheer.html">⚙️ Beheer</a>':'')+(magBeurtenBeheren(user)?'<a class="btn btn-outline" href="beurten.html">🎟️ Beurtenkaarten</a>':'')+'<a class="btn btn-outline" href="'+(user.isAdmin?'beheer.html?tab=ev':'huren.html')+'">🎉 '+(user.isAdmin?'Evenement-aanvragen':'Café huren / mijn aanvragen')+'</a>'+
       '<button class="btn btn-outline" onclick="logout()">Afmelden</button></div>'+
     '<p class="res-regels">E-mailadres wijzigen of je account laten verwijderen? Stuur ons een <a href="https://wa.me/'+REGELS.whatsapp+'" target="_blank" rel="noopener">WhatsApp-bericht</a>.</p>'+
   '</aside>';

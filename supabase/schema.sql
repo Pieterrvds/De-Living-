@@ -80,6 +80,31 @@ create table if not exists public.beurten (
 );
 create index if not exists beurten_user_idx on public.beurten(user_id);
 
+-- Café huren voor een evenement (trouwfeest, babyborrel, vergadering, …). De klant vult een
+-- vragenlijst in (huren.html) en stuurt een aanvraag; de beheerder bevestigt of weigert.
+-- Café (120 m²) + terras (80 m²) altijd; de grote zaal (112 m²) is optioneel (met_zaal).
+-- Een aanvraag mag nooit overlappen met een les, een reservatie of een bevestigd evenement.
+create table if not exists public.verhuur (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references public.profielen(id) on delete cascade,
+  start      timestamptz not null,
+  eind       timestamptz not null,
+  met_zaal   boolean not null default false,
+  soort      text not null,                         -- Trouwfeest, Babyborrel, …
+  gasten     int  not null,
+  naam       text not null default '',
+  telefoon   text not null default '',
+  gegevens   jsonb not null default '{}'::jsonb,     -- de rest van de vragenlijst
+  status     text not null default 'aangevraagd'
+             check (status in ('aangevraagd','bevestigd','geweigerd','geannuleerd','ingetrokken')),
+  prijs      numeric(8,2),                          -- afgesproken prijs (door de beheerder)
+  antwoord   text not null default '',              -- bericht van de beheerder aan de klant
+  aangemaakt timestamptz not null default now(),
+  behandeld  timestamptz
+);
+create index if not exists verhuur_start_idx on public.verhuur(start);
+create index if not exists verhuur_user_idx  on public.verhuur(user_id);
+
 -- ── HULPFUNCTIES ───────────────────────────────────────────────────────
 -- 'HH:MM' → minuten
 create or replace function public.hm(t text) returns int
@@ -223,6 +248,9 @@ begin
                 where b.les = 'zaal' and b.start < new.eind and b.eind > new.start and telt(b)) then
       raise exception 'De zaal is dan al bezet.';
     end if;
+    if exists (select 1 from verhuur v where v.status = 'bevestigd' and v.start < new.eind and v.eind > new.start) then
+      raise exception 'Het café is dan verhuurd voor een evenement.';
+    end if;
     new.bedrag     := 0;
     new.beurt      := false;
     new.aangemaakt := now();
@@ -274,6 +302,10 @@ begin
   for x in select * from jsonb_array_elements(coalesce(c->'gesloten'->(dow::text), '[]'::jsonb)) loop
     if hm(x->>0) < tot and hm(x->>1) > van then raise exception 'Op dit uur zijn we gesloten.'; end if;
   end loop;
+  -- het café is verhuurd voor een (bevestigd) evenement
+  if exists (select 1 from verhuur v where v.status = 'bevestigd' and v.start < new.eind and v.eind > new.start) then
+    raise exception 'Op dit moment is het café verhuurd voor een evenement.';
+  end if;
 
   if new.les = 'zaal' then
     -- zaalhuur: enkel goedgekeurde professionals met zaalrecht
@@ -431,6 +463,10 @@ create policy "annuleren" on public.boekingen for delete
 
 alter table public.vaste_lesgevers enable row level security;   -- enkel via de functies hierboven
 alter table public.beurten enable row level security;
+alter table public.verhuur enable row level security;           -- aanvragen en wijzigen enkel via de functies
+drop policy if exists "eigen aanvragen of beheerder" on public.verhuur;
+create policy "eigen aanvragen of beheerder" on public.verhuur for select
+  using (user_id = auth.uid() or is_admin());
 drop policy if exists "eigen beurten of beheer" on public.beurten;
 create policy "eigen beurten of beheer" on public.beurten for select
   using (user_id = auth.uid() or beheert_beurten());
@@ -536,6 +572,140 @@ begin
   end loop;
   update instellingen set config = jsonb_set(config, '{rooster}', r), bijgewerkt = now() where id = 1;
 end $$;
+
+-- ── CAFÉ HUREN (EVENEMENTEN) ───────────────────────────────────────────
+-- Waarom kan het café niet verhuurd worden van s tot e? (null = vrij)
+-- Lessen uit het weekrooster (behalve 'binnenkort'), reservaties en bevestigde evenementen.
+create or replace function public.verhuur_conflict(s timestamptz, e timestamptz, zonder uuid default null) returns text
+language plpgsql stable security definer set search_path = public as $$
+declare
+  c   jsonb := cfg();
+  d   date;
+  x   jsonb;
+  les jsonb;
+  ls  timestamptz;
+  le  timestamptz;
+  dg  text[] := array['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+begin
+  for d in select g::date from generate_series(((s at time zone 'Europe/Brussels')::date - 1)::timestamp,
+                                               (e at time zone 'Europe/Brussels')::date::timestamp, interval '1 day') g loop
+    for x in select * from jsonb_array_elements(coalesce(c->'rooster'->(extract(dow from d)::int::text), '[]'::jsonb)) loop
+      les := c->'lessen'->(x->>1);
+      continue when les is null or coalesce((les->>'binnenkort')::boolean, false);
+      ls := (d + make_interval(mins => hm(x->>0))) at time zone 'Europe/Brussels';
+      le := ls + make_interval(mins => (les->>'duur')::int);
+      if ls < e and le > s then
+        return format('Dan is er een les %s (%s %s – %s). Kies een ander tijdstip.', lower(les->>'naam'),
+          dg[extract(dow from d)::int + 1], to_char(ls at time zone 'Europe/Brussels', 'HH24:MI'), to_char(le at time zone 'Europe/Brussels', 'HH24:MI'));
+      end if;
+    end loop;
+  end loop;
+  if exists (select 1 from boekingen b where b.start < e and b.eind > s and telt(b)) then
+    return 'Dan is er al een reservatie in onze zaal. Kies een ander tijdstip.';
+  end if;
+  if exists (select 1 from verhuur v where v.status = 'bevestigd' and v.id is distinct from zonder and v.start < e and v.eind > s) then
+    return 'Het café is dan al verhuurd. Kies een andere datum of een ander uur.';
+  end if;
+  return null;
+end $$;
+revoke all on function public.verhuur_conflict(timestamptz, timestamptz, uuid) from public, anon, authenticated;
+
+-- Klant: aanvraag versturen (de vragenlijst). Geeft het nummer van de aanvraag terug.
+create or replace function public.vraag_verhuur(van timestamptz, tot timestamptz, met_zaal boolean, soort text, gasten int,
+                                                naam text, telefoon text, gegevens jsonb default '{}'::jsonb) returns uuid
+language plpgsql security definer set search_path = public as $$
+#variable_conflict use_variable
+declare
+  v    jsonb := coalesce(cfg()->'verhuur', '{}'::jsonb);
+  minu numeric := coalesce((v->>'minUren')::numeric, 2);
+  mind int := coalesce((v->>'minDagenVooraf')::int, 7);
+  m    int;
+  fout text;
+  id   uuid;
+begin
+  if auth.uid() is null then raise exception 'Meld je eerst aan.'; end if;
+  perform pg_advisory_xact_lock(hashtext('boekingen'));
+  if van is null or tot is null or tot <= van then raise exception 'Kies een begin- en einduur.'; end if;
+  if extract(epoch from van)::bigint % 1800 <> 0 or extract(epoch from tot)::bigint % 1800 <> 0 then
+    raise exception 'Kies een heel of half uur.';
+  end if;
+  m := round(extract(epoch from (tot - van)) / 60)::int;
+  if m < minu * 60 then raise exception 'Je kan het café huren vanaf % uur.', minu; end if;
+  if m > 24 * 60 then raise exception 'Een evenement duurt maximaal 24 uur.'; end if;
+  if van < now() + make_interval(days => mind) then
+    raise exception 'Vraag je evenement minstens % dagen op voorhand aan.', mind;
+  end if;
+  if van > now() + interval '18 months' then raise exception 'Zo ver vooruit kan je nog niet aanvragen.'; end if;
+  soort := left(btrim(coalesce(soort, '')), 40);
+  if soort = '' then raise exception 'Kies wat je wil vieren.'; end if;
+  if gasten is null or gasten < 1 or gasten > 500 then raise exception 'Vul het aantal gasten in.'; end if;
+  naam := left(btrim(coalesce(naam, '')), 100);
+  if length(naam) < 2 then raise exception 'Vul je naam in.'; end if;
+  telefoon := left(btrim(coalesce(telefoon, '')), 30);
+  if length(regexp_replace(telefoon, '\D', '', 'g')) < 8 then raise exception 'Vul een geldig telefoonnummer in.'; end if;
+  if gegevens is null or jsonb_typeof(gegevens) <> 'object' then gegevens := '{}'::jsonb; end if;
+  if length(gegevens::text) > 4000 then raise exception 'Je antwoorden zijn te lang.'; end if;
+  if (select count(*) from verhuur r where r.user_id = auth.uid() and r.status = 'aangevraagd') >= 3 then
+    raise exception 'Je hebt al 3 aanvragen die nog wachten op een antwoord.';
+  end if;
+  fout := verhuur_conflict(van, tot, null);
+  if fout is not null then raise exception '%', fout; end if;
+  insert into verhuur (user_id, start, eind, met_zaal, soort, gasten, naam, telefoon, gegevens)
+  values (auth.uid(), van, tot, coalesce(met_zaal, false), soort, gasten, naam, telefoon, gegevens)
+  returning verhuur.id into id;
+  return id;
+end $$;
+
+-- Klant: eigen aanvraag intrekken (zolang ze nog niet behandeld is)
+create or replace function public.trek_verhuur_in(aanvraag uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  update verhuur set status = 'ingetrokken', behandeld = now()
+   where id = aanvraag and user_id = auth.uid() and status = 'aangevraagd';
+  if not found then raise exception 'Deze aanvraag kan je niet meer intrekken. Bel of mail ons even.'; end if;
+end $$;
+
+-- Beheerder: aanvraag bevestigen, weigeren of een evenement annuleren (met prijs en bericht)
+create or replace function public.zet_verhuur_status(aanvraag uuid, nieuw text, prijs numeric default null, antwoord text default '') returns void
+language plpgsql security definer set search_path = public as $$
+#variable_conflict use_variable
+declare r verhuur; fout text;
+begin
+  if not is_admin() then raise exception 'Enkel voor de beheerder.'; end if;
+  perform pg_advisory_xact_lock(hashtext('boekingen'));
+  select * into r from verhuur where id = aanvraag for update;
+  if r.id is null then raise exception 'Aanvraag niet gevonden.'; end if;
+  if nieuw = 'bevestigd' then
+    if r.status not in ('aangevraagd', 'bevestigd') then raise exception 'Deze aanvraag kan niet meer bevestigd worden.'; end if;
+    if r.start <= now() then raise exception 'Dit evenement is al voorbij.'; end if;
+    fout := verhuur_conflict(r.start, r.eind, r.id);
+    if fout is not null then raise exception '%', fout; end if;
+  elsif nieuw = 'geweigerd' then
+    if r.status <> 'aangevraagd' then raise exception 'Enkel een nieuwe aanvraag kan je weigeren.'; end if;
+  elsif nieuw = 'geannuleerd' then
+    if r.status not in ('aangevraagd', 'bevestigd') then raise exception 'Deze aanvraag is al afgesloten.'; end if;
+  else
+    raise exception 'Ongeldige status.';
+  end if;
+  if prijs is not null and (prijs < 0 or prijs > 100000) then raise exception 'Ongeldige prijs.'; end if;
+  update verhuur set status = nieuw, prijs = coalesce(prijs, r.prijs),
+                     antwoord = left(coalesce(antwoord, ''), 1000), behandeld = now()
+   where id = r.id;
+end $$;
+
+-- Is het café vrij van van tot tot? null = vrij, anders de reden (voor de live controle op huren.html)
+create or replace function public.verhuur_vrij(van timestamptz, tot timestamptz) returns text
+language sql stable security definer set search_path = public as $$
+  select case when van is null or tot is null or tot <= van or tot - van > interval '24 hours' then 'Kies een begin- en einduur.'
+              else verhuur_conflict(van, tot, null) end
+$$;
+
+-- Wanneer is het café verhuurd? Enkel begin en einde van bevestigde evenementen (geen namen).
+create or replace function public.verhuur_bezet(van timestamptz, tot timestamptz)
+returns table (start timestamptz, eind timestamptz)
+language sql stable security definer set search_path = public as $$
+  select v.start, v.eind from verhuur v where v.status = 'bevestigd' and v.start < tot and v.eind > van order by v.start
+$$;
 
 -- ── BEURTENKAARTEN ─────────────────────────────────────────────────────
 -- Lid: eigen saldo en openstaande aanvraag
@@ -712,13 +882,18 @@ revoke all on function public.deelnemers(timestamptz, timestamptz) from anon;
 revoke all on function public.schrijf_uit(uuid, boolean) from anon;
 grant execute on function public.bezetting(timestamptz, timestamptz) to anon, authenticated;
 grant execute on function public.aantal_leden() to anon, authenticated;
+grant execute on function public.verhuur_bezet(timestamptz, timestamptz) to anon, authenticated;
+grant execute on function public.verhuur_vrij(timestamptz, timestamptz) to anon, authenticated;
+revoke all on function public.vraag_verhuur(timestamptz, timestamptz, boolean, text, int, text, text, jsonb) from anon;
+revoke all on function public.trek_verhuur_in(uuid) from anon;
+revoke all on function public.zet_verhuur_status(uuid, text, numeric, text) from anon;
 
 -- ── STARTWAARDEN ───────────────────────────────────────────────────────
 insert into public.beheerders (email) values ('pieterv-d-s@hotmail.com') on conflict do nothing;
 insert into public.vaste_lesgevers (email, naam, type) values ('gwen.deryck@telenet.be', 'Gwen Deryck', 'yoga-instructeur')
   on conflict (email) do update set naam = excluded.naam, type = excluded.type;
 
-insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":25,"prijs":15,"stijlen":["Hatha yoga","Vinyasa flow","Yin yoga","Yoga Nidra"]},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40,"binnenkort":true},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15,"binnenkort":true}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["07:00","22:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["07:00","22:00"]},"gesloten":{},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20,"binnenkort":true},"beurtenkaart":{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]}},"migratie":4}'::jsonb)
+insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":25,"prijs":15,"stijlen":["Hatha yoga","Vinyasa flow","Yin yoga","Yoga Nidra"]},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40,"binnenkort":true},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15,"binnenkort":true}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["07:00","22:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["07:00","22:00"]},"gesloten":{},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20,"binnenkort":true},"beurtenkaart":{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]}},"verhuur":{"prijzen":{"cafeUur":null,"zaalUur":null},"minUren":2,"minDagenVooraf":7},"migratie":4}'::jsonb)
 on conflict (id) do nothing;
 
 -- ── OMSCHAKELING oktober 2026 ──────────────────────────────────────────
@@ -775,3 +950,9 @@ update public.profielen p set type = v.type, goedgekeurd = true, naam = coalesce
   from public.vaste_lesgevers v where p.email = v.email and (p.type <> v.type or not p.goedgekeurd);
 alter table public.profielen enable trigger controleer_gewijzigd_profiel;
 select public.wijs_lessen_toe(p.id) from public.profielen p join public.vaste_lesgevers v on v.email = p.email;
+
+-- ── OMSCHAKELING oktober 2026 (5): café huren voor evenementen ─────────
+-- Prijzen per uur (null = prijs op aanvraag) en regels; de beheerder past ze aan in Beheer → Evenementen.
+update public.instellingen
+   set config = config || '{"verhuur":{"prijzen":{"cafeUur":null,"zaalUur":null},"minUren":2,"minDagenVooraf":7}}'::jsonb, bijgewerkt = now()
+ where id = 1 and not (config ? 'verhuur');

@@ -142,6 +142,10 @@ var herstel=new URLSearchParams(location.search).get('herstel')==='1';
 if(next.indexOf('reserveren.html')===0){
   document.getElementById('introTekst').textContent='Je staat op het punt een uur te reserveren. Meld je eerst aan of maak een account, daarna ga je meteen verder.';
 }
+if(next.indexOf('huren.html')===0){
+  document.getElementById('introTekst').textContent='Meld je aan of maak een gratis account om je aanvraag te versturen. Je antwoorden blijven bewaard: daarna ga je meteen verder.';
+}
+if(new URLSearchParams(location.search).get('tab')==='registreer')setTimeout(function(){toonTab('registreer');},0);
 document.getElementById('typeKeuzes').innerHTML=TYPES.map(function(t,i){
   return '<div class="type-choice"><input type="radio" name="type" id="type-'+t.id+'" value="'+t.id+'"'+(i===0?' checked':'')+'>'+
     '<label for="type-'+t.id+'">'+t.icon+' '+esc(t.label)+'</label></div>';

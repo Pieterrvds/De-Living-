@@ -96,7 +96,10 @@ DB.bezettingLijst=async function(van,tot){
   if(r.error)throw nlFout(r.error);
   return (r.data||[]).map(function(b){return {les:b.les,start:new Date(b.start).getTime(),eind:new Date(b.eind).getTime(),aantal:b.aantal,mijn:b.mijn};});
 };
-DB.laadBezetting=async function(van,tot){CACHE.bezet=await DB.bezettingLijst(van,tot);};
+DB.laadBezetting=async function(van,tot){
+  var r=await Promise.all([DB.bezettingLijst(van,tot),haalVerhuur(van,tot).catch(function(){return CACHE.verhuur;})]);
+  CACHE.bezet=r[0];CACHE.verhuur=r[1];
+};
 // Aantal accounts (voor de teller "Leden" op de hoofdpagina)
 DB.aantalLeden=async function(){
   if(!sb)throw GEEN_VERBINDING;
@@ -161,6 +164,20 @@ DB.beurten={
   zoek:function(term){return _rpc('zoek_klanten',{term:term});},
   deelnemers:function(van,tot){return _rpc('deelnemers',{van:van.toISOString(),tot:tot.toISOString()});},
   schrijfUit:function(id,beurtTerug){return _rpc('schrijf_uit',{boeking:id,beurt_terug:!!beurtTerug});}
+};
+
+/* ── CAFÉ HUREN ── */
+DB.verhuur={
+  // klant
+  vraag:function(a){return _rpc('vraag_verhuur',{van:a.van.toISOString(),tot:a.tot.toISOString(),met_zaal:!!a.metZaal,soort:a.soort,
+    gasten:a.gasten,naam:a.naam,telefoon:a.telefoon,gegevens:a.gegevens||{}});},
+  mijn:async function(){if(!sb)throw GEEN_VERBINDING;return _ok(await sb.from('verhuur').select('*').order('start',{ascending:false}));},
+  intrekken:function(id){return _rpc('trek_verhuur_in',{aanvraag:id});},
+  // is het café vrij? null = vrij, anders de reden
+  vrij:function(van,tot){return _rpc('verhuur_vrij',{van:van.toISOString(),tot:tot.toISOString()});},
+  // beheerder
+  alle:async function(){if(!sb)throw GEEN_VERBINDING;return _ok(await sb.from('verhuur').select('*, profielen(naam,email)').order('start'));},
+  zetStatus:function(id,status,prijs,antwoord){return _rpc('zet_verhuur_status',{aanvraag:id,nieuw:status,prijs:prijs==null?null:prijs,antwoord:antwoord||''});}
 };
 
 /* ── BEHEER ── (de database weigert dit voor wie geen beheerder is) */
