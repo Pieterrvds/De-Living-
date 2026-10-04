@@ -207,8 +207,8 @@
     var st=document.createElement('style');st.textContent=CSS;document.head.appendChild(st);
     knoppen();
     if(standalone)tabbalk();
-    if(window.klaar)klaar(function(u){if(u)Meldingen.synchroniseer();});
     else if(iosSafari)setTimeout(toonKaart,2500);   // iPhone kent geen installatievenster: kaart met uitleg
+    if(window.klaar)klaar(function(u){if(u)Meldingen.synchroniseer();});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
