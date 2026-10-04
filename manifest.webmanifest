@@ -1,0 +1,25 @@
+{
+  "name": "La Vie en Rose",
+  "short_name": "La Vie en Rose",
+  "description": "Yoga reserveren met je beurtenkaart en het café huren voor je feest – La Vie en Rose, Aalst.",
+  "lang": "nl-BE",
+  "dir": "ltr",
+  "id": "app.html",
+  "start_url": "app.html?bron=app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FDF8EE",
+  "theme_color": "#FDF8EE",
+  "categories": ["health", "fitness", "lifestyle"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Yoga reserveren", "short_name": "Yoga", "url": "yoga.html", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Café huren", "short_name": "Huren", "url": "huren.html", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Mijn account", "short_name": "Mijn", "url": "account.html", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

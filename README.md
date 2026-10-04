@@ -10,6 +10,7 @@ met online lessen boeken en zaalhuur voor lesgevers (kinesisten, yoga-instructeu
 | `index.html` | Hoofdpagina (over ons, rooster, lessen, evenementen, contact) |
 | `yoga.html` | **Yoga reserveren**: eenvoudige pagina voor de gsm (grote tekst en knoppen), met aanmelden, beurtenkaart en reservaties op één plek |
 | `huren.html` | **Café huren voor een evenement** (trouwfeest, babyborrel, verjaardag, vergadering, …): vragenlijst in 5 stappen met live controle of het tijdslot vrij is, en *Mijn aanvragen* met de status |
+| `app.html` | **Startscherm van de app** (begroeting, volgende les, beurten, grote knoppen voor yoga en café huren) |
 | `beurten.html` | Beurtenkaarten voor de yoga-lesgever en de beheerder: betalingen bevestigen, beurten geven, deelnemers per les |
 | `boeken.html` | Volledig weekrooster (alle lessen; wat nog niet kan staat als "binnenkort") |
 | `login.html` | Aanmelden en account maken (met type persoon) |
@@ -88,6 +89,22 @@ De rest staat bovenaan in **`assets/boeken.js`**:
 - `TYPES`: types personen, wie de zaal mag huren en welke lessen een lesgever zelf plant
 
 De hoofdpagina leest de openingsuren en lessen uit dit bestand en het rooster uit de database.
+
+## De app (installeerbaar op de gsm)
+
+De website is ook een app (PWA): bezoekers krijgen op de gsm een kaartje **"Zet onze app op je gsm"**
+(Android: meteen installeren; iPhone: korte uitleg met de Deel-knop → *Zet op beginscherm*). De knop staat
+ook bij *Mijn account* en onderaan de hoofdpagina.
+
+- `manifest.webmanifest`: naam, kleuren, icoon en snelkoppelingen (Yoga, Huren, Mijn); de app start op `app.html`.
+- `sw.js`: service worker. Pagina's komen altijd eerst van het internet (dus altijd de nieuwste versie);
+  zonder internet tonen bezochte pagina's uit het geheugen, anders `offline.html`. De database gaat nooit via de cache.
+  Verhoog `VERSIE` als je de lijst met bestanden aanpast.
+- `assets/app.js`: registreert de service worker, toont in de app de **tabbalk onderaan** (Start, Yoga, Huren, Mijn)
+  en de installatieknop op de website.
+- `icons/`: app-iconen (192, 512, Apple 180 en favicon 32).
+
+Een update van de website is meteen ook een update van de app: niets opnieuw installeren.
 
 ## Agenda-abonnement (Google Calendar, Apple, Outlook)
 

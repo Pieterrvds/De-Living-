@@ -58,6 +58,15 @@
 @media(max-width:900px){.acc-grid{grid-template-columns:1fr;}.profiel{position:static;order:2;}.profiel,.res-kaart{padding:1.5rem;}}
 @media(max-width:560px){.kpis{grid-template-columns:1fr 1fr;}.kpis .kpi:last-child{grid-column:span 2;}}
 </style>
+<meta name="theme-color" content="#FDF8EE">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="La Vie en Rose">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script src="assets/app.js" defer></script>
 </head>
 <body>
 <script src="assets/site.js"></script>
@@ -113,7 +122,8 @@ function render(){
       '<div class="fg"><label for="a-nieuw">Nieuw wachtwoord</label><input type="password" id="a-nieuw" required minlength="6" autocomplete="new-password"></div>'+
       '<div class="fg"><label for="a-herhaal">Herhaal nieuw wachtwoord</label><input type="password" id="a-herhaal" required minlength="6" autocomplete="new-password"></div>'+
       '<div class="p-fout" id="pwFout"></div><button class="btn btn-primary btn-block" id="pwKnop">Wachtwoord wijzigen</button></form></details>'+
-    '<div class="p-knoppen">'+(user.isAdmin?'<a class="btn btn-outline" href="beheer.html">⚙️ Beheer</a>':'')+(magBeurtenBeheren(user)?'<a class="btn btn-outline" href="beurten.html">🎟️ Beurtenkaarten</a>':'')+'<a class="btn btn-outline" href="'+(user.isAdmin?'beheer.html?tab=ev':'huren.html')+'">🎉 '+(user.isAdmin?'Evenement-aanvragen':'Café huren / mijn aanvragen')+'</a>'+
+    '<div class="p-knoppen">'+(user.isAdmin?'<a class="btn btn-outline" href="beheer.html">⚙️ Beheer</a>':'')+(magBeurtenBeheren(user)?'<a class="btn btn-outline" href="beurten.html">🎟️ Beurtenkaarten</a>':'')+'<button class="btn btn-outline" type="button" data-app-installeer onclick="installeerApp()"'+(window.appKanInstalleren&&appKanInstalleren()?'':' hidden')+'>📲 Installeer de app</button>'+
+      '<a class="btn btn-outline" href="'+(user.isAdmin?'beheer.html?tab=ev':'huren.html')+'">🎉 '+(user.isAdmin?'Evenement-aanvragen':'Café huren / mijn aanvragen')+'</a>'+
       '<button class="btn btn-outline" onclick="logout()">Afmelden</button></div>'+
     '<p class="res-regels">E-mailadres wijzigen of je account laten verwijderen? Stuur ons een <a href="https://wa.me/'+REGELS.whatsapp+'" target="_blank" rel="noopener">WhatsApp-bericht</a>.</p>'+
   '</aside>';
