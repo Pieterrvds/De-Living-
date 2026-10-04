@@ -131,7 +131,10 @@ function teken(u,info){
     '<a href="https://wa.me/'+REGELS.whatsapp+'" target="_blank" rel="noopener">'+svg('wa')+'WhatsApp</a>'+
     '<a href="tel:+'+REGELS.whatsapp+'">'+svg('bel')+'Bellen</a>'+
     '<a href="'+ROUTE+'" target="_blank" rel="noopener">'+svg('route')+'Route</a></div>';
+  if(u)h+='<div id="meldVraag"></div>';
   document.getElementById('st').innerHTML=h;
+  // meldingen staan uit? vriendelijk voorstellen (tot "Niet nu")
+  if(u&&window.Meldingen&&Meldingen.magVragen())Meldingen.toon('meldVraag',{enkelUit:true,nietNu:true});
 }
 
 klaar(function(u){

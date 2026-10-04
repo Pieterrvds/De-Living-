@@ -3,10 +3,10 @@
    - Lettertypes, de Supabase-bibliotheek en foto's: uit de cache (ze veranderen niet).
    - De database (Supabase) gaat nooit via de cache: reservaties zijn altijd live.
    Verhoog VERSIE als je de lijst hieronder aanpast. */
-var VERSIE='lvr-v1';
+var VERSIE='lvr-v2';
 var KERN=['app.html','index.html','yoga.html','huren.html','account.html','login.html','offline.html',
   'assets/site.css','assets/site.js','assets/app.js','assets/boeken.js','assets/db.js',
-  'manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/apple-touch-icon.png'];
+  'manifest.webmanifest','icons/icon-192.png','icons/badge-96.png','icons/icon-512.png','icons/apple-touch-icon.png'];
 var VASTE_BRONNEN=/^https:\/\/(fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net|images\.unsplash\.com)\//;
 
 self.addEventListener('install',function(e){
@@ -48,4 +48,32 @@ self.addEventListener('fetch',function(e){
     }));
   }
   // al de rest (o.a. de database) gewoon via het netwerk
+});
+
+/* ── MELDINGEN ── (verstuurd door de Edge Function 'meldingen') */
+self.addEventListener('push',function(e){
+  var d={};
+  try{d=e.data?e.data.json():{};}catch(x){d={tekst:e.data?e.data.text():''};}
+  e.waitUntil(self.registration.showNotification(d.titel||'La Vie en Rose',{
+    body:d.tekst||'',
+    icon:'icons/icon-192.png',
+    badge:'icons/badge-96.png',          // klein wit icoontje in de statusbalk (Android)
+    tag:'lvr-'+(d.id||Date.now()),
+    lang:'nl',
+    data:{url:d.url||'app.html'}
+  }));
+});
+// Tik op een melding: de app openen op de juiste pagina
+self.addEventListener('notificationclick',function(e){
+  e.notification.close();
+  var url=new URL((e.notification.data&&e.notification.data.url)||'app.html',self.registration.scope).href;
+  e.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(function(lijst){
+    for(var i=0;i<lijst.length;i++){
+      var c=lijst[i];
+      if(c.url.indexOf(self.registration.scope)===0&&'focus' in c){
+        return c.focus().then(function(c2){return c2&&c2.navigate?c2.navigate(url):c2;});
+      }
+    }
+    return self.clients.openWindow(url);
+  }));
 });

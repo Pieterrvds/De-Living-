@@ -180,6 +180,21 @@ DB.verhuur={
   zetStatus:function(id,status,prijs,antwoord){return _rpc('zet_verhuur_status',{aanvraag:id,nieuw:status,prijs:prijs==null?null:prijs,antwoord:antwoord||''});}
 };
 
+/* ── MELDINGEN OP DE GSM ── */
+DB.push={
+  // publieke sleutel; de eerste keer maakt de Edge Function 'meldingen' ze aan
+  sleutel:async function(){
+    var k=await _rpc('push_sleutel');
+    if(k)return k;
+    var r=await fetch(SUPABASE_URL+'/functions/v1/meldingen');
+    if(!r.ok)throw 'Meldingen zijn nog niet klaar. Probeer het later opnieuw.';
+    return (await r.json()).publiek;
+  },
+  bewaar:function(s){var j=s.toJSON();return _rpc('bewaar_push',{eindpunt:j.endpoint,sleutel_p256dh:j.keys.p256dh,sleutel_auth:j.keys.auth});},
+  verwijder:function(endpoint){return _rpc('verwijder_push',{eindpunt:endpoint});},
+  test:function(){return _rpc('test_melding');}
+};
+
 /* ── BEHEER ── (de database weigert dit voor wie geen beheerder is) */
 function _ok(r){if(r.error)throw nlFout(r.error);return r.data;}
 DB.admin={

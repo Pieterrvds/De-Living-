@@ -146,8 +146,9 @@ function render(){
       :'<div class="leeg-res">'+(tab==='komend'?'Je hebt nog geen komende reservaties.<br><a class="btn btn-primary" href="yoga.html">🧘 Yoga reserveren</a>':'Nog geen voorbije reservaties.')+'</div>')+
     '</div><div class="res-regels">Zelf annuleren kan tot '+REGELS.annulerenTotUurVooraf+' uur op voorhand, daarna via WhatsApp. Onbetaalde reservaties vervallen na '+REGELS.betaaltermijnMin+' minuten.</div></div>';
 
-  document.getElementById('inhoud').innerHTML='<div class="acc-grid">'+profiel+'<div>'+kpis+res+'</div></div>'+lesgeverHtml();
+  document.getElementById('inhoud').innerHTML='<div class="acc-grid">'+profiel+'<div>'+kpis+'<div id="meldKaart" style="margin-bottom:1.5rem;"></div>'+res+'</div></div>'+lesgeverHtml();
   reveal();
+  if(window.Meldingen)Meldingen.toon('meldKaart');
   if(ed)ed.teken();
 }
 

@@ -109,10 +109,105 @@
   });
   window.addEventListener('appinstalled',function(){var d=document.querySelector('.app-inst');if(d)d.remove();uitgesteld=null;knoppen();});
 
+  /* ── MELDINGEN OP DE GSM ──
+     Meldingen.toon(element) tekent een kaartje om meldingen aan/uit te zetten (Mijn account, startscherm).
+     Op een iPhone kan dit enkel in de geïnstalleerde app (iOS 16.4 of nieuwer). */
+  function naarBytes(b64){var p='='.repeat((4-b64.length%4)%4),r=atob((b64+p).replace(/-/g,'+').replace(/_/g,'/'));
+    var u=new Uint8Array(r.length);for(var i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return u;}
+  function zelfdeSleutel(s,k){try{var a=new Uint8Array(s.options.applicationServerKey),b=naarBytes(k);
+    if(a.length!==b.length)return false;for(var i=0;i<a.length;i++)if(a[i]!==b[i])return false;return true;}catch(e){return true;}}
+  function abonneer(reg,k){
+    return reg.pushManager.getSubscription().then(function(s){
+      if(s&&zelfdeSleutel(s,k))return s;
+      return (s?s.unsubscribe():Promise.resolve()).then(function(){
+        return reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:naarBytes(k)});});
+    });
+  }
+  var Meldingen={
+    ondersteund:function(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;},
+    status:function(){
+      if(!this.ondersteund())return Promise.resolve(ios&&!standalone?'installeer':'nee');
+      if(Notification.permission==='denied')return Promise.resolve('geblokkeerd');
+      if(Notification.permission!=='granted')return Promise.resolve('uit');
+      return navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription();}).then(function(s){return s?'aan':'uit';});
+    },
+    aan:function(){
+      // toestemming vragen moet meteen bij de tik gebeuren (iPhone)
+      return Notification.requestPermission().then(function(p){
+        if(p!=='granted')throw p==='denied'?'Je weigerde meldingen. Zet ze aan in de instellingen van je gsm.':'Je gaf (nog) geen toestemming.';
+        return Promise.all([navigator.serviceWorker.ready,DB.push.sleutel()]);
+      }).then(function(r){return abonneer(r[0],r[1]);})
+        .then(function(s){bewaar('lvr-push-sync',String(Date.now()));return DB.push.bewaar(s);});
+    },
+    uit:function(){
+      return navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription();}).then(function(s){
+        if(!s)return;var ep=s.endpoint;
+        return s.unsubscribe().then(function(){return DB.push.verwijder(ep).catch(function(){});});
+      });
+    },
+    // bij het openen: het toestel opnieuw doorgeven (één keer per dag), of opnieuw aanmelden als het abonnement verliep
+    synchroniseer:function(){
+      if(!this.ondersteund()||Notification.permission!=='granted'||!window.DB||!DB.push)return;
+      var laatst=+lees('lvr-push-sync')||0;
+      navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription().then(function(s){
+        if(s&&Date.now()-laatst<864e5)return;
+        return DB.push.sleutel().then(function(k){return abonneer(r,k);}).then(function(s2){
+          bewaar('lvr-push-sync',String(Date.now()));return DB.push.bewaar(s2);});
+      });}).catch(function(){});
+    },
+    uitleg:function(){
+      var u=window.DB&&DB.user,t='Je krijgt een bericht de dag voor je les, als je beurten klaarstaan en als je feest bevestigd is.';
+      if(u&&u.isAdmin)t+=' Als beheerder ook bij elke nieuwe aanvraag om het café te huren.';
+      if(u&&window.magBeurtenBeheren&&magBeurtenBeheren(u)&&!u.isAdmin)t+=' Als lesgever ook bij elke nieuwe beurtenkaart.';
+      return t;
+    },
+    toon:function(el,opties){
+      if(typeof el==='string')el=document.getElementById(el);if(!el)return;
+      opties=opties||{};var self=this;
+      this.status().then(function(st){
+        if(opties.enkelUit&&st!=='uit'){el.innerHTML='';return;}
+        var h='<div class="meld-kaart meld-'+st+'"><div class="meld-kop"><span class="meld-ic" aria-hidden="true">'+(st==='aan'?'🔔':'🔕')+'</span><b>'+
+          (st==='aan'?'Meldingen staan aan op deze gsm':'Meldingen op je gsm')+'</b></div>';
+        if(st==='aan')h+='<p>'+self.uitleg()+'</p><div class="meld-knoppen"><button type="button" class="meld-knop" data-a="test">Stuur me een testmelding</button><button type="button" class="meld-knop wit" data-a="uit">Uitzetten</button></div>';
+        else if(st==='uit')h+='<p>'+self.uitleg()+'</p><div class="meld-knoppen"><button type="button" class="meld-knop" data-a="aan">Meldingen aanzetten</button>'+
+          (opties.nietNu?'<button type="button" class="meld-knop wit" data-a="nietnu">Niet nu</button>':'')+'</div>';
+        else if(st==='installeer')h+='<p>Op een iPhone werken meldingen enkel in de app. Zet de app eerst op je beginscherm en open hem daar.</p><div class="meld-knoppen"><button type="button" class="meld-knop" data-a="installeer">Installeer de app</button></div>';
+        else if(st==='geblokkeerd')h+='<p>Meldingen staan geblokkeerd op deze gsm. Zet ze aan bij <b>Instellingen → Meldingen → La Vie en Rose</b> (of via het slotje naast het adres in je browser).</p>';
+        else h+='<p>Deze browser kan geen meldingen tonen. Gebruik Chrome op Android, of de app op een iPhone.</p>';
+        el.innerHTML=h+'<p class="meld-fout" role="alert"></p></div>';
+        el.querySelectorAll('[data-a]').forEach(function(b){b.onclick=function(){
+          var a=b.getAttribute('data-a'),fout=el.querySelector('.meld-fout');fout.textContent='';
+          if(a==='installeer')return installeerApp();
+          if(a==='nietnu'){bewaar('lvr-meld-nietnu',String(Date.now()));el.innerHTML='';return;}
+          b.disabled=true;var oud=b.textContent;b.textContent='Even geduld…';
+          var p=a==='aan'?self.aan():a==='uit'?self.uit():DB.push.test();
+          p.then(function(){
+            if(a==='test'){b.disabled=false;b.textContent=oud;fout.textContent='✓ Verstuurd. Je krijgt zo dadelijk een melding.';fout.className='meld-fout ok';return;}
+            if(window.showToast)showToast(a==='aan'?'🔔 Meldingen staan aan':'Meldingen staan uit');
+            self.toon(el,opties&&opties.enkelUit?{}:opties);
+          }).catch(function(e){b.disabled=false;b.textContent=oud;fout.className='meld-fout';fout.textContent=String(e&&e.message||e);});
+        };});
+      });
+    },
+    // startscherm: enkel tonen als ze uit staan en niet net weggeklikt
+    magVragen:function(){return Date.now()-(+lees('lvr-meld-nietnu')||0)>14*864e5;}
+  };
+  window.Meldingen=Meldingen;
+  CSS+='.meld-kaart{background:#fff;border:2px solid rgba(61,32,7,.12);border-radius:20px;padding:16px 18px;font-family:Nunito,system-ui,sans-serif;color:#2E1A08;font-size:1.02rem;line-height:1.5;text-align:left;}'+
+    '.meld-kaart.meld-aan{border-color:#3F6B34;background:#F3F8EF;}'+
+    '.meld-kop{display:flex;align-items:center;gap:.5rem;font-size:1.1rem;margin-bottom:.35rem;}.meld-ic{font-size:1.4rem;}'+
+    '.meld-kaart p{margin:.3rem 0 0;color:#5C3314;}'+
+    '.meld-knoppen{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem;}'+
+    '.meld-knop{flex:1 1 180px;min-height:52px;border:none;border-radius:14px;background:#3F6B34;color:#fff;font-family:inherit;font-size:1.02rem;font-weight:800;cursor:pointer;padding:0 14px;}'+
+    '.meld-knop.wit{background:#fff;color:#2E1A08;border:2px solid rgba(61,32,7,.3);}.meld-knop:disabled{opacity:.6;cursor:wait;}'+
+    '.meld-knop:focus-visible{outline:3px solid #1D4ED8;outline-offset:3px;}'+
+    '.meld-fout{color:#9E3B3B!important;font-weight:800;}.meld-fout:empty{display:none;}.meld-fout.ok{color:#2F5226!important;}';
+
   function start(){
     var st=document.createElement('style');st.textContent=CSS;document.head.appendChild(st);
     knoppen();
     if(standalone)tabbalk();
+    if(window.klaar)klaar(function(u){if(u)Meldingen.synchroniseer();});
     else if(iosSafari)setTimeout(toonKaart,2500);   // iPhone kent geen installatievenster: kaart met uitleg
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();

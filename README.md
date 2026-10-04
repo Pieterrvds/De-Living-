@@ -106,6 +106,32 @@ ook bij *Mijn account* en onderaan de hoofdpagina.
 
 Een update van de website is meteen ook een update van de app: niets opnieuw installeren.
 
+### Meldingen op de gsm
+
+Wie meldingen aanzet (*Mijn* → **Meldingen aanzetten**, of het voorstel op het startscherm), krijgt een bericht:
+
+| Wanneer | Wie |
+|---|---|
+| De dag voor de les (± 18 uur): "Morgen: Hatha yoga met Gwen" | klant |
+| Beurtenkaart bevestigd, beurten gekregen of aanvraag niet bevestigd | klant |
+| Reservatie verplaatst, of geannuleerd door de beheerder of lesgever | klant |
+| Feest bevestigd (met prijs), niet mogelijk of geannuleerd | klant |
+| Nieuwe aanvraag voor een beurtenkaart | lesgever (Gwen), anders de beheerder |
+| Nieuwe of ingetrokken aanvraag om het café te huren | beheerder |
+
+Hoe het werkt: de database zet meldingen klaar in de tabel `meldingen` (triggers in `supabase/schema.sql`) en de
+Edge Function **`meldingen`** (`supabase/functions/meldingen/index.ts`) verstuurt ze, meteen (pg_net) en elke minuut
+(pg_cron). De herinneringen voor morgen worden elke dag om 16:00 UTC klaargezet. De sleutels (VAPID) maakt de functie
+zelf aan en bewaart ze in `push_sleutels`; die tabel is niet leesbaar via de website.
+
+**Eén keer instellen in Supabase:**
+1. SQL Editor → `supabase/schema.sql` uitvoeren (zet ook pg_cron en pg_net aan).
+2. Edge Functions → *Deploy a new function* → *Via Editor* → naam **`meldingen`** → plak `supabase/functions/meldingen/index.ts` → *Deploy*.
+3. Bij die functie → *Details*: zet **Enforce JWT verification** (Verify JWT) **uit** en bewaar.
+4. In de app: *Mijn* → **Meldingen aanzetten** → **Stuur me een testmelding**.
+
+Op een iPhone werken meldingen enkel in de geïnstalleerde app (iOS 16.4 of nieuwer).
+
 ## Agenda-abonnement (Google Calendar, Apple, Outlook)
 
 `rooster.ics` is het lessenrooster als agenda. De knop **+ Google Calendar** op de hoofdpagina

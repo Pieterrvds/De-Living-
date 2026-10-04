@@ -105,6 +105,37 @@ create table if not exists public.verhuur (
 create index if not exists verhuur_start_idx on public.verhuur(start);
 create index if not exists verhuur_user_idx  on public.verhuur(user_id);
 
+-- Meldingen op de gsm (web push). Elke gsm waarop iemand meldingen aanzet, staat in push_abonnementen.
+-- Meldingen wachten in 'meldingen' tot de Edge Function 'meldingen' (supabase/functions/meldingen) ze verstuurt.
+-- De sleutels voor het versturen (VAPID) maakt die functie zelf aan; de private sleutel kan niemand via de website lezen.
+create table if not exists public.push_abonnementen (
+  endpoint        text primary key,
+  user_id         uuid not null references public.profielen(id) on delete cascade,
+  p256dh          text not null,
+  auth            text not null,
+  aangemaakt      timestamptz not null default now(),
+  laatst_gebruikt timestamptz
+);
+create index if not exists push_abonnementen_user_idx on public.push_abonnementen(user_id);
+create table if not exists public.meldingen (
+  id         bigserial primary key,
+  user_id    uuid not null references public.profielen(id) on delete cascade,
+  titel      text not null,
+  tekst      text not null,
+  url        text not null default 'app.html',
+  sleutel    text unique,                           -- tegen dubbele meldingen (bv. 'herinnering:<boeking>')
+  aangemaakt timestamptz not null default now(),
+  verstuurd  timestamptz,
+  pogingen   int not null default 0
+);
+create index if not exists meldingen_wacht_idx on public.meldingen(id) where verstuurd is null;
+create table if not exists public.push_sleutels (
+  id         int primary key default 1 check (id = 1),
+  publiek    text not null,
+  prive      jsonb not null,
+  aangemaakt timestamptz not null default now()
+);
+
 -- ── HULPFUNCTIES ───────────────────────────────────────────────────────
 -- 'HH:MM' → minuten
 create or replace function public.hm(t text) returns int
@@ -463,7 +494,15 @@ create policy "annuleren" on public.boekingen for delete
 
 alter table public.vaste_lesgevers enable row level security;   -- enkel via de functies hierboven
 alter table public.beurten enable row level security;
-alter table public.verhuur enable row level security;           -- aanvragen en wijzigen enkel via de functies
+alter table public.verhuur enable row level security;
+alter table public.push_abonnementen enable row level security;
+alter table public.meldingen enable row level security;
+alter table public.push_sleutels enable row level security;          -- geen enkele policy: niemand leest dit via de website
+revoke all on public.push_sleutels from anon, authenticated;
+drop policy if exists "eigen toestellen" on public.push_abonnementen;
+create policy "eigen toestellen" on public.push_abonnementen for select using (user_id = auth.uid());
+drop policy if exists "eigen meldingen" on public.meldingen;
+create policy "eigen meldingen" on public.meldingen for select using (user_id = auth.uid());           -- aanvragen en wijzigen enkel via de functies
 drop policy if exists "eigen aanvragen of beheerder" on public.verhuur;
 create policy "eigen aanvragen of beheerder" on public.verhuur for select
   using (user_id = auth.uid() or is_admin());
@@ -707,6 +746,206 @@ language sql stable security definer set search_path = public as $$
   select v.start, v.eind from verhuur v where v.status = 'bevestigd' and v.start < tot and v.eind > van order by v.start
 $$;
 
+-- ── MELDINGEN OP DE GSM ─────────────────────────────────────────────────
+-- Gsm aanmelden voor meldingen (na toestemming in de app)
+create or replace function public.bewaar_push(eindpunt text, sleutel_p256dh text, sleutel_auth text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null or not exists (select 1 from profielen where id = auth.uid()) then raise exception 'Meld je eerst aan.'; end if;
+  if eindpunt is null or eindpunt !~ '^https://' or length(eindpunt) > 1000
+     or coalesce(sleutel_p256dh, '') !~ '^[A-Za-z0-9_=-]{40,200}$' or coalesce(sleutel_auth, '') !~ '^[A-Za-z0-9_=-]{8,64}$' then
+    raise exception 'Ongeldige gegevens voor meldingen.';
+  end if;
+  insert into push_abonnementen (endpoint, user_id, p256dh, auth)
+  values (eindpunt, auth.uid(), sleutel_p256dh, sleutel_auth)
+  on conflict (endpoint) do update set user_id = excluded.user_id, p256dh = excluded.p256dh, auth = excluded.auth;
+  -- hoogstens 10 toestellen per persoon
+  delete from push_abonnementen where user_id = auth.uid() and endpoint in (
+    select endpoint from push_abonnementen where user_id = auth.uid() order by aangemaakt desc offset 10);
+end $$;
+
+create or replace function public.verwijder_push(eindpunt text) returns void
+language sql security definer set search_path = public as $$
+  delete from push_abonnementen where endpoint = eindpunt and user_id = auth.uid()
+$$;
+
+-- Publieke sleutel voor de app (null zolang de Edge Function nog nooit gelopen heeft)
+create or replace function public.push_sleutel() returns text
+language sql stable security definer set search_path = public as $$
+  select publiek from push_sleutels where id = 1
+$$;
+
+-- 'zaterdag 10 oktober om 10:00'
+create or replace function public.nl_moment(t timestamptz) returns text
+language sql stable as $$
+  select (array['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'])[extract(dow from t at time zone 'Europe/Brussels')::int + 1]
+      || ' ' || extract(day from t at time zone 'Europe/Brussels')::int
+      || ' ' || (array['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'])[extract(month from t at time zone 'Europe/Brussels')::int]
+      || ' om ' || to_char(t at time zone 'Europe/Brussels', 'HH24:MI')
+$$;
+
+-- 'Hatha yoga met Gwen' (soort en lesgever uit het rooster), anders de naam van de les
+create or replace function public.les_titel(les text, t timestamptz) returns text
+language sql stable security definer set search_path = public as $$
+  select coalesce(nullif(x->>4, ''), cfg()->'lessen'->les->>'naam', les)
+      || coalesce(' met ' || nullif(split_part(coalesce(x->>3, ''), ' ', 1), ''), '')
+    from (select (select y from jsonb_array_elements(coalesce(cfg()->'rooster'->(extract(dow from t at time zone 'Europe/Brussels')::int::text), '[]'::jsonb)) y
+                   where y->>0 = to_char(t at time zone 'Europe/Brussels', 'HH24:MI') and y->>1 = les limit 1) as x) r
+$$;
+
+-- Melding klaarzetten (enkel als die persoon meldingen aanzette); de Edge Function verstuurt ze
+create or replace function public.meld(ontvanger uuid, titel text, tekst text, url text default 'app.html', sleutel text default null) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from push_abonnementen a where a.user_id = ontvanger) then return; end if;
+  insert into meldingen (user_id, titel, tekst, url, sleutel)
+  values (ontvanger, left(titel, 80), left(tekst, 220), url, sleutel)
+  on conflict do nothing;
+exception when foreign_key_violation then null;    -- account wordt net verwijderd
+end $$;
+
+-- Wie krijgt meldingen over beurtenkaarten? De lesgevers (bv. Gwen), anders de beheerder.
+create or replace function public.beheerders_ids() returns setof uuid
+language sql stable security definer set search_path = public as $$
+  select p.id from profielen p join beheerders b on b.email = p.email
+$$;
+create or replace function public.beurten_beheerders() returns setof uuid
+language sql stable security definer set search_path = public as $$
+  with l as (
+    select p.id from profielen p
+     where p.goedgekeurd and coalesce((cfg()->'types'->p.type->>'pro')::boolean, false)
+       and exists (select 1 from jsonb_array_elements_text(coalesce(cfg()->'types'->p.type->'lessen', '[]'::jsonb)) x
+                    where coalesce(cfg()->'beurtenkaart'->'lessen', '[]'::jsonb) ? x))
+  select id from l
+  union all
+  select id from beheerders_ids() id where not exists (select 1 from l)
+$$;
+
+-- Beurtenkaart aangevraagd (→ lesgever), bevestigd of beurten gekregen (→ klant), geweigerd (→ klant)
+create or replace function public.melding_beurten() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare n text; ontv uuid;
+begin
+  if tg_op = 'DELETE' then
+    if old.status = 'aangevraagd' and auth.uid() is distinct from old.user_id then
+      perform meld(old.user_id, '🎟️ Beurtenkaart', 'Je aanvraag voor een beurtenkaart werd niet bevestigd. Vragen? Spreek Gwen gerust aan.', 'yoga.html');
+    end if;
+    return null;
+  end if;
+  if tg_op = 'INSERT' and new.status = 'aangevraagd' then
+    select p.naam into n from profielen p where p.id = new.user_id;
+    for ontv in select * from beurten_beheerders() loop
+      perform meld(ontv, '🎟️ Nieuwe beurtenkaart', coalesce(nullif(n, ''), 'Een klant') || ' vraagt een kaart van ' || new.aantal
+        || ' beurten. Bevestig zodra er betaald is.', 'beurten.html');
+    end loop;
+  elsif new.status = 'bevestigd' and new.aantal > 0 and (tg_op = 'INSERT' or old.status = 'aangevraagd') then
+    perform meld(new.user_id, '🎟️ Je beurten staan klaar',
+      case when new.soort = 'kaart' then 'Je kaart van ' || new.aantal || ' beurten is bevestigd.'
+           else 'Je kreeg ' || new.aantal || case when new.aantal = 1 then ' beurt' else ' beurten' end || ' erbij.' end
+      || ' Je hebt nu ' || beurten_saldo(new.user_id) || case when beurten_saldo(new.user_id) = 1 then ' beurt.' else ' beurten.' end, 'yoga.html');
+  end if;
+  return null;
+end $$;
+drop trigger if exists melding_bij_beurten on public.beurten;
+create trigger melding_bij_beurten after insert or update or delete on public.beurten
+  for each row execute function public.melding_beurten();
+
+-- Café huren: nieuwe aanvraag of intrekken (→ beheerder), bevestigd/geweigerd/geannuleerd (→ klant)
+create or replace function public.melding_verhuur() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare ontv uuid; wanneer text := nl_moment(new.start);
+begin
+  if tg_op = 'INSERT' then
+    for ontv in select * from beheerders_ids() loop
+      perform meld(ontv, '🎉 Nieuwe aanvraag: ' || new.soort, new.naam || ' · ' || wanneer || ' · ' || new.gasten || ' gasten', 'beheer.html?tab=ev');
+    end loop;
+  elsif new.status is distinct from old.status then
+    if new.status = 'bevestigd' then
+      perform meld(new.user_id, '🎉 Je feest is bevestigd!', new.soort || ' op ' || wanneer || '.'
+        || coalesce(' Prijs: € ' || replace(to_char(new.prijs, 'FM9999990.00'), '.', ','), '') || ' Tot dan!', 'huren.html');
+    elsif new.status = 'geweigerd' then
+      perform meld(new.user_id, 'Je aanvraag: ' || lower(new.soort), 'Het lukt helaas niet op ' || wanneer || '.'
+        || coalesce(' ' || nullif(new.antwoord, ''), ''), 'huren.html');
+    elsif new.status = 'geannuleerd' and auth.uid() is distinct from new.user_id then
+      perform meld(new.user_id, 'Je evenement is geannuleerd', new.soort || ' op ' || wanneer || '.'
+        || coalesce(' ' || nullif(new.antwoord, ''), ' We nemen contact met je op.'), 'huren.html');
+    elsif new.status = 'ingetrokken' then
+      for ontv in select * from beheerders_ids() loop
+        perform meld(ontv, 'Aanvraag ingetrokken', new.naam || ' trok de aanvraag in: ' || lower(new.soort) || ', ' || wanneer || '.', 'beheer.html?tab=ev');
+      end loop;
+    end if;
+  end if;
+  return null;
+end $$;
+drop trigger if exists melding_bij_verhuur on public.verhuur;
+create trigger melding_bij_verhuur after insert or update on public.verhuur
+  for each row execute function public.melding_verhuur();
+
+-- Reservatie verplaatst of door de beheerder/lesgever geannuleerd (→ klant)
+create or replace function public.melding_boeking() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'UPDATE' then
+    if new.start is distinct from old.start and new.status <> 'intern' and new.start > now() then
+      perform meld(new.user_id, '🔁 Je les is verplaatst', les_titel(new.les, new.start) || ': nu op ' || nl_moment(new.start)
+        || ' (was ' || nl_moment(old.start) || ').', 'yoga.html');
+    end if;
+  elsif old.status not in ('intern', 'wacht-op-betaling') and old.start > now() and auth.uid() is distinct from old.user_id then
+    perform meld(old.user_id, 'Je reservatie is geannuleerd', les_titel(old.les, old.start) || ' op ' || nl_moment(old.start)
+      || ' gaat voor jou niet door. Vragen? Stuur ons een berichtje.', 'yoga.html');
+  end if;
+  return null;
+end $$;
+drop trigger if exists melding_bij_boeking on public.boekingen;
+create trigger melding_bij_boeking after update or delete on public.boekingen
+  for each row execute function public.melding_boeking();
+
+-- Herinnering de dag voor de les (elke dag rond 18 uur, via pg_cron)
+create or replace function public.plan_herinneringen() returns int
+language plpgsql security definer set search_path = public as $$
+declare b boekingen; n int := 0; morgen date := (now() at time zone 'Europe/Brussels')::date + 1;
+begin
+  for b in select x.* from boekingen x
+            where x.status <> 'intern' and x.les <> 'zaal' and telt(x)
+              and (x.start at time zone 'Europe/Brussels')::date = morgen loop
+    perform meld(b.user_id, '🧘 Morgen: ' || les_titel(b.les, b.start),
+      'Om ' || to_char(b.start at time zone 'Europe/Brussels', 'HH24:MI') || ' in La Vie en Rose. Kan je toch niet? Annuleer op tijd in de app.',
+      'yoga.html', 'herinnering:' || b.id);
+    n := n + 1;
+  end loop;
+  delete from meldingen where aangemaakt < now() - interval '30 days';
+  return n;
+end $$;
+
+-- Wachtende meldingen laten versturen door de Edge Function (meteen bij een nieuwe melding en elke minuut)
+create or replace function public.stuur_meldingen() returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from meldingen where verstuurd is null and pogingen < 5 and aangemaakt > now() - interval '2 days') then return; end if;
+  begin
+    perform net.http_post(url := 'https://asogwgjyurkcciaamhld.supabase.co/functions/v1/meldingen', body := '{}'::jsonb);
+  exception when others then null;   -- pg_net (nog) niet aan: de minuutjob probeert het later opnieuw
+  end;
+end $$;
+create or replace function public.na_nieuwe_melding() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin perform stuur_meldingen(); return null; end $$;
+drop trigger if exists verstuur_nieuwe_meldingen on public.meldingen;
+create trigger verstuur_nieuwe_meldingen after insert on public.meldingen
+  for each statement execute function public.na_nieuwe_melding();
+
+-- Knop "Stuur me een testmelding" in de app
+create or replace function public.test_melding() returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'Meld je eerst aan.'; end if;
+  if not exists (select 1 from push_abonnementen where user_id = auth.uid()) then
+    raise exception 'Zet eerst meldingen aan op deze gsm.';
+  end if;
+  perform meld(auth.uid(), '🌹 Het werkt!', 'Je krijgt voortaan meldingen van La Vie en Rose op deze gsm.', 'app.html',
+               'test:' || auth.uid() || ':' || to_char(now(), 'YYYYMMDDHH24MI'));
+end $$;
+
 -- ── BEURTENKAARTEN ─────────────────────────────────────────────────────
 -- Lid: eigen saldo en openstaande aanvraag
 create or replace function public.mijn_beurten() returns jsonb
@@ -883,6 +1122,16 @@ revoke all on function public.schrijf_uit(uuid, boolean) from anon;
 grant execute on function public.bezetting(timestamptz, timestamptz) to anon, authenticated;
 grant execute on function public.aantal_leden() to anon, authenticated;
 grant execute on function public.verhuur_bezet(timestamptz, timestamptz) to anon, authenticated;
+grant execute on function public.push_sleutel() to anon, authenticated;
+revoke all on function public.bewaar_push(text, text, text) from anon;
+revoke all on function public.verwijder_push(text) from anon;
+revoke all on function public.test_melding() from anon;
+revoke all on function public.meld(uuid, text, text, text, text) from public, anon, authenticated;
+revoke all on function public.beheerders_ids() from public, anon, authenticated;
+revoke all on function public.beurten_beheerders() from public, anon, authenticated;
+revoke all on function public.plan_herinneringen() from public, anon, authenticated;
+revoke all on function public.stuur_meldingen() from public, anon, authenticated;
+revoke all on function public.les_titel(text, timestamptz) from public, anon, authenticated;
 grant execute on function public.verhuur_vrij(timestamptz, timestamptz) to anon, authenticated;
 revoke all on function public.vraag_verhuur(timestamptz, timestamptz, boolean, text, int, text, text, jsonb) from anon;
 revoke all on function public.trek_verhuur_in(uuid) from anon;
@@ -956,3 +1205,20 @@ select public.wijs_lessen_toe(p.id) from public.profielen p join public.vaste_le
 update public.instellingen
    set config = config || '{"verhuur":{"prijzen":{"cafeUur":null,"zaalUur":null},"minUren":2,"minDagenVooraf":7}}'::jsonb, bijgewerkt = now()
  where id = 1 and not (config ? 'verhuur');
+
+-- ── MELDINGEN: AUTOMATISCH VERSTUREN ───────────────────────────────────
+-- pg_net (internetverzoeken vanuit de database) en pg_cron (taken op een vast uur).
+-- Lukt dit niet? Zet ze aan bij Database → Extensions en voer dit bestand opnieuw uit.
+do $$
+begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_net') then
+    create extension if not exists pg_net with schema extensions;
+  end if;
+  if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    create extension if not exists pg_cron;
+    perform cron.schedule('lvr-meldingen', '* * * * *', 'select public.stuur_meldingen()');          -- wachtende meldingen
+    perform cron.schedule('lvr-herinneringen', '0 16 * * *', 'select public.plan_herinneringen()');  -- ± 18 uur: les van morgen
+  end if;
+exception when others then
+  raise notice 'Meldingen: % — zet pg_cron en pg_net aan bij Database → Extensions en voer dit bestand opnieuw uit.', sqlerrm;
+end $$;
