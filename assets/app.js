@@ -23,7 +23,7 @@
     'html.app-modus body{padding-bottom:calc(84px + env(safe-area-inset-bottom));}'+
     'html.app-modus .wa,html.app-modus .yoga-balk,html.app-modus .cursor,html.app-modus .cursor-ring{display:none!important;}'+
     /* in de app enkel de tabbalk onderaan: de menubalk bovenaan valt weg en de pagina schuift op */
-    'html.app-modus #nav,html.app-modus #mobMenu,html.app-modus .progress-bar{display:none!important;}'+
+    'html.app-modus #nav,html.app-modus #mobMenu,html.app-modus .progress-bar,html.app-modus footer{display:none!important;}'+
     'html.app-modus .yg,html.app-modus .hu,html.app-modus .st{padding-top:calc(22px + env(safe-area-inset-top))!important;}'+
     'html.app-modus .page-hero{padding-top:calc(3.5rem + env(safe-area-inset-top))!important;}'+
     '.app-tabs{position:fixed;left:0;right:0;bottom:0;z-index:1100;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:calc(70px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#fff;border-top:1px solid rgba(61,32,7,.12);box-shadow:0 -6px 24px rgba(61,32,7,.06);font-family:Nunito,system-ui,sans-serif;}'+
