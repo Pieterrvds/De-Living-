@@ -136,6 +136,10 @@ create table if not exists public.push_sleutels (
   aangemaakt timestamptz not null default now()
 );
 
+-- Extra lessen bovenop die van het type (bv. Gwen: yoga-instructeur én massage)
+alter table public.profielen      add column if not exists extra_lessen jsonb not null default '[]'::jsonb;
+alter table public.vaste_lesgevers add column if not exists extra_lessen jsonb not null default '[]'::jsonb;
+
 -- ── HULPFUNCTIES ───────────────────────────────────────────────────────
 -- 'HH:MM' → minuten
 create or replace function public.hm(t text) returns int
@@ -146,6 +150,12 @@ $$;
 create or replace function public.cfg() returns jsonb
 language sql stable security definer set search_path = public as $$
   select config from instellingen where id = 1
+$$;
+
+-- Alle lessen van een lesgever: die van het type + de extra lessen
+create or replace function public.pro_lessen(p public.profielen) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select coalesce(cfg()->'types'->p.type->'lessen', '[]'::jsonb) || coalesce(p.extra_lessen, '[]'::jsonb)
 $$;
 
 create or replace function public.is_admin() returns boolean
@@ -175,7 +185,7 @@ language sql stable security definer set search_path = public as $$
     select 1 from profielen p
      where p.id = auth.uid() and p.goedgekeurd
        and coalesce((cfg()->'types'->p.type->>'pro')::boolean, false)
-       and exists (select 1 from jsonb_array_elements_text(coalesce(cfg()->'types'->p.type->'lessen', '[]'::jsonb)) l
+       and exists (select 1 from jsonb_array_elements_text(pro_lessen(p)) l
                     where coalesce(cfg()->'beurtenkaart'->'lessen', '[]'::jsonb) ? l))
 $$;
 
@@ -191,7 +201,7 @@ begin
   for d in select jsonb_object_keys(c->'rooster') loop
     r := r || jsonb_build_object(d, coalesce((
       select jsonb_agg(case when coalesce(x->>2, '') = ''
-                              and coalesce(c->'types'->p.type->'lessen', '[]'::jsonb) ? (x->>1)
+                              and pro_lessen(p) ? (x->>1)
                          then jsonb_build_array(x->>0, x->>1, p.id::text, p.naam)
                               || case when x->>4 is not null then jsonb_build_array(x->>4) else '[]'::jsonb end
                          else x end order by n)
@@ -210,13 +220,14 @@ begin
   select * into v from vaste_lesgevers where email = lower(new.email);
   if v.email is not null then t := v.type; end if;
   if not coalesce(cfg()->'types' ? t, false) then t := 'lid'; end if;
-  insert into profielen (id, naam, email, type, goedgekeurd)
+  insert into profielen (id, naam, email, type, goedgekeurd, extra_lessen)
   values (new.id,
           left(coalesce(v.naam, nullif(new.raw_user_meta_data->>'naam', ''), ''), 100),   -- vaste lesgever: altijd de gekende naam
           lower(new.email),
           t,
           -- gewone leden hoeven niet goedgekeurd te worden; vaste lesgevers zijn al gekend
-          v.email is not null or not coalesce((cfg()->'types'->t->>'pro')::boolean, false))
+          v.email is not null or not coalesce((cfg()->'types'->t->>'pro')::boolean, false),
+          coalesce(v.extra_lessen, '[]'::jsonb))
   on conflict (id) do nothing;
   if v.email is not null then perform wijs_lessen_toe(new.id); end if;
   return new;
@@ -442,11 +453,12 @@ language plpgsql security definer set search_path = public as $$
 begin
   if not is_admin() then
     if old.id is distinct from auth.uid() then raise exception 'Niet toegestaan.'; end if;
-    new.type := old.type; new.goedgekeurd := old.goedgekeurd;
+    new.type := old.type; new.goedgekeurd := old.goedgekeurd; new.extra_lessen := old.extra_lessen;
   end if;
   new.naam := left(btrim(coalesce(new.naam, '')), 80);
   if new.naam = '' then raise exception 'Vul je naam in.'; end if;
   if not coalesce(cfg()->'types' ? new.type, false) then raise exception 'Onbekend type.'; end if;
+  if jsonb_typeof(new.extra_lessen) is distinct from 'array' then new.extra_lessen := '[]'::jsonb; end if;
   new.id := old.id; new.email := old.email; new.aangemaakt := old.aangemaakt;
   return new;
 end $$;
@@ -559,7 +571,7 @@ begin
   if p.id is null then raise exception 'Meld je eerst aan.'; end if;
   -- één wijziging tegelijk
   select config into c from instellingen where id = 1 for update;
-  mag := c->'types'->p.type->'lessen';
+  mag := pro_lessen(p);
   if not coalesce((c->'types'->p.type->>'pro')::boolean, false) or not p.goedgekeurd
      or mag is null or jsonb_typeof(mag) <> 'array' or jsonb_array_length(mag) = 0 then
     raise exception 'Enkel goedgekeurde lesgevers kunnen hun uren aanpassen.';
@@ -814,7 +826,7 @@ language sql stable security definer set search_path = public as $$
   with l as (
     select p.id from profielen p
      where p.goedgekeurd and coalesce((cfg()->'types'->p.type->>'pro')::boolean, false)
-       and exists (select 1 from jsonb_array_elements_text(coalesce(cfg()->'types'->p.type->'lessen', '[]'::jsonb)) x
+       and exists (select 1 from jsonb_array_elements_text(pro_lessen(p)) x
                     where coalesce(cfg()->'beurtenkaart'->'lessen', '[]'::jsonb) ? x))
   select id from l
   union all
@@ -893,7 +905,7 @@ language sql stable security definer set search_path = public as $$
   lesgevers as (
     select p.id from profielen p
      where p.goedgekeurd and coalesce((cfg()->'types'->p.type->>'pro')::boolean, false)
-       and coalesce(cfg()->'types'->p.type->'lessen', '[]'::jsonb) ? les)
+       and pro_lessen(p) ? les)
   select id from eigenaar
   union all select id from lesgevers where not exists (select 1 from eigenaar)
   union all select id from beheerders_ids() id where not exists (select 1 from eigenaar) and not exists (select 1 from lesgevers)
@@ -1000,7 +1012,7 @@ begin
       from boekingen b join profielen q on q.id = b.user_id
      where b.start >= van and b.start < tot and telt(b) and b.status <> 'intern'
        and coalesce((cfg()->'lessen'->b.les->>'max')::int, 0) = 1
-       and (is_admin() or coalesce(cfg()->'types'->p.type->'lessen', '[]'::jsonb) ? b.les)
+       and (is_admin() or pro_lessen(p) ? b.les)
      order by b.start;
 end $$;
 
@@ -1198,8 +1210,9 @@ revoke all on function public.zet_verhuur_status(uuid, text, numeric, text) from
 
 -- ── STARTWAARDEN ───────────────────────────────────────────────────────
 insert into public.beheerders (email) values ('pieterv-d-s@hotmail.com') on conflict do nothing;
-insert into public.vaste_lesgevers (email, naam, type) values ('gwen.deryck@telenet.be', 'Gwen Deryck', 'yoga-instructeur')
-  on conflict (email) do update set naam = excluded.naam, type = excluded.type;
+insert into public.vaste_lesgevers (email, naam, type, extra_lessen) values ('gwen.deryck@telenet.be', 'Gwen Deryck', 'yoga-instructeur', '["massage"]')
+  on conflict (email) do update set naam = excluded.naam, type = excluded.type,
+    extra_lessen = (select coalesce(jsonb_agg(distinct x), '[]'::jsonb) from jsonb_array_elements(vaste_lesgevers.extra_lessen || excluded.extra_lessen) x);
 
 insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":25,"prijs":15,"stijlen":["Hatha yoga","Vinyasa flow","Yin yoga","Yoga Nidra"]},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40,"binnenkort":true},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15,"binnenkort":true},"massage":{"naam":"Massage","duur":60,"max":1,"prijs":null}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["07:00","22:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["07:00","22:00"]},"gesloten":{},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20,"binnenkort":true},"beurtenkaart":{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]},"masseur":{"pro":true,"zaal":true,"lessen":["massage"]}},"verhuur":{"prijzen":{"cafeUur":null,"zaalUur":null},"minUren":2,"minDagenVooraf":7},"migratie":4}'::jsonb)
 on conflict (id) do nothing;
@@ -1272,6 +1285,15 @@ update public.instellingen
                           '{types,masseur}', '{"pro":true,"zaal":true,"lessen":["massage"]}'::jsonb),
        bijgewerkt = now()
  where id = 1 and not (config->'lessen' ? 'massage');
+
+-- ── OMSCHAKELING oktober 2026 (7): Gwen geeft ook massage ──────────────
+-- Vaste lesgevers krijgen hun extra lessen (bv. Gwen: massage) ook als hun account al bestaat.
+alter table public.profielen disable trigger controleer_gewijzigd_profiel;
+update public.profielen p
+   set extra_lessen = (select coalesce(jsonb_agg(distinct x), '[]'::jsonb) from jsonb_array_elements(p.extra_lessen || v.extra_lessen) x)
+  from public.vaste_lesgevers v
+ where p.email = v.email and not (p.extra_lessen @> v.extra_lessen);
+alter table public.profielen enable trigger controleer_gewijzigd_profiel;
 
 -- ── MELDINGEN: AUTOMATISCH VERSTUREN ───────────────────────────────────
 -- pg_net (internetverzoeken vanuit de database) en pg_cron (taken op een vast uur).

@@ -27,8 +27,8 @@
     'html.app-modus #nav,html.app-modus #mobMenu,html.app-modus .progress-bar,html.app-modus footer{display:none!important;}'+
     'html.app-modus .yg,html.app-modus .hu,html.app-modus .st{padding-top:calc(22px + env(safe-area-inset-top))!important;}'+
     'html.app-modus .page-hero{padding-top:calc(3.5rem + env(safe-area-inset-top))!important;}'+
-    '.app-tabs{position:fixed;left:0;right:0;bottom:0;z-index:1100;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:calc(70px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#fff;border-top:1px solid rgba(61,32,7,.12);box-shadow:0 -6px 24px rgba(61,32,7,.06);font-family:Nunito,system-ui,sans-serif;}'+
-    '.app-tabs a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#6E5641;font-size:13px;font-weight:700;-webkit-tap-highlight-color:transparent;}'+
+    '.app-tabs{position:fixed;left:0;right:0;bottom:0;z-index:1100;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);height:calc(70px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:#fff;border-top:1px solid rgba(61,32,7,.12);box-shadow:0 -6px 24px rgba(61,32,7,.06);font-family:Nunito,system-ui,sans-serif;}'+
+    '.app-tabs a{min-width:0;white-space:nowrap;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:#6E5641;font-size:13px;font-weight:700;-webkit-tap-highlight-color:transparent;}'+
     '.app-tabs a[aria-current]{color:#3F6B34;font-weight:800;}'+
     '.app-tabs svg{width:26px;height:26px;}'+
     /* installatiekaart */

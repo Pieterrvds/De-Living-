@@ -29,7 +29,7 @@ var LESSEN={
     keuzes:[
       {naam:'Ontspanningsmassage',uitleg:'Zacht en rustgevend, voor het hele lichaam'},
       {naam:'Sportmassage',uitleg:'Steviger, voor vermoeide of stijve spieren'},
-      {naam:'Rug, nek en schouders',uitleg:'Gericht op spanning in de bovenrug'},
+      {naam:'Rug, nek & schouders',uitleg:'Gericht op spanning in de bovenrug'},
       {naam:'Voetreflexmassage',uitleg:'Ontspanning via drukpunten in de voeten'}
     ]}
 };
@@ -179,8 +179,10 @@ function magInplannen(user){return !!(user&&user.isAdmin);}
 // Goedgekeurde lesgevers passen hun eigen uren in het rooster aan
 // Beurtenkaarten bevestigen en deelnemers zien: beheerder of goedgekeurde lesgever van een beurtenles
 function magBeurtenBeheren(user){return !!(user&&(user.isAdmin||eigenLessenRuw(user).some(metBeurt)));}
-function eigenLessenRuw(user){return isGoedgekeurdePro(user)?(getType(user.type).lessen||[]):[];}
-function eigenLessen(user){return isGoedgekeurdePro(user)?(getType(user.type).lessen||[]).filter(function(l){return LESSEN[l];}):[];}
+// lessen van het type + extra lessen van deze persoon (bv. Gwen: yoga én massage)
+function proLessen(p){var l=(getType(p.type).lessen||[]).slice();(Array.isArray(p.extra_lessen)?p.extra_lessen:[]).forEach(function(x){if(l.indexOf(x)<0)l.push(x);});return l;}
+function eigenLessenRuw(user){return isGoedgekeurdePro(user)?proLessen(user):[];}
+function eigenLessen(user){return eigenLessenRuw(user).filter(function(l){return LESSEN[l];});}
 
 /* ── ACTIVITEITEN ── keuzelijst bij 'Inplannen' door de beheerder */
 var ACTIVITEITEN=[

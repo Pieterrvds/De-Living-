@@ -263,7 +263,7 @@ var ed=null;
 function reAantalWijzigingen(){return ed?ed.aantal():0;}
 function maakEditor(rooster){
   ed=new RoosterEditor({el:'reHier',rooster:rooster,gesloten:dbInst.config.gesloten||{},dichtBeheer:true,lessen:Object.keys(LESSEN),
-    lesgevers:function(les){return profielen.filter(function(p){return isGoedgekeurdePro(p)&&(getType(p.type).lessen||[]).indexOf(les)>=0;})
+    lesgevers:function(les){return profielen.filter(function(p){return isGoedgekeurdePro(p)&&proLessen(p).indexOf(les)>=0;})
       .map(function(p){return {id:p.id,naam:p.naam||p.email};});},
     hulp:'Klik op een les om ook de <b>lesgever</b> te kiezen: goedgekeurde lesgevers verschuiven hun eigen uren dan zelf bij <i>Mijn account</i>. ',
     publiceer:rePubliceer,naWijziging:tekenTabs});

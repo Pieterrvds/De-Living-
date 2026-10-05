@@ -246,7 +246,7 @@ function lesgeverHtml(){
     });
   }
   return '<div class="card lesgever sr up"><h2 class="card-title">🗓️ Mijn lessen</h2>'+
-    '<p class="lg-intro">Als '+esc(getType(user.type).label.toLowerCase())+' zet je hier zelf je uren in het rooster. Leden zien ze meteen op de website en kunnen ze boeken. Hieronder zie je ook hoe vol je lessen zijn.'+
+    '<p class="lg-intro">Je zet hier zelf je uren voor '+esc(eigenLessen(user).map(function(l){return LESSEN[l].naam.toLowerCase();}).join(' en '))+' in het rooster. Leden zien ze meteen op de website en kunnen ze boeken. Hieronder zie je ook hoe vol je lessen zijn.'+
       (eigenLessen(user).every(isBinnenkort)?' <b>Let op:</b> online boeken voor '+eigenLessen(user).map(function(l){return LESSEN[l].naam.toLowerCase();}).join(' en ')+' kan pas binnenkort; je kan je uren wel al klaarzetten.':'')+
       (magBeurtenBeheren(user)?' Beurtenkaarten bevestigen en zien wie er komt doe je bij <a href="beurten.html">🎟️ Beurtenkaarten</a>.':'')+'</p>'+
     afsprakenHtml()+

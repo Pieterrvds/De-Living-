@@ -31,6 +31,11 @@ therapeut van dat uur een melding op de gsm, en in **Mijn lessen** staat de lijs
 soort massage en opmerking. De prijs is "ter plaatse"; de soorten en uitleg pas je aan in
 `assets/boeken.js` (`LESSEN.massage.keuzes`).
 
+**Gwen Deryck** is yoga-instructeur én geeft massage. Zulke extra lessen staan per persoon in de
+kolom `extra_lessen` (tabel `profielen`, en voor vaste lesgevers in `vaste_lesgevers`). Gwen zet zo
+zowel yoga- als massage-uren in het rooster, ziet haar afspraken in **Mijn lessen** en krijgt
+meldingen bij nieuwe of geannuleerde massages. Een lesgever kan die extra lessen niet zelf wijzigen.
+
 **Het weekrooster** pas je aan op de website zelf: `beheer.html` → **🗓️ Rooster**. Sleep lessen
 met de muis naar een andere dag of uur, sleep een les uit de balk bovenaan in de kalender om ze
 toe te voegen, sleep naar 🗑️ (of druk Delete) om te verwijderen, of klik op een les om ze te
