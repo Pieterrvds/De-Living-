@@ -19,6 +19,7 @@
   ],
   "shortcuts": [
     { "name": "Yoga reserveren", "short_name": "Yoga", "url": "yoga.html", "icons": [{ "src": "icons/roos-192.png", "sizes": "192x192" }] },
+    { "name": "Massage reserveren", "short_name": "Massage", "url": "massage.html", "icons": [{ "src": "icons/roos-192.png", "sizes": "192x192" }] },
     { "name": "Café huren", "short_name": "Huren", "url": "huren.html", "icons": [{ "src": "icons/roos-192.png", "sizes": "192x192" }] },
     { "name": "Mijn account", "short_name": "Mijn", "url": "account.html", "icons": [{ "src": "icons/roos-192.png", "sizes": "192x192" }] }
   ]

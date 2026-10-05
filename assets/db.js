@@ -108,6 +108,8 @@ DB.aantalLeden=async function(){
   return r.data||0;
 };
 // Lesgever: eigen uren in het rooster zetten (de server controleert alles). uren = [[weekdag, 'HH:MM', les], …]
+// Lesgever (bv. massagetherapeut) of beheerder: wie heeft een 1-op-1-afspraak geboekt?
+DB.afspraken=function(van,tot){return _rpc('mijn_afspraken',{van:van.toISOString(),tot:tot.toISOString()});};
 DB.zetMijnUren=async function(uren){
   if(!sb)throw GEEN_VERBINDING;
   var r=await sb.rpc('zet_mijn_uren',{uren:uren});

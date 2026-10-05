@@ -21,9 +21,20 @@ var LESSEN={
       {naam:'Yin yoga',uitleg:'Zacht en lang aanhouden, ontspannend'},
       {naam:'Yoga Nidra',uitleg:'Liggend, diepe ontspanning'}
     ]},
-  kine:{naam:'Kinesitherapie',kort:'Kine',icon:'💆',duur:45,trainer:'Onze kinesist',max:1,prijs:40,soort:'Individuele begeleiding',binnenkort:true},
-  groep:{naam:'Groepsles',kort:'Groep',icon:'🤸',duur:60,trainer:'Pieter',max:12,prijs:15,soort:'Groepsles',binnenkort:true}
+  kine:{naam:'Kinesitherapie',kort:'Kine',icon:'🩺',duur:45,trainer:'Onze kinesist',max:1,prijs:40,soort:'Individuele begeleiding',binnenkort:true},
+  groep:{naam:'Groepsles',kort:'Groep',icon:'🤸',duur:60,trainer:'Pieter',max:12,prijs:15,soort:'Groepsles',binnenkort:true},
+  // Massage: 1-op-1, betalen ter plaatse (prijs:null = "prijs ter plaatse"). De massagetherapeut (of de beheerder)
+  // zet de uren in het rooster; de klant kiest bij het boeken de soort massage (keuzes).
+  massage:{naam:'Massage',kort:'Massage',icon:'💆',duur:60,trainer:'Onze massagetherapeut',max:1,prijs:null,soort:'Individuele massage',
+    keuzes:[
+      {naam:'Ontspanningsmassage',uitleg:'Zacht en rustgevend, voor het hele lichaam'},
+      {naam:'Sportmassage',uitleg:'Steviger, voor vermoeide of stijve spieren'},
+      {naam:'Rug, nek en schouders',uitleg:'Gericht op spanning in de bovenrug'},
+      {naam:'Voetreflexmassage',uitleg:'Ontspanning via drukpunten in de voeten'}
+    ]}
 };
+// Op welke pagina boek je deze les? (yoga met beurtenkaart, massage op een eigen pagina, de rest via reserveren)
+function boekPagina(lesId){return metBeurt(lesId)?'yoga.html':lesId==='massage'?'massage.html':'reserveren.html';}
 /* ── BEURTENKAART ── Lessen in 'lessen' boek je met een beurt (1 beurt per les).
    Een lid koopt de kaart ter plaatse; de lesgever bevestigt de betaling op beurten.html.
    prijs:null = op de website staat "vraag de prijs aan de lesgever". */
@@ -155,7 +166,8 @@ var TYPES=[
   {id:'lid',label:'Lid / sporter',icon:'🏃',pro:false},
   {id:'kinesist',label:'Kinesist',icon:'🩺',pro:true,zaal:true,lessen:['kine']},
   {id:'yoga-instructeur',label:'Yoga-instructeur',icon:'🧘',pro:true,zaal:true,lessen:['yoga']},
-  {id:'groepslesgever',label:'Groepslesgever',icon:'📣',pro:true,zaal:true,lessen:['groep']}
+  {id:'groepslesgever',label:'Groepslesgever',icon:'📣',pro:true,zaal:true,lessen:['groep']},
+  {id:'masseur',label:'Massagetherapeut',icon:'💆',pro:true,zaal:true,lessen:['massage']}
 ];
 function getType(id){return TYPES.find(function(t){return t.id===id;})||TYPES[0];}
 // Professionals krijgen hun extra rechten pas na goedkeuring door de beheerder.
@@ -193,7 +205,7 @@ function isoDate(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.get
 function mondayOf(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());var dow=x.getDay();x.setDate(x.getDate()-(dow===0?6:dow-1));return x;}
 function addDays(d,n){var x=new Date(d);x.setDate(x.getDate()+n);return x;}
 function fmtDatum(d){return DAGEN[d.getDay()]+' '+d.getDate()+' '+MAANDEN[d.getMonth()];}
-function fmtEuro(n){return '€ '+n.toFixed(2).replace('.',',');}
+function fmtEuro(n){return n==null||isNaN(n)?'Ter plaatse':'€ '+(+n).toFixed(2).replace('.',',');}
 function eindTijd(tijd,duur){var p=tijd.split(':');var m=+p[0]*60+ +p[1]+duur;return pad(Math.floor(m/60))+':'+pad(m%60);}
 
 function slotId(datum,tijd,lesId){return isoDate(datum)+'T'+tijd+'_'+lesId;}

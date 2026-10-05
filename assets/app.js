@@ -50,6 +50,7 @@
     start:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
     yoga:'<circle cx="12" cy="5" r="2"/><path d="M4 12c3 0 5-2 8-2s5 2 8 2M12 10v5l-4 5M12 15l4 5"/>',
     huren:'<path d="M8 3h8l-1 7a3 3 0 0 1-6 0z"/><path d="M12 13v7M8 21h8"/>',
+    massage:'<path d="M12 21c-4-2.5-7-5.5-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 12c0 3.5-3 6.5-7 9z"/><path d="M9 13c1 1 2 1.5 3 1.5s2-.5 3-1.5"/>',
     mijn:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'
   };
   function svg(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[n]+'</svg>';}
@@ -57,7 +58,7 @@
   function tabbalk(){
     var pagina=(location.pathname.split('/').pop()||'index.html');
     var tabs=[['app.html','start','Start',['app.html','index.html','fotos.html']],['yoga.html','yoga','Yoga',['yoga.html','boeken.html','reserveren.html','betalen.html']],
-      ['huren.html','huren','Huren',['huren.html']],['account.html','mijn','Mijn',['account.html','login.html','beurten.html','beheer.html']]];
+      ['massage.html','massage','Massage',['massage.html']],['huren.html','huren','Huren',['huren.html']],['account.html','mijn','Mijn',['account.html','login.html','beurten.html','beheer.html']]];
     // een div met role=navigation: de site geeft elk <nav>-element de stijl van de menubalk bovenaan
     var nav=document.createElement('div');nav.className='app-tabs';nav.setAttribute('role','navigation');nav.setAttribute('aria-label','Hoofdmenu');
     nav.innerHTML=tabs.map(function(t){var nu=t[3].indexOf(pagina)>=0;
@@ -66,7 +67,7 @@
   }
 
   // Installatiekaart: enkel op de gsm-pagina's waar het zin heeft, en niet meer na "nee" (30 dagen)
-  var KAART_PAGINAS=['','index.html','yoga.html','huren.html','account.html','app.html'];
+  var KAART_PAGINAS=['','index.html','yoga.html','massage.html','huren.html','account.html','app.html'];
   function magKaart(){
     if(standalone)return false;
     if(KAART_PAGINAS.indexOf(location.pathname.split('/').pop())<0)return false;

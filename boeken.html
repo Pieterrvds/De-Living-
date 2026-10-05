@@ -371,6 +371,7 @@ function openSlot(id){
   else if(vrij<=0){knop='<button class="btn btn-primary btn-block" disabled>Volzet</button>';}
   else if(isTeLaat(s)){knop='<button class="btn btn-primary btn-block" disabled>Boeken kan tot '+REGELS.boekenTotMinVooraf+' min op voorhand</button>';}
   else if(metBeurt(s.lesId)){knop='<a class="btn btn-primary btn-block" href="yoga.html?les='+encodeURIComponent(id)+'">🎟️ Reserveer met 1 beurt</a>';}
+  else if(s.lesId==='massage'){knop='<a class="btn btn-primary btn-block" href="massage.html?les='+encodeURIComponent(id)+'">💆 Boek deze massage</a>';}
   else{knop='<button class="btn btn-primary btn-block" onclick="reserveer(\''+id+'\')">'+(s.lesId==='zaal'?'🏠 Huur de zaal':'🌹 Reserveer dit uur')+'</button>'+
     (user?'':'<div class="login-hint">Je wordt eerst gevraagd om je aan te melden.</div>');}
   var cap=s.les.max>1

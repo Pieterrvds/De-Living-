@@ -200,6 +200,7 @@ function render(){
         (volgende?reservatieRij(volgende,'annuleer'):'<p class="acc-leeg">Nog niets gepland.</p>')+'</div>'+
       '<div class="card acc-lijst">'+
         link('yoga.html','Yoga reserveren','Lessen met Gwen')+
+        link('massage.html','Massage reserveren','Een uur voor jezelf · betalen ter plaatse')+
         link('huren.html','Café huren','Je feest of vergadering · je aanvragen')+
         (magBeurtenBeheren(user)?link('beurten.html','Beurtenkaarten','Betalingen bevestigen en deelnemers'):'')+
         (user.isAdmin?link('beheer.html','Beheer','Reservaties, rooster, leden'):'')+
@@ -217,7 +218,22 @@ function render(){
 }
 
 /* ── LESGEVERS: eigen uren in het rooster en hoe vol je lessen zijn ── */
-var ed=null;
+var ed=null,afspraken=null;
+function heeftAfspraken(){return eigenLessen(user).some(function(l){return LESSEN[l]&&LESSEN[l].max===1;});}
+function afsprakenHtml(){
+  if(!heeftAfspraken())return '';
+  if(afspraken===null)return '<div class="lg-kop">Geboekte afspraken</div><p class="lg-intro"><i>Je afspraken konden niet geladen worden.</i></p>';
+  return '<div class="lg-kop">Geboekte afspraken · komende 3 weken</div>'+
+    (afspraken.length?'<div class="mijn-lessen afspraken">'+afspraken.map(function(a){
+      var d=new Date(a.start),e=new Date(a.eind),opm=String(a.opmerking||''),i=opm.indexOf(' — ');
+      var soort=i>=0?opm.slice(0,i):opm,extra=i>=0?opm.slice(i+3):'';
+      return '<div class="ml les-'+esc(a.les)+'"><div class="ml-wat"><b>'+((LESSEN[a.les]||{}).icon||'')+' '+esc(a.naam||'Lid')+'</b>'+
+        DAGEN_KORT[d.getDay()]+' '+d.getDate()+' '+MAANDEN[d.getMonth()].slice(0,3)+' · '+pad(d.getHours())+':'+pad(d.getMinutes())+' – '+pad(e.getHours())+':'+pad(e.getMinutes())+
+        (soort?' · '+esc(soort):'')+(extra?'<br><i>“'+esc(extra)+'”</i>':'')+
+        (a.email?'<br><a href="mailto:'+esc(a.email)+'">'+esc(a.email)+'</a>':'')+'</div></div>';
+    }).join('')+'</div>'
+      :'<p class="lg-intro"><i>Nog geen afspraken geboekt.</i></p>');
+}
 function eigenUur(x){return x[2]===user.id;}
 function lesgeverHtml(){
   if(!eigenLessen(user).length)return '';
@@ -233,6 +249,7 @@ function lesgeverHtml(){
     '<p class="lg-intro">Als '+esc(getType(user.type).label.toLowerCase())+' zet je hier zelf je uren in het rooster. Leden zien ze meteen op de website en kunnen ze boeken. Hieronder zie je ook hoe vol je lessen zijn.'+
       (eigenLessen(user).every(isBinnenkort)?' <b>Let op:</b> online boeken voor '+eigenLessen(user).map(function(l){return LESSEN[l].naam.toLowerCase();}).join(' en ')+' kan pas binnenkort; je kan je uren wel al klaarzetten.':'')+
       (magBeurtenBeheren(user)?' Beurtenkaarten bevestigen en zien wie er komt doe je bij <a href="beurten.html">🎟️ Beurtenkaarten</a>.':'')+'</p>'+
+    afsprakenHtml()+
     '<div class="lg-kop">Komende 2 weken</div>'+
     (rij.length?'<div class="mijn-lessen">'+rij.map(function(s){
       return '<div class="ml les-'+s.lesId+'"><div class="ml-wat"><b>'+s.les.icon+' '+esc(slotNaam(s))+'</b>'+DAGEN_KORT[s.datum.getDay()]+' '+s.datum.getDate()+' '+MAANDEN[s.datum.getMonth()].slice(0,3)+' · '+s.tijd+' – '+s.eind+'</div>'+bezettingHtml(bezetting(s),s.les.max)+'</div>';
@@ -297,7 +314,8 @@ function bewaarWachtwoord(e){
 }
 function herlaad(){
   var nu=new Date();
-  return Promise.all([DB.laadMijn(),eigenLessen(user).length?DB.laadBezetting(nu,addDays(nu,15)):null,DB.beurten.mijn().then(function(b){beurten=b;}).catch(function(){beurten=null;})]).then(render).catch(function(e){
+  return Promise.all([DB.laadMijn(),eigenLessen(user).length?DB.laadBezetting(nu,addDays(nu,15)):null,
+    heeftAfspraken()?DB.afspraken(nu,addDays(nu,22)).then(function(a){afspraken=a||[];}).catch(function(){afspraken=null;}):null,DB.beurten.mijn().then(function(b){beurten=b;}).catch(function(){beurten=null;})]).then(render).catch(function(e){
     document.getElementById('inhoud').innerHTML='<div class="card" style="padding:2.5rem;text-align:center;"><h2 class="card-title">Geen verbinding</h2><p>'+esc(e)+'</p></div>';
   });
 }

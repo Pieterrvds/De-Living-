@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Boek een massage bij La Vie en Rose in Aalst: ontspanningsmassage, sportmassage en meer. Betalen ter plaatse.">
+<meta name="theme-color" content="#F7F3ED">
+<title>Massage reserveren – La Vie en Rose</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700;800&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/boeken.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
+<script src="assets/db.js"></script>
+<style>
+/* Massage reserveren (kleuren en onderdelen: assets/app.css) */
+.ms{padding:calc(86px + env(safe-area-inset-top)) 18px 40px;}
+.ms-wrap{max-width:560px;margin:0 auto;}
+.ms-kop{margin:4px 0 18px;}
+.ms-titel{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--a-ink-3);margin:24px 0 10px;}
+.kaart{background:var(--a-surface);border:1px solid var(--a-line);border-radius:var(--a-radius-lg);padding:16px;margin-bottom:10px;box-shadow:var(--a-shadow);}
+/* keuzes */
+.keuzes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.keuze{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px;min-height:104px;background:var(--a-surface);border:1px solid var(--a-line-2);border-radius:var(--a-radius);cursor:pointer;font-family:var(--a-font);color:var(--a-ink);transition:border-color .15s,transform .1s;}
+.keuze:active{transform:scale(.98);}
+.keuze b{font-size:14.5px;font-weight:700;line-height:1.25;}
+.keuze span{font-size:12.5px;color:var(--a-ink-3);line-height:1.4;}
+.keuze.aan{border-color:var(--a-ink);box-shadow:0 0 0 1px var(--a-ink) inset;}
+.keuze.aan b::after{content:' ✓';color:var(--a-accent);}
+/* dagen en uren */
+.dagen{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 6px;margin:0 -2px;}
+.dagen::-webkit-scrollbar{display:none;}
+.dag{flex:0 0 auto;width:62px;padding:10px 0;border-radius:14px;border:1px solid var(--a-line-2);background:var(--a-surface);text-align:center;cursor:pointer;font-family:var(--a-font);color:var(--a-ink);}
+.dag small{display:block;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--a-ink-3);}
+.dag b{display:block;font-size:19px;font-weight:700;margin-top:2px;}
+.dag.aan{background:var(--a-ink);border-color:var(--a-ink);color:#fff;}
+.dag.aan small{color:rgba(255,255,255,.7);}
+.uren{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:12px;}
+.uur{padding:12px 10px;border-radius:12px;border:1px solid var(--a-line-2);background:var(--a-surface);cursor:pointer;font-family:var(--a-font);text-align:center;color:var(--a-ink);}
+.uur b{display:block;font-size:16px;font-weight:700;}
+.uur span{display:block;font-size:12px;color:var(--a-ink-3);margin-top:1px;}
+.uur:hover,.dag:hover,.keuze:hover{border-color:var(--a-ink-3);}
+.keuze:focus-visible,.dag:focus-visible,.uur:focus-visible,.knop-groot:focus-visible{outline:2px solid var(--a-accent);outline-offset:3px;}
+/* afspraken */
+.afspraak{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.afspraak .wat{font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--a-ok);}
+.afspraak .wanneer{font-size:15px;font-weight:600;margin-top:1px;}
+.afspraak .soort{font-size:13.5px;color:var(--a-ink-3);}
+/* knoppen */
+.knop-groot{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;padding:0 18px;margin-top:10px;border-radius:14px;border:1px solid transparent;font-family:var(--a-font);font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;text-align:center;}
+.knop-groot.donker{background:var(--a-primary);color:#fff;}
+.knop-groot.wit{background:var(--a-surface);color:var(--a-ink);border-color:var(--a-line-2);}
+.knop-groot.rood{background:var(--a-danger);color:#fff;}
+.knop-groot:disabled{opacity:.55;cursor:wait;}
+.knop-klein{width:auto;margin:0;min-height:40px;padding:0 14px;font-size:14px;}
+.leeg{color:var(--a-ink-3);text-align:center;padding:20px 8px;}
+.melding{padding:12px 14px;border-radius:12px;background:var(--a-surface-2);color:var(--a-ink-2);font-size:14px;}
+/* venster onderaan */
+.blad-bg{position:fixed;inset:0;background:rgba(20,12,6,.45);z-index:1200;display:none;align-items:flex-end;justify-content:center;}
+.blad-bg.open{display:flex;}
+.blad{background:var(--a-surface);width:100%;max-width:560px;border-radius:24px 24px 0 0;padding:10px 20px calc(22px + env(safe-area-inset-bottom));max-height:92vh;overflow-y:auto;font-family:var(--a-font);font-size:15px;line-height:1.5;color:var(--a-ink);box-shadow:var(--a-shadow-lg);}
+.blad::before{content:'';display:block;width:38px;height:4px;border-radius:4px;background:var(--a-line-2);margin:0 auto 16px;}
+.blad h2{font-family:var(--a-display);font-size:24px;font-weight:700;margin-bottom:8px;line-height:1.2;}
+.blad p{color:var(--a-ink-2);margin-bottom:8px;}
+.overz{background:var(--a-surface-2);border-radius:14px;padding:4px 14px;margin:10px 0 14px;}
+.overz div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;font-size:14px;}
+.overz div+div{border-top:1px solid var(--a-line);}
+.overz span{color:var(--a-ink-3);}
+.overz b{text-align:right;font-weight:600;}
+.veld label{display:block;font-weight:600;margin-bottom:6px;font-size:14px;}
+.veld textarea{width:100%;min-height:76px;font-family:var(--a-font);font-size:16px;padding:10px 14px;border:1px solid var(--a-line-2);border-radius:12px;resize:vertical;color:var(--a-ink);}
+.blad-ok{width:60px;height:60px;border-radius:50%;background:var(--a-ok-soft);color:var(--a-ok);font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:4px auto 12px;}
+.midden{text-align:center;}
+.fout{color:var(--a-danger);font-weight:600;font-size:14px;min-height:1.2em;margin-top:6px;}
+@media(min-width:700px){.blad-bg{align-items:center;padding:16px;}.blad{border-radius:24px;}.blad::before{display:none;}}
+.ms-hulp{margin-top:28px;padding:18px;border-radius:var(--a-radius-lg);background:var(--a-surface-2);}
+.ms-hulp h2{font-size:15.5px;font-weight:700;}
+.ms-hulp p{color:var(--a-ink-2);font-size:14px;margin-top:2px;}
+.klein{font-size:13.5px;color:var(--a-ink-3);margin-top:12px;}
+.klein a{color:var(--a-accent);font-weight:600;}
+html.app-modus .ms{padding-top:calc(20px + env(safe-area-inset-top))!important;}
+</style>
+<script src="assets/splash.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/roos-32.png">
+<link rel="apple-touch-icon" href="icons/roos-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="La Vie en Rose">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script src="assets/app.js" defer></script>
+</head>
+<body class="a" data-rustig>
+<script src="assets/site.js"></script>
+
+<main class="ms">
+  <div class="ms-wrap">
+    <header class="ms-kop">
+      <div class="a-merk app"><img src="icons/roos-mark.svg" alt="" width="26" height="27"><span>La Vie <i>en Rose</i></span></div>
+      <div class="a-eyebrow">Massage</div>
+      <h1 class="a-titel">Boek je massage</h1>
+      <p class="a-sub">Een uur voor jezelf · betalen ter plaatse</p>
+    </header>
+    <div id="ms" aria-live="polite"><p class="leeg">Even geduld…</p></div>
+    <section class="ms-hulp">
+      <h2>Vragen of een ander moment?</h2>
+      <p>Stuur ons gerust een bericht.</p>
+      <a class="knop-groot wit" id="hulpWa" href="#" target="_blank" rel="noopener">Stuur ons een bericht</a>
+      <p class="klein" id="msWie"></p>
+      <p class="klein"><a href="index.html">Naar de website van La Vie en Rose</a></p>
+    </section>
+  </div>
+</main>
+
+<div class="blad-bg" id="blad" role="dialog" aria-modal="true" aria-labelledby="bladTitel"><div class="blad" id="bladInhoud"></div></div>
+
+<script>
+var MASSAGE=LESSEN.massage,DAGEN_VOORUIT=21,KEUZE_SLEUTEL='lvr-massage';
+var user=null,soort='',dag='',bezig=false,gekozen=null;
+document.getElementById('hulpWa').href='https://wa.me/'+REGELS.whatsapp+'?text='+encodeURIComponent('Hallo! Ik heb een vraag over een massage.');
+
+function voornaam(n){return String(n||'').trim().split(/\s+/)[0]||'';}
+function dagLabel(d){
+  var v=new Date();v.setHours(0,0,0,0);
+  var x=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-v)/864e5);
+  var t=DAGEN[d.getDay()]+' '+d.getDate()+' '+MAANDEN[d.getMonth()];
+  return x===0?'Vandaag, '+t.toLowerCase():x===1?'Morgen, '+t.toLowerCase():t;
+}
+// Vrije massage-uren in de komende weken
+function vrijeUren(){
+  var r=[],v=new Date(),d=new Date(v.getFullYear(),v.getMonth(),v.getDate());
+  for(var i=0;i<DAGEN_VOORUIT;i++,d=addDays(d,1))slotsVoorDag(d).forEach(function(s){
+    if(s.lesId==='massage'&&!isTeLaat(s)&&vrijePlaatsen(s)>0)r.push(s);});
+  return r;
+}
+function mijnAfspraken(){
+  if(!user)return [];
+  return mijnBookings(user).filter(function(b){return b.slot.lesId==='massage'&&!isVoorbij(b.slot);});
+}
+function soortVan(b){return String(b.opmerking||'').split(' — ')[0]||'Massage';}
+function bewaarKeuze(){try{sessionStorage.setItem(KEUZE_SLEUTEL,JSON.stringify({soort:soort,dag:dag,slot:gekozen}));}catch(e){}}
+
+function laad(){
+  var nu=new Date();
+  return Promise.all([DB.laadBezetting(nu,addDays(nu,DAGEN_VOORUIT+1)),user?DB.laadMijn():null]).then(teken).catch(function(e){
+    document.getElementById('ms').innerHTML='<div class="kaart"><p><b>Er is geen verbinding.</b></p><p>'+esc(e)+'</p><button class="knop-groot donker" onclick="laad()">Probeer opnieuw</button></div>';
+  });
+}
+
+function teken(){
+  var h='',mijn=mijnAfspraken(),uren=vrijeUren();
+  if(mijn.length){
+    h+='<h2 class="ms-titel">Je afspraken</h2>'+mijn.map(function(b){var s=b.slot;
+      return '<div class="kaart afspraak"><div><div class="wat">Bevestigd</div><div class="wanneer">'+dagLabel(s.datum)+' · '+s.tijd+'</div><div class="soort">'+esc(soortVan(b))+' · '+s.les.duur+' min</div></div>'+
+        '<button class="knop-groot wit knop-klein" onclick="annuleerVraag(\''+b.id+'\')">Annuleren</button></div>';}).join('');
+  }
+  h+='<h2 class="ms-titel">1. Kies je massage</h2><div class="keuzes">'+MASSAGE.keuzes.map(function(k){var aan=soort===k.naam;
+    return '<button type="button" class="keuze'+(aan?' aan':'')+'" aria-pressed="'+aan+'" onclick="kiesSoort('+esc(JSON.stringify(k.naam))+')"><b>'+esc(k.naam)+'</b><span>'+esc(k.uitleg)+'</span></button>';}).join('')+'</div>';
+
+  h+='<h2 class="ms-titel">2. Kies een moment</h2>';
+  if(!uren.length){
+    h+='<div class="kaart leeg">Er zijn de komende weken geen vrije massage-uren.<br>Stuur ons een bericht, dan zoeken we samen een moment.</div>';
+  }else{
+    var dagen=[];uren.forEach(function(s){var k=isoDate(s.datum);if(dagen.indexOf(k)<0)dagen.push(k);});
+    if(dagen.indexOf(dag)<0)dag=dagen[0];
+    h+='<div class="dagen" role="list">'+dagen.map(function(k){var d=uren.find(function(s){return isoDate(s.datum)===k;}).datum,aan=k===dag;
+      return '<button type="button" role="listitem" class="dag'+(aan?' aan':'')+'" aria-pressed="'+aan+'" onclick="kiesDag(\''+k+'\')"><small>'+DAGEN_KORT[d.getDay()]+'</small><b>'+d.getDate()+'</b></button>';}).join('')+'</div>';
+    var opDag=uren.filter(function(s){return isoDate(s.datum)===dag;});
+    h+='<div class="melding" style="margin-top:12px;">'+dagLabel(opDag[0].datum)+'</div><div class="uren">'+opDag.map(function(s){
+      return '<button type="button" class="uur" onclick="kies(\''+s.id+'\')"><b>'+s.tijd+'</b><span>tot '+s.eind+(s.trainer&&s.trainer!==MASSAGE.trainer?' · '+esc(voornaam(s.trainer)):'')+'</span></button>';}).join('')+'</div>';
+  }
+  document.getElementById('ms').innerHTML=h;
+  document.getElementById('msWie').innerHTML=user?'Aangemeld als <b>'+esc(user.naam)+'</b>':'';
+}
+function kiesSoort(n){soort=n;bewaarKeuze();teken();}
+function kiesDag(k){dag=k;bewaarKeuze();teken();}
+
+/* ── VENSTER ONDERAAN ── */
+function blad(html){document.getElementById('bladInhoud').innerHTML=html;document.getElementById('blad').classList.add('open');document.body.style.overflow='hidden';
+  var f=document.querySelector('#bladInhoud [data-focus]');if(f)setTimeout(function(){f.focus();},50);}
+function sluitBlad(){document.getElementById('blad').classList.remove('open');document.body.style.overflow='';}
+document.getElementById('blad').addEventListener('click',function(e){if(e.target===this&&!bezig)sluitBlad();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!bezig)sluitBlad();});
+
+/* ── BOEKEN ── */
+function kies(slotId){
+  var s=parseSlot(slotId);
+  if(!s||s.lesId!=='massage'||isTeLaat(s)||vrijePlaatsen(s)<=0)return blad('<h2 id="bladTitel">Niet meer vrij</h2><p>Dit uur is net geboekt of te kort op voorhand. Kies een ander moment.</p><button class="knop-groot donker" data-focus onclick="sluitBlad();laad()">OK</button>');
+  gekozen=slotId;bewaarKeuze();
+  var h='<h2 id="bladTitel">Je massage</h2><div class="overz">'+
+    '<div><span>Massage</span><b>'+(soort?esc(soort):'<button type="button" class="knop-link" onclick="sluitBlad()" style="background:none;border:none;color:var(--a-accent);font-weight:600;font-family:inherit;cursor:pointer;padding:0;">Kies eerst je massage</button>')+'</b></div>'+
+    '<div><span>Wanneer</span><b>'+dagLabel(s.datum)+', '+s.tijd+' – '+s.eind+'</b></div>'+
+    '<div><span>Duur</span><b>'+s.les.duur+' minuten</b></div>'+
+    '<div><span>Prijs</span><b>'+(s.les.prijs==null?'Betalen ter plaatse':fmtEuro(s.les.prijs)+', ter plaatse')+'</b></div></div>';
+  if(!user){
+    h+='<p>Meld je aan om je afspraak te bevestigen. Je keuze blijft bewaard.</p>'+
+      '<a class="knop-groot donker" data-focus href="login.html?next='+encodeURIComponent('massage.html?les='+slotId)+'">Aanmelden</a>'+
+      '<a class="knop-groot wit" href="login.html?tab=registreer&amp;next='+encodeURIComponent('massage.html?les='+slotId)+'">Nieuw? Maak een account</a>';
+  }else if(!soort){
+    h+='<p>Kies hierboven eerst welke massage je wil.</p><button class="knop-groot donker" data-focus onclick="sluitBlad();document.querySelector(\'.keuzes\').scrollIntoView({behavior:\'smooth\',block:\'center\'})">Massage kiezen</button>';
+  }else{
+    h+='<div class="veld"><label for="opm">Iets wat de therapeut moet weten? <span style="color:var(--a-ink-3);font-weight:500">(mag leeg)</span></label>'+
+      '<textarea id="opm" maxlength="300" placeholder="bv. pijn in de rechterschouder, zwanger, allergie voor olie…"></textarea></div>'+
+      '<div class="fout" id="fout" role="alert"></div>'+
+      '<button class="knop-groot donker" id="boekKnop" data-focus>Bevestig afspraak</button>'+
+      '<p style="font-size:13px;color:var(--a-ink-3);margin-top:10px;">Annuleren kan gratis tot '+REGELS.annulerenTotUurVooraf+' uur op voorhand.</p>';
+  }
+  h+='<button class="knop-groot wit" onclick="sluitBlad()">Terug</button>';
+  blad(h);
+  var k=document.getElementById('boekKnop');if(k)k.onclick=function(){boek(s,k);};
+}
+function boek(s,knop){
+  bezig=true;knop.disabled=true;knop.textContent='Even geduld…';
+  var opm=(document.getElementById('opm').value||'').trim();
+  DB.maakBoeking(s,s.les.duur,'',soort+(opm?' — '+opm:'')).then(function(b){return DB.bevestigBar(b.id);}).then(function(){
+    bezig=false;gekozen=null;try{sessionStorage.removeItem(KEUZE_SLEUTEL);}catch(e){}
+    return laad().then(function(){
+      blad('<div class="midden"><div class="blad-ok" aria-hidden="true">✓</div><h2 id="bladTitel">Je massage is geboekt</h2>'+
+        '<p><b>'+esc(soort)+'</b><br>'+dagLabel(s.datum).toLowerCase()+' om '+s.tijd+'</p><p>Betalen doe je ter plaatse. Tot dan!</p></div>'+
+        '<button class="knop-groot donker" data-focus onclick="sluitBlad()">OK</button>');
+    });
+  }).catch(function(e){bezig=false;knop.disabled=false;knop.textContent='Bevestig afspraak';document.getElementById('fout').textContent=e;laad();});
+}
+function annuleerVraag(id){
+  var b=getBookings().find(function(x){return x.id===id;});if(!b)return laad();
+  var s=parseSlot(b.slotId,true);
+  if(!magZelfAnnuleren(b,s)){
+    return blad('<h2 id="bladTitel">Annuleren kan niet meer online</h2><p>Je afspraak begint binnen '+REGELS.annulerenTotUurVooraf+' uur. Laat het ons weten via een bericht.</p>'+
+      '<a class="knop-groot donker" href="'+waAnnuleerLink(b,s)+'" target="_blank" rel="noopener">Stuur een bericht</a><button class="knop-groot wit" data-focus onclick="sluitBlad()">Sluiten</button>');
+  }
+  blad('<h2 id="bladTitel">Afspraak annuleren?</h2><p>'+esc(soortVan(b))+', '+dagLabel(s.datum).toLowerCase()+' om '+s.tijd+'.</p>'+
+    '<button class="knop-groot rood" id="annKnop">Ja, annuleer</button><button class="knop-groot wit" data-focus onclick="sluitBlad()">Nee, ik kom wel</button>');
+  document.getElementById('annKnop').onclick=function(){
+    var k=this;bezig=true;k.disabled=true;
+    DB.annuleer(id).then(laad).then(function(){bezig=false;sluitBlad();showToast('Afspraak geannuleerd');}).catch(function(e){bezig=false;k.disabled=false;showToast('⚠️ '+e);});
+  };
+}
+
+/* ── STARTEN ── */
+klaar(function(u){
+  user=u;renderNav();
+  try{var k=JSON.parse(sessionStorage.getItem(KEUZE_SLEUTEL)||'null');if(k){soort=k.soort||'';dag=k.dag||'';}}catch(e){}
+  var p=new URLSearchParams(location.search).get('les');
+  if(p&&/_massage$/.test(p))dag=p.slice(0,10);
+  laad().then(function(){if(p&&/_massage$/.test(p))kies(p);});
+});
+</script>
+</body>
+</html>

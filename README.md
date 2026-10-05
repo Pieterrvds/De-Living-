@@ -9,6 +9,7 @@ met online lessen boeken en zaalhuur voor lesgevers (kinesisten, yoga-instructeu
 |---|---|
 | `index.html` | Hoofdpagina (over ons, rooster, lessen, evenementen, contact) |
 | `yoga.html` | **Yoga reserveren**: eenvoudige pagina voor de gsm (grote tekst en knoppen), met aanmelden, beurtenkaart en reservaties op één plek |
+| `massage.html` | **Massage reserveren** (website en app): kies je massage (ontspanning, sport, rug/nek/schouders, voetreflex) en een vrij uur, 60 min, betalen ter plaatse. Je komende afspraken en annuleren staan op dezelfde pagina |
 | `huren.html` | **Café huren voor een evenement** (trouwfeest, babyborrel, verjaardag, vergadering, …): vragenlijst in 5 stappen met live controle of het tijdslot vrij is, en *Mijn aanvragen* met de status |
 | `app.html` | **Startscherm van de app** (begroeting, volgende les, beurten, grote knoppen voor yoga en café huren) |
 | `beurten.html` | Beurtenkaarten voor de yoga-lesgever en de beheerder: betalingen bevestigen, beurten geven, deelnemers per les |
@@ -21,6 +22,14 @@ met online lessen boeken en zaalhuur voor lesgevers (kinesisten, yoga-instructeu
 | `fotos.html` | Fotogalerij (`Gallery.html` stuurt door naar deze pagina) |
 
 ## Waar pas je wat aan?
+
+**Massage.** De uren voor massage zet een **massagetherapeut** (type *Massagetherapeut* bij het
+aanmaken van een account, daarna goedgekeurd door de beheerder) zelf in het rooster via
+`account.html` → **Mijn lessen**; de beheerder kan dat ook in `beheer.html` → **🗓️ Rooster**
+(sleep *Massage* in de kalender). Elk uur is één afspraak. Bij een nieuwe afspraak krijgt de
+therapeut van dat uur een melding op de gsm, en in **Mijn lessen** staat de lijst met naam,
+soort massage en opmerking. De prijs is "ter plaatse"; de soorten en uitleg pas je aan in
+`assets/boeken.js` (`LESSEN.massage.keuzes`).
 
 **Het weekrooster** pas je aan op de website zelf: `beheer.html` → **🗓️ Rooster**. Sleep lessen
 met de muis naar een andere dag of uur, sleep een les uit de balk bovenaan in de kalender om ze

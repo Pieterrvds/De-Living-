@@ -204,6 +204,7 @@ klaar(function(u){
   slot=parseSlot(new URLSearchParams(location.search).get('slot'));duur=slot?slot.les.duur:60;
   // lessen met een beurtenkaart reserveer je op de eenvoudige yogapagina
   if(slot&&metBeurt(slot.lesId)){location.replace('yoga.html?les='+encodeURIComponent(slot.id));return;}
+  if(slot&&slot.lesId==='massage'){location.replace('massage.html?les='+encodeURIComponent(slot.id));return;}
   if(slot&&isBinnenkort(slot.lesId))return foutScherm('Binnenkort online',esc(slot.lesId==='zaal'?'Zaalhuur':slot.les.naam)+' kan je binnenkort online boeken. Voorlopig kan je enkel yoga online reserveren.','<a class="btn btn-primary" href="yoga.html">Naar yoga reserveren</a>');
   if(!slot)return render();
   var dag=new Date(slot.datum);

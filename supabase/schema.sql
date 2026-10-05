@@ -369,7 +369,7 @@ begin
     end if;
     select count(*) into aantal from boekingen b where b.les = new.les and b.start = new.start and telt(b);
     if aantal >= (les->>'max')::int then raise exception 'Deze les is volzet.'; end if;
-    new.bedrag := (les->>'prijs')::numeric;
+    new.bedrag := coalesce((les->>'prijs')::numeric, 0);   -- massage: prijs ter plaatse
   end if;
 
   -- 'voor een klant' enkel voor goedgekeurde professionals, bij 1-op-1 en zaalhuur
@@ -881,10 +881,47 @@ drop trigger if exists melding_bij_verhuur on public.verhuur;
 create trigger melding_bij_verhuur after insert or update on public.verhuur
   for each row execute function public.melding_verhuur();
 
--- Reservatie verplaatst of door de beheerder/lesgever geannuleerd (→ klant)
+-- Wie geeft deze 1-op-1-afspraak? De lesgever van dat uur in het rooster, anders alle goedgekeurde
+-- lesgevers van die les, anders de beheerder.
+create or replace function public.afspraak_ontvangers(les text, t timestamptz) returns setof uuid
+language sql stable security definer set search_path = public as $$
+  with eigenaar as (
+    select (y->>2)::uuid as id
+      from jsonb_array_elements(coalesce(cfg()->'rooster'->(extract(dow from t at time zone 'Europe/Brussels')::int::text), '[]'::jsonb)) y
+     where y->>0 = to_char(t at time zone 'Europe/Brussels', 'HH24:MI') and y->>1 = les and coalesce(y->>2, '') <> ''
+     limit 1),
+  lesgevers as (
+    select p.id from profielen p
+     where p.goedgekeurd and coalesce((cfg()->'types'->p.type->>'pro')::boolean, false)
+       and coalesce(cfg()->'types'->p.type->'lessen', '[]'::jsonb) ? les)
+  select id from eigenaar
+  union all select id from lesgevers where not exists (select 1 from eigenaar)
+  union all select id from beheerders_ids() id where not exists (select 1 from eigenaar) and not exists (select 1 from lesgevers)
+$$;
+revoke all on function public.afspraak_ontvangers(text, timestamptz) from public, anon, authenticated;
+
+-- Reservatie verplaatst of door de beheerder/lesgever geannuleerd (→ klant);
+-- nieuwe of geannuleerde 1-op-1-afspraak, bv. massage (→ massagetherapeut)
 create or replace function public.melding_boeking() returns trigger
 language plpgsql security definer set search_path = public as $$
+declare ontv uuid; n text;
 begin
+  if tg_op = 'UPDATE' and old.status = 'wacht-op-betaling' and new.status in ('bevestigd', 'betaald')
+     and coalesce((cfg()->'lessen'->new.les->>'max')::int, 0) = 1 then
+    select p.naam into n from profielen p where p.id = new.user_id;
+    for ontv in select * from afspraak_ontvangers(new.les, new.start) loop
+      perform meld(ontv, '💆 Nieuwe afspraak', coalesce(nullif(n, ''), 'Een klant') || coalesce(' · ' || nullif(split_part(new.opmerking, ' — ', 1), ''), '')
+        || ' · ' || nl_moment(new.start), 'account.html#lessen');
+    end loop;
+  end if;
+  if tg_op = 'DELETE' and old.status in ('bevestigd', 'betaald') and old.start > now() and auth.uid() = old.user_id
+     and coalesce((cfg()->'lessen'->old.les->>'max')::int, 0) = 1 then
+    select p.naam into n from profielen p where p.id = old.user_id;
+    for ontv in select * from afspraak_ontvangers(old.les, old.start) loop
+      perform meld(ontv, 'Afspraak geannuleerd', coalesce(nullif(n, ''), 'Een klant') || ' annuleerde ' || lower(coalesce(cfg()->'lessen'->old.les->>'naam', old.les))
+        || ' op ' || nl_moment(old.start) || '.', 'account.html#lessen');
+    end loop;
+  end if;
   if tg_op = 'UPDATE' then
     if new.start is distinct from old.start and new.status <> 'intern' and new.start > now() then
       perform meld(new.user_id, '🔁 Je les is verplaatst', les_titel(new.les, new.start) || ': nu op ' || nl_moment(new.start)
@@ -944,6 +981,27 @@ begin
   end if;
   perform meld(auth.uid(), '🌹 Het werkt!', 'Je krijgt voortaan meldingen van La Vie en Rose op deze gsm.', 'app.html',
                'test:' || auth.uid() || ':' || to_char(now(), 'YYYYMMDDHH24MI'));
+end $$;
+
+-- Lesgever (bv. massagetherapeut) of beheerder: wie heeft een 1-op-1-afspraak geboekt?
+create or replace function public.mijn_afspraken(van timestamptz, tot timestamptz)
+returns table (id uuid, les text, start timestamptz, eind timestamptz, naam text, email text, opmerking text)
+language plpgsql stable security definer set search_path = public as $$
+#variable_conflict use_column
+declare p profielen;
+begin
+  select * into p from profielen where profielen.id = auth.uid();
+  if p.id is null then raise exception 'Meld je eerst aan.'; end if;
+  if not (is_admin() or (p.goedgekeurd and coalesce((cfg()->'types'->p.type->>'pro')::boolean, false))) then
+    raise exception 'Enkel voor lesgevers.';
+  end if;
+  return query
+    select b.id, b.les, b.start, b.eind, q.naam, q.email, b.opmerking
+      from boekingen b join profielen q on q.id = b.user_id
+     where b.start >= van and b.start < tot and telt(b) and b.status <> 'intern'
+       and coalesce((cfg()->'lessen'->b.les->>'max')::int, 0) = 1
+       and (is_admin() or coalesce(cfg()->'types'->p.type->'lessen', '[]'::jsonb) ? b.les)
+     order by b.start;
 end $$;
 
 -- ── BEURTENKAARTEN ─────────────────────────────────────────────────────
@@ -1132,6 +1190,7 @@ revoke all on function public.beurten_beheerders() from public, anon, authentica
 revoke all on function public.plan_herinneringen() from public, anon, authenticated;
 revoke all on function public.stuur_meldingen() from public, anon, authenticated;
 revoke all on function public.les_titel(text, timestamptz) from public, anon, authenticated;
+revoke all on function public.mijn_afspraken(timestamptz, timestamptz) from anon;
 grant execute on function public.verhuur_vrij(timestamptz, timestamptz) to anon, authenticated;
 revoke all on function public.vraag_verhuur(timestamptz, timestamptz, boolean, text, int, text, text, jsonb) from anon;
 revoke all on function public.trek_verhuur_in(uuid) from anon;
@@ -1142,7 +1201,7 @@ insert into public.beheerders (email) values ('pieterv-d-s@hotmail.com') on conf
 insert into public.vaste_lesgevers (email, naam, type) values ('gwen.deryck@telenet.be', 'Gwen Deryck', 'yoga-instructeur')
   on conflict (email) do update set naam = excluded.naam, type = excluded.type;
 
-insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":25,"prijs":15,"stijlen":["Hatha yoga","Vinyasa flow","Yin yoga","Yoga Nidra"]},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40,"binnenkort":true},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15,"binnenkort":true}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["07:00","22:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["07:00","22:00"]},"gesloten":{},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20,"binnenkort":true},"beurtenkaart":{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]}},"verhuur":{"prijzen":{"cafeUur":null,"zaalUur":null},"minUren":2,"minDagenVooraf":7},"migratie":4}'::jsonb)
+insert into public.instellingen (id, config) values (1, '{"lessen":{"yoga":{"naam":"Yoga","duur":60,"max":25,"prijs":15,"stijlen":["Hatha yoga","Vinyasa flow","Yin yoga","Yoga Nidra"]},"kine":{"naam":"Kinesitherapie","duur":45,"max":1,"prijs":40,"binnenkort":true},"groep":{"naam":"Groepsles","duur":60,"max":12,"prijs":15,"binnenkort":true},"massage":{"naam":"Massage","duur":60,"max":1,"prijs":null}},"rooster":{"0":[["10:00","yoga"],["11:30","kine"]],"1":[["09:00","yoga"],["18:00","groep"]],"2":[["09:00","kine"]],"3":[["12:00","yoga"],["17:00","kine"],["18:00","groep"],["19:30","yoga"]],"4":[["16:00","kine"]],"5":[["07:00","yoga"]],"6":[["10:00","yoga"],["16:00","groep"]]},"openingsuren":{"0":["07:00","22:00"],"1":["07:00","22:00"],"2":["07:00","22:00"],"3":["07:00","22:00"],"4":["07:00","22:00"],"5":["07:00","22:00"],"6":["07:00","22:00"]},"gesloten":{},"regels":{"betaaltermijnMin":5,"boekenTotMinVooraf":60,"annulerenTotUurVooraf":24,"maxUrenPerWeek":10,"zaalDuren":[60,90,120]},"zaal":{"prijs":20,"binnenkort":true},"beurtenkaart":{"lessen":["yoga"],"kaarten":[{"beurten":10,"prijs":null}]},"types":{"lid":{"pro":false,"zaal":false,"lessen":[]},"kinesist":{"pro":true,"zaal":true,"lessen":["kine"]},"yoga-instructeur":{"pro":true,"zaal":true,"lessen":["yoga"]},"groepslesgever":{"pro":true,"zaal":true,"lessen":["groep"]},"masseur":{"pro":true,"zaal":true,"lessen":["massage"]}},"verhuur":{"prijzen":{"cafeUur":null,"zaalUur":null},"minUren":2,"minDagenVooraf":7},"migratie":4}'::jsonb)
 on conflict (id) do nothing;
 
 -- ── OMSCHAKELING oktober 2026 ──────────────────────────────────────────
@@ -1205,6 +1264,14 @@ select public.wijs_lessen_toe(p.id) from public.profielen p join public.vaste_le
 update public.instellingen
    set config = config || '{"verhuur":{"prijzen":{"cafeUur":null,"zaalUur":null},"minUren":2,"minDagenVooraf":7}}'::jsonb, bijgewerkt = now()
  where id = 1 and not (config ? 'verhuur');
+
+-- ── OMSCHAKELING oktober 2026 (6): massage ────────────────────────────
+-- Massage (1-op-1, 60 min, betalen ter plaatse) en het type massagetherapeut. Gebeurt één keer.
+update public.instellingen
+   set config = jsonb_set(jsonb_set(config, '{lessen,massage}', '{"naam":"Massage","duur":60,"max":1,"prijs":null}'::jsonb),
+                          '{types,masseur}', '{"pro":true,"zaal":true,"lessen":["massage"]}'::jsonb),
+       bijgewerkt = now()
+ where id = 1 and not (config->'lessen' ? 'massage');
 
 -- ── MELDINGEN: AUTOMATISCH VERSTUREN ───────────────────────────────────
 -- pg_net (internetverzoeken vanuit de database) en pg_cron (taken op een vast uur).

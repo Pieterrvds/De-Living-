@@ -87,6 +87,7 @@ html.app-modus .st{padding-top:calc(20px + env(safe-area-inset-top))!important;}
 var IC={
   yoga:'<circle cx="12" cy="5" r="2"/><path d="M4 12c3 0 5-2 8-2s5 2 8 2M12 10v5l-4 5M12 15l4 5"/>',
   huren:'<path d="M8 3h8l-1 7a3 3 0 0 1-6 0z"/><path d="M12 13v7M8 21h8"/>',
+  massage:'<path d="M12 21c-4-2.5-7-5.5-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 12c0 3.5-3 6.5-7 9z"/><path d="M9 13c1 1 2 1.5 3 1.5s2-.5 3-1.5"/>',
   agenda:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   route:'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
   bel:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
@@ -113,7 +114,7 @@ function agendaLink(b){
   var f=function(d){return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+'00Z';};
   var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//La Vie en Rose//App//NL','BEGIN:VEVENT','UID:'+b.id+'@lavieenrose',
     'DTSTAMP:'+f(new Date()),'DTSTART:'+f(s.start),'DTEND:'+f(eind),'SUMMARY:'+slotNaam(s)+' – La Vie en Rose',
-    'LOCATION:'+ADRES.replace(/,/g,'\\,'),'BEGIN:VALARM','TRIGGER:-PT2H','ACTION:DISPLAY','DESCRIPTION:Yoga binnen 2 uur','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+    'LOCATION:'+ADRES.replace(/,/g,'\\,'),'BEGIN:VALARM','TRIGGER:-PT2H','ACTION:DISPLAY','DESCRIPTION:'+slotNaam(s)+' binnen 2 uur','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
   return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);
 }
 
@@ -130,9 +131,10 @@ function teken(u,info){
     var b=info.volgende;
     if(b){
       var s=b.slot;
-      h+='<div class="st-les"><div class="kop">Je volgende les</div><div class="wanneer">'+dagLabel(s.datum)+', '+s.tijd+'</div>'+
-        '<div class="wat">'+esc(slotNaam(s))+' · tot '+boekingEind(b,s)+' · met '+esc(voornaam(s.trainer))+'</div>'+
-        '<div class="knoppen"><a href="'+agendaLink(b)+'" download="yoga.ics">'+svg('agenda')+'In mijn agenda</a>'+
+      var isMassage=s.lesId==='massage';
+      h+='<div class="st-les"><div class="kop">'+(isMassage?'Je volgende afspraak':'Je volgende les')+'</div><div class="wanneer">'+dagLabel(s.datum)+', '+s.tijd+'</div>'+
+        '<div class="wat">'+esc(slotNaam(s))+' · tot '+boekingEind(b,s)+(isMassage?'':' · met '+esc(voornaam(s.trainer)))+'</div>'+
+        '<div class="knoppen"><a href="'+agendaLink(b)+'" download="'+(isMassage?'massage':'yoga')+'.ics">'+svg('agenda')+'In mijn agenda</a>'+
         '<a href="'+ROUTE+'" target="_blank" rel="noopener">'+svg('route')+'Route</a></div></div>';
     }else if(info.geladen){
       h+='<div class="st-geen"><b>Nog geen les gepland</b>Kies een les in het rooster en reserveer met je beurtenkaart.</div>';
@@ -145,6 +147,7 @@ function teken(u,info){
   }
   h+='<div class="a-sectie"><h2>Ontdek</h2></div><div class="st-lijst">'+
     rij('yoga.html','yoga','ok','Yoga reserveren','Lessen met Gwen, deze en volgende week')+
+    rij('massage.html','massage','roos','Massage reserveren','Een uur voor jezelf · betalen ter plaatse')+
     rij('huren.html','huren','roos','Café huren','Voor je feest, jubileum of vergadering')+'</div>';
 
   if(u&&info.aanvragen.length){

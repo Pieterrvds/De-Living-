@@ -206,7 +206,7 @@ a.wk-les:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(61,32,7,.1
 /* ═══════════════════════ LESSEN ═══════════════════════ */
 #lessen{background:var(--vanilla);}
 .les-hdr{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:end;margin-bottom:3.5rem;}
-.les-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.75rem;}
+.les-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.75rem;}
 .les-card{background:var(--cream);border-radius:24px;border:1px solid var(--border);overflow:hidden;box-shadow:0 4px 24px var(--shadow);transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s;cursor:default;transform-style:preserve-3d;}
 .les-card:hover{transform:translateY(-14px) rotateX(3deg) rotateY(-1deg);box-shadow:0 40px 72px rgba(61,32,7,.18);}
 .les-img-w{overflow:hidden;height:240px;position:relative;}
@@ -454,6 +454,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
   <a href="#about"       onclick="cm()">Over ons</a>
   <a href="#kalender"    onclick="cm()">Rooster</a>
   <a href="#lessen"      onclick="cm()">Lessen</a>
+  <a href="massage.html" onclick="cm()">💆 Massage</a>
   <a href="#evenementen" onclick="cm()">Evenementen</a>
   <a href="#huren"       onclick="cm()">Café huren</a>
   <a href="fotos.html"   onclick="cm()">Foto's</a>
@@ -582,7 +583,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
         <p class="eyebrow sr">Beweging met aandacht</p>
         <h2 class="sec-title sr d1">Onze lessen<br>&amp; begeleiding</h2>
       </div>
-      <p class="sec-lead sr d2">Drie disciplines, één filosofie: bewust bewegen in een warme omgeving.</p>
+      <p class="sec-lead sr d2">Yoga, massage en meer — één filosofie: bewust bewegen in een warme omgeving.</p>
     </div>
     <div class="les-grid">
       <div class="les-card sr d1">
@@ -604,7 +605,24 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
           </div>
         </div>
       </div>
-      <div class="les-card sr d2">
+      <div class="les-card sr d2" id="massage">
+        <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=85" alt="Massage" loading="lazy"></div>
+        <div class="les-body">
+          <div class="les-ey">Individuele afspraak</div>
+          <div class="les-name">Massage</div>
+          <p class="les-desc">Een uur helemaal voor jezelf. Kies je massage en een vrij moment — je betaalt gewoon ter plaatse.</p>
+          <div class="les-buls">
+            <div class="les-bul"><div class="bul-dot"></div>Ontspanning · sport · rug &amp; nek · voetreflex</div>
+            <div class="les-bul"><div class="bul-dot"></div>60 minuten, één op één</div>
+            <div class="les-bul"><div class="bul-dot"></div>Online boeken, betalen ter plaatse</div>
+            <div class="les-bul"><div class="bul-dot"></div>Gratis annuleren tot 24 uur op voorhand</div>
+          </div>
+          <div class="les-btns">
+            <a href="massage.html" class="les-btn">💆 Massage reserveren</a>
+          </div>
+        </div>
+      </div>
+      <div class="les-card sr d1">
         <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=85" alt="Kinesitherapie" loading="lazy"><span class="binnenkort-lint">Binnenkort</span></div>
         <div class="les-body">
           <div class="les-ey">Individuele begeleiding</div>
@@ -623,7 +641,7 @@ footer{background:var(--espresso);padding:4.5rem 2rem 3rem;position:relative;ove
           </div>
         </div>
       </div>
-      <div class="les-card sr d3">
+      <div class="les-card sr d2">
         <div class="les-img-w"><img class="les-img" src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=85" alt="Groepsles" loading="lazy"><span class="binnenkort-lint">Binnenkort</span></div>
         <div class="les-body">
           <div class="les-ey">Samen sporten</div>
@@ -1131,7 +1149,7 @@ function renderKal(){
         '<div class="wk-status">'+status+'</div>';
       var cls='wk-les '+e.t+(vol?' vol':'')+(voorbij?' voorbij':'')+(!vol&&!voorbij&&aantal!==null&&max-aantal<=3?' bijna':'');
       html+=(voorbij||vol)?'<div class="'+cls+'">'+inhoud+'</div>'
-        :'<a class="'+cls+'" href="yoga.html?les='+encodeURIComponent(slotId(dag,e.tijd,e.t))+'" title="Reserveer deze les">'+inhoud+'<span class="wk-knop">Reserveer →</span></a>';
+        :'<a class="'+cls+'" href="'+(e.t==='massage'?'massage.html':'yoga.html')+'?les='+encodeURIComponent(slotId(dag,e.tijd,e.t))+'" title="Reserveer deze les">'+inhoud+'<span class="wk-knop">Reserveer →</span></a>';
     });
     html+='</div></div>';
   }
