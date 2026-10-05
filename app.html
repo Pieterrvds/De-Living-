@@ -52,7 +52,8 @@
 .st-rij .pijl{color:var(--a-ink-3);}
 .st-rij .pijl svg{width:18px;height:18px;}
 /* niet aangemeld */
-.st-welkom{padding:22px;}
+.st-welkom{padding:22px;text-align:center;}
+.st-roos{display:block;margin:2px auto 12px;width:64px;height:auto;}
 .st-welkom p{color:var(--a-ink-2);margin-bottom:16px;}
 .st-welkom .a-knop+.a-knop{margin-top:10px;}
 /* contact */
@@ -120,10 +121,10 @@ function rij(href,ic,klas,titel,sub,extra){
   return '<a class="st-rij" href="'+href+'"'+(extra||'')+'><span class="st-ic '+(klas||'')+'">'+svg(ic)+'</span><span class="t"><b>'+titel+'</b><span>'+sub+'</span></span><span class="pijl">'+svg('pijl')+'</span></a>';
 }
 function teken(u,info){
-  var h='<div class="st-kop"><div class="st-hallo"><small>'+groet()+(u?',':'')+'</small><h1>'+(u?esc(voornaam(u.naam)||'welkom'):'Welkom')+'</h1></div>'+
+  var h='<div class="a-merk"><img src="icons/roos-mark.svg" alt="" width="26" height="27"><span>La Vie <i>en Rose</i></span></div>'+'<div class="st-kop"><div class="st-hallo"><small>'+groet()+(u?',':'')+'</small><h1>'+(u?esc(voornaam(u.naam)||'welkom'):'Welkom')+'</h1></div>'+
     (u?'<a class="st-av" href="account.html" aria-label="Mijn account">'+esc(initialen(u.naam||u.email))+'</a>':'')+'</div>';
   if(!u){
-    h+='<div class="a-kaart st-welkom"><p>Reserveer je yogales met je beurtenkaart, volg je aanvragen en krijg een seintje voor je les.</p>'+
+    h+='<div class="a-kaart st-welkom"><img class="st-roos" src="icons/roos-mark.svg" alt="" width="64" height="67"><p>Reserveer je yogales met je beurtenkaart, volg je aanvragen en krijg een seintje voor je les.</p>'+
       '<a class="a-knop primair blok" href="login.html?next=app.html">Aanmelden</a><a class="a-knop tweede blok" href="login.html?tab=registreer&amp;next=app.html">Nieuw? Maak een account</a></div>';
   }else{
     var b=info.volgende;

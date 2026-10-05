@@ -57,6 +57,30 @@
 .leeg-res .btn{margin-top:1rem;font-style:normal;}
 @media(max-width:900px){.acc-grid{grid-template-columns:1fr;}.profiel{position:static;order:2;}.profiel,.res-kaart{padding:1.5rem;}}
 @media(max-width:560px){.kpis{grid-template-columns:1fr 1fr;}.kpis .kpi:last-child{grid-column:span 2;}}
+/* interne menu van Mijn account */
+.acc-wrap{max-width:780px;margin:0 auto;}
+.acc-tabs{position:sticky;top:76px;z-index:20;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:6px;margin:0 0 1.25rem;background:rgba(253,248,238,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--border);border-radius:16px;}
+.acc-tabs::-webkit-scrollbar{display:none;}
+.acc-tab{flex:1 0 auto;justify-content:center;display:inline-flex;align-items:center;gap:6px;border:none;background:none;padding:.6rem 1rem;border-radius:11px;font-family:inherit;font-size:.9rem;font-weight:700;color:var(--espresso2);cursor:pointer;white-space:nowrap;}
+.acc-tab:hover{background:rgba(61,32,7,.05);}
+.acc-tab.actief{background:var(--espresso);color:#fff;}
+.acc-tab:focus-visible{outline:2px solid var(--rose-d);outline-offset:2px;}
+.acc-tel{display:inline-flex;min-width:20px;height:20px;padding:0 6px;border-radius:10px;align-items:center;justify-content:center;font-size:.72rem;background:rgba(61,32,7,.1);}
+.acc-tab.actief .acc-tel{background:rgba(255,255,255,.22);}
+.acc-paneel>.card,.acc-paneel>.kpis,.acc-paneel>#meldKaart{margin-bottom:1rem;}
+.acc-paneel .profiel{position:static;}
+.acc-blok{padding:1.4rem 1.5rem;}
+.acc-blok-kop{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.6rem;}
+.acc-blok-kop .card-title{margin:0;font-size:1.15rem;}
+.acc-meer{border:none;background:none;color:var(--rose-d);font-weight:700;font-family:inherit;cursor:pointer;font-size:.9rem;}
+.acc-leeg{color:var(--muted);font-size:.92rem;}
+.acc-lijst{padding:.3rem 0;overflow:hidden;}
+.acc-rij{display:flex;width:100%;align-items:center;justify-content:space-between;gap:1rem;padding:.95rem 1.4rem;text-decoration:none;color:inherit;background:none;border:none;font-family:inherit;text-align:left;cursor:pointer;}
+.acc-rij+.acc-rij{border-top:1px solid var(--border);}
+.acc-rij:hover{background:rgba(61,32,7,.03);}
+.acc-rij b{display:block;font-size:.98rem;color:var(--espresso);}
+.acc-rij span span{display:block;font-size:.85rem;color:var(--muted);margin-top:1px;}
+.acc-rij svg{color:var(--muted);flex-shrink:0;}
 </style>
 <meta name="theme-color" content="#FDF8EE">
 <script src="assets/splash.js"></script>
@@ -88,7 +112,7 @@
 <div class="morph-divider"><svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path id="wavePath" d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#FDF8EE"/></svg></div>
 
 <main>
-  <div class="acc-appkop"><div class="a-eyebrow">Mijn account</div><h1 class="a-titel" id="accNaam">Mijn</h1></div>
+  <div class="acc-appkop"><div class="a-merk app"><img src="icons/roos-mark.svg" alt="" width="26" height="27"><span>La Vie <i>en Rose</i></span></div><div class="a-eyebrow">Mijn account</div><h1 class="a-titel" id="accNaam">Mijn</h1></div>
   <section class="sec">
     <div class="blob" style="width:420px;height:420px;top:-60px;right:-160px;background:rgba(232,164,160,.14);"></div>
     <div class="inner" id="inhoud"></div>
@@ -97,6 +121,10 @@
 
 <script>
 var user=null,tab='komend',beurten=null;
+// interne menu: overzicht · reservaties · mijn lessen (lesgevers) · meldingen · profiel; te openen via account.html#reservaties enz.
+var paneel=(location.hash||'').replace('#','')||'overzicht';
+function kiesPaneel(p){paneel=p;try{history.replaceState(null,'','#'+p);}catch(e){}render();window.scrollTo(0,0);}
+window.addEventListener('hashchange',function(){var p=(location.hash||'').replace('#','');if(p&&p!==paneel){paneel=p;if(user)render();}});
 
 function statusProfiel(u){
   if(u.isAdmin)return '⚙️ Beheerder';
@@ -126,8 +154,7 @@ function render(){
       '<div class="fg"><label for="a-nieuw">Nieuw wachtwoord</label><input type="password" id="a-nieuw" required minlength="6" autocomplete="new-password"></div>'+
       '<div class="fg"><label for="a-herhaal">Herhaal nieuw wachtwoord</label><input type="password" id="a-herhaal" required minlength="6" autocomplete="new-password"></div>'+
       '<div class="p-fout" id="pwFout"></div><button class="btn btn-primary btn-block" id="pwKnop">Wachtwoord wijzigen</button></form></details>'+
-    '<div class="p-knoppen">'+(user.isAdmin?'<a class="btn btn-outline" href="beheer.html">Beheer</a>':'')+(magBeurtenBeheren(user)?'<a class="btn btn-outline" href="beurten.html">Beurtenkaarten</a>':'')+'<button class="btn btn-outline" type="button" data-app-installeer onclick="installeerApp()"'+(window.appKanInstalleren&&appKanInstalleren()?'':' hidden')+'>Installeer de app</button>'+
-      '<a class="btn btn-outline" href="'+(user.isAdmin?'beheer.html?tab=ev':'huren.html')+'">'+(user.isAdmin?'Evenement-aanvragen':'Café huren · mijn aanvragen')+'</a>'+
+    '<div class="p-knoppen"><button class="btn btn-outline" type="button" data-app-installeer onclick="installeerApp()"'+(window.appKanInstalleren&&appKanInstalleren()?'':' hidden')+'>Installeer de app</button>'+
       '<button class="btn btn-outline" onclick="logout()">Afmelden</button></div>'+
     '<p class="res-regels">E-mailadres wijzigen of je account laten verwijderen? Stuur ons een <a href="https://wa.me/'+REGELS.whatsapp+'" target="_blank" rel="noopener">WhatsApp-bericht</a>.</p>'+
   '</aside>';
@@ -150,11 +177,43 @@ function render(){
       :'<div class="leeg-res">'+(tab==='komend'?'Je hebt nog geen komende reservaties.<br><a class="btn btn-primary" href="yoga.html">Yoga reserveren</a>':'Nog geen voorbije reservaties.')+'</div>')+
     '</div><div class="res-regels">Zelf annuleren kan tot '+REGELS.annulerenTotUurVooraf+' uur op voorhand, daarna via WhatsApp. Onbetaalde reservaties vervallen na '+REGELS.betaaltermijnMin+' minuten.</div></div>';
 
-  document.getElementById('inhoud').innerHTML='<div class="acc-grid">'+profiel+'<div>'+kpis+'<div id="meldKaart" style="margin-bottom:1.5rem;"></div>'+res+'</div></div>'+lesgeverHtml();
+  // ── interne menu ──
+  var lg=lesgeverHtml();
+  var panelen=[['overzicht','Overzicht'],['reservaties','Reservaties'+(komend.length?' <span class="acc-tel">'+komend.length+'</span>':'')]];
+  if(lg)panelen.push(['lessen','Mijn lessen']);
+  panelen.push(['meldingen','Meldingen'],['profiel','Profiel']);
+  if(!panelen.some(function(x){return x[0]===paneel;}))paneel='overzicht';
+  var menu='<nav class="acc-tabs" aria-label="Mijn account">'+panelen.map(function(x){
+    return '<button type="button" class="acc-tab'+(x[0]===paneel?' actief':'')+'"'+(x[0]===paneel?' aria-current="page"':'')+' onclick="kiesPaneel(\''+x[0]+'\')">'+x[1]+'</button>';}).join('')+'</nav>';
+  var pijl='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+  var link=function(href,titel,sub){return '<a class="acc-rij" href="'+href+'"><span><b>'+titel+'</b><span>'+sub+'</span></span>'+pijl+'</a>';};
+  var knop=function(p,titel,sub){return '<button type="button" class="acc-rij" onclick="kiesPaneel(\''+p+'\')"><span><b>'+titel+'</b><span>'+sub+'</span></span>'+pijl+'</button>';};
+  var inh;
+  if(paneel==='reservaties')inh=res;
+  else if(paneel==='lessen')inh=lg;
+  else if(paneel==='meldingen')inh='<div id="meldKaart"></div>';
+  else if(paneel==='profiel')inh=profiel;
+  else{
+    var volgende=komend[0];
+    inh=kpis+
+      '<div class="card acc-blok"><div class="acc-blok-kop"><h2 class="card-title">Volgende reservatie</h2>'+(komend.length>1?'<button class="acc-meer" onclick="kiesPaneel(\'reservaties\')">Alle '+komend.length+'</button>':'')+'</div>'+
+        (volgende?reservatieRij(volgende,'annuleer'):'<p class="acc-leeg">Nog niets gepland.</p>')+'</div>'+
+      '<div class="card acc-lijst">'+
+        link('yoga.html','Yoga reserveren','Lessen met Gwen')+
+        link('huren.html','Café huren','Je feest of vergadering · je aanvragen')+
+        (magBeurtenBeheren(user)?link('beurten.html','Beurtenkaarten','Betalingen bevestigen en deelnemers'):'')+
+        (user.isAdmin?link('beheer.html','Beheer','Reservaties, rooster, leden'):'')+
+        (user.isAdmin?link('beheer.html?tab=ev','Evenement-aanvragen','Café huren: aanvragen behandelen'):'')+
+        knop('meldingen','Meldingen','Herinneringen en berichten op je gsm')+
+        knop('profiel','Profiel','Naam, wachtwoord en afmelden')+
+      '</div>';
+  }
+  document.getElementById('inhoud').innerHTML='<div class="acc-wrap">'+menu+'<div class="acc-paneel">'+inh+'</div></div>';
   reveal();
-  if(window.Meldingen)Meldingen.toon('meldKaart');
+  if(window.Meldingen&&paneel==='meldingen')Meldingen.toon('meldKaart');
+  if(window.appKnoppen)appKnoppen();
   var kn=document.getElementById('accNaam');if(kn)kn.textContent=String(user.naam||'Mijn account').split(' ')[0];
-  if(ed)ed.teken();
+  if(ed&&paneel==='lessen'&&document.getElementById('mijnUren'))ed.teken();
 }
 
 /* ── LESGEVERS: eigen uren in het rooster en hoe vol je lessen zijn ── */

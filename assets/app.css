@@ -42,6 +42,14 @@ body.a ::selection{background:var(--a-accent-soft);}
 .a-sectie h2{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--a-ink-3);}
 .a-sectie a,.a-sectie button{font-size:14px;font-weight:600;color:var(--a-accent);text-decoration:none;background:none;border:none;cursor:pointer;font-family:inherit;}
 
+/* ── Merk: de roos met de naam, bovenaan de app-schermen ── */
+.a-merk{display:flex;align-items:center;gap:8px;margin:0 0 16px;}
+.a-merk img{width:26px;height:auto;flex-shrink:0;}
+.a-merk span{font-family:var(--a-display);font-weight:700;font-size:16.5px;letter-spacing:-.01em;color:var(--a-ink);}
+.a-merk i{color:var(--a-accent);}
+.a-merk.app{display:none;}
+html.app-modus .a-merk.app{display:flex;}
+
 /* ── Kaarten ── */
 .a-kaart{background:var(--a-surface);border:1px solid var(--a-line);border-radius:var(--a-radius-lg);padding:18px;box-shadow:var(--a-shadow);}
 
@@ -144,3 +152,14 @@ html.app-modus body.acc .fg>label{font-size:13px;letter-spacing:0;text-transform
 html.app-modus body.acc .fg input{background:var(--a-surface);border:1px solid var(--a-line-2);font-size:16px;}
 html.app-modus body.acc .tab{font-family:var(--a-font);font-weight:600;}
 html.app-modus body.acc .type-choice label{font-family:var(--a-font);font-weight:600;}
+/* interne menu van Mijn account, in de app */
+html.app-modus body.acc .acc-tabs{top:calc(8px + env(safe-area-inset-top));background:rgba(255,255,255,.9);border:1px solid var(--a-line);border-radius:14px;box-shadow:var(--a-shadow);}
+html.app-modus body.acc .acc-tab{flex:1 0 auto;justify-content:center;font-family:var(--a-font);font-weight:600;font-size:13.5px;color:var(--a-ink-2);padding:9px 10px;}
+html.app-modus body.acc .acc-tab.actief{background:var(--a-primary);color:#fff;}
+html.app-modus body.acc .acc-rij{padding:14px 16px;}
+html.app-modus body.acc .acc-rij b{font-family:var(--a-font);font-weight:600;font-size:15px;color:var(--a-ink);}
+html.app-modus body.acc .acc-rij span span{font-size:13.5px;color:var(--a-ink-3);}
+html.app-modus body.acc .acc-rij+.acc-rij{border-top-color:var(--a-line);}
+html.app-modus body.acc .acc-blok{padding:16px 18px;}
+html.app-modus body.acc .acc-blok-kop .card-title{font-size:18px;}
+html.app-modus body.acc .acc-meer{color:var(--a-accent);font-family:var(--a-font);font-weight:600;}
