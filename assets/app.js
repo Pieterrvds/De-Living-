@@ -21,7 +21,8 @@
   var CSS=
     /* tabbalk in de app */
     'html.app-modus body{padding-bottom:calc(84px + env(safe-area-inset-bottom));}'+
-    'html.app-modus .wa,html.app-modus .yoga-balk,html.app-modus .cursor,html.app-modus .cursor-ring{display:none!important;}'+
+    'html.app-modus .wa,html.app-modus .yoga-balk,html.app-modus .cursor,html.app-modus .cursor-ring,html.app-modus #petalCanvas{display:none!important;}'+
+    '[data-app-installeer][hidden]{display:none!important;}'+
     /* in de app enkel de tabbalk onderaan: de menubalk bovenaan valt weg en de pagina schuift op */
     'html.app-modus #nav,html.app-modus #mobMenu,html.app-modus .progress-bar,html.app-modus footer{display:none!important;}'+
     'html.app-modus .yg,html.app-modus .hu,html.app-modus .st{padding-top:calc(22px + env(safe-area-inset-top))!important;}'+
@@ -166,7 +167,7 @@
       opties=opties||{};var self=this;
       this.status().then(function(st){
         if(opties.enkelUit&&st!=='uit'){el.innerHTML='';return;}
-        var h='<div class="meld-kaart meld-'+st+'"><div class="meld-kop"><span class="meld-ic" aria-hidden="true">'+(st==='aan'?'🔔':'🔕')+'</span><b>'+
+        var h='<div class="meld-kaart meld-'+st+'"><div class="meld-kop"><span class="meld-ic" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>'+(st==='aan'?'':'<path d="M3 3l18 18"/>')+'</svg></span><b>'+
           (st==='aan'?'Meldingen staan aan op deze gsm':'Meldingen op je gsm')+'</b></div>';
         if(st==='aan')h+='<p>'+self.uitleg()+'</p><div class="meld-knoppen"><button type="button" class="meld-knop" data-a="test">Stuur me een testmelding</button><button type="button" class="meld-knop wit" data-a="uit">Uitzetten</button></div>';
         else if(st==='uit')h+='<p>'+self.uitleg()+'</p><div class="meld-knoppen"><button type="button" class="meld-knop" data-a="aan">Meldingen aanzetten</button>'+
@@ -193,15 +194,17 @@
     magVragen:function(){return Date.now()-(+lees('lvr-meld-nietnu')||0)>14*864e5;}
   };
   window.Meldingen=Meldingen;
-  CSS+='.meld-kaart{background:#fff;border:2px solid rgba(61,32,7,.12);border-radius:20px;padding:16px 18px;font-family:Nunito,system-ui,sans-serif;color:#2E1A08;font-size:1.02rem;line-height:1.5;text-align:left;}'+
-    '.meld-kaart.meld-aan{border-color:#3F6B34;background:#F3F8EF;}'+
-    '.meld-kop{display:flex;align-items:center;gap:.5rem;font-size:1.1rem;margin-bottom:.35rem;}.meld-ic{font-size:1.4rem;}'+
-    '.meld-kaart p{margin:.3rem 0 0;color:#5C3314;}'+
-    '.meld-knoppen{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem;}'+
-    '.meld-knop{flex:1 1 180px;min-height:52px;border:none;border-radius:14px;background:#3F6B34;color:#fff;font-family:inherit;font-size:1.02rem;font-weight:800;cursor:pointer;padding:0 14px;}'+
-    '.meld-knop.wit{background:#fff;color:#2E1A08;border:2px solid rgba(61,32,7,.3);}.meld-knop:disabled{opacity:.6;cursor:wait;}'+
-    '.meld-knop:focus-visible{outline:3px solid #1D4ED8;outline-offset:3px;}'+
-    '.meld-fout{color:#9E3B3B!important;font-weight:800;}.meld-fout:empty{display:none;}.meld-fout.ok{color:#2F5226!important;}';
+  CSS+='.meld-kaart{background:#fff;border:1px solid rgba(30,20,12,.09);border-radius:22px;padding:18px;box-shadow:0 1px 2px rgba(30,20,12,.04),0 6px 20px rgba(30,20,12,.05);font-family:"DM Sans",system-ui,sans-serif;color:#1E140C;font-size:14.5px;line-height:1.5;text-align:left;}'+
+    '.meld-kop{display:flex;align-items:center;gap:10px;font-size:15.5px;margin-bottom:4px;}.meld-kop b{font-weight:700;}'+
+    '.meld-ic{display:inline-flex;width:34px;height:34px;border-radius:10px;align-items:center;justify-content:center;background:#F6E6E2;color:#B05D59;flex-shrink:0;}'+
+    '.meld-aan .meld-ic{background:#E7EFE2;color:#3B6A38;}'+
+    '.meld-kaart p{margin:6px 0 0;color:#5B4A3C;}'+
+    '.meld-knoppen{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}'+
+    '.meld-knop{flex:1 1 150px;white-space:nowrap;min-height:44px;border:1px solid transparent;border-radius:12px;background:#22160D;color:#fff;font-family:inherit;font-size:14.5px;font-weight:600;cursor:pointer;padding:0 14px;}'+
+    '.meld-knop.wit{background:#fff;color:#1E140C;border-color:rgba(30,20,12,.16);}.meld-knop:disabled{opacity:.55;cursor:wait;}'+
+    '.meld-knop:focus-visible{outline:2px solid #B05D59;outline-offset:3px;}'+
+    '.meld-fout{color:#A33A3A!important;font-weight:600;}.meld-fout:empty{display:none;}.meld-fout.ok{color:#3B6A38!important;}';
+
 
   function start(){
     var st=document.createElement('style');st.textContent=CSS;document.head.appendChild(st);

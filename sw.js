@@ -3,9 +3,9 @@
    - Lettertypes, de Supabase-bibliotheek en foto's: uit de cache (ze veranderen niet).
    - De database (Supabase) gaat nooit via de cache: reservaties zijn altijd live.
    Verhoog VERSIE als je de lijst hieronder aanpast. */
-var VERSIE='lvr-v2';
+var VERSIE='lvr-v3';
 var KERN=['app.html','index.html','yoga.html','huren.html','account.html','login.html','offline.html',
-  'assets/site.css','assets/site.js','assets/app.js','assets/boeken.js','assets/db.js',
+  'assets/site.css','assets/site.js','assets/app.js','assets/app.css','assets/splash.js','assets/boeken.js','assets/db.js',
   'manifest.webmanifest','icons/icon-192.png','icons/badge-96.png','icons/icon-512.png','icons/apple-touch-icon.png'];
 var VASTE_BRONNEN=/^https:\/\/(fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net|images\.unsplash\.com)\//;
 

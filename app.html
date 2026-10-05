@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="De app van La Vie en Rose in Aalst: yoga reserveren met je beurtenkaart en het café huren voor je feest.">
-<meta name="theme-color" content="#FDF8EE">
+<meta name="theme-color" content="#F7F3ED">
 <title>La Vie en Rose</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&family=Nunito:wght@300;400;500;600;700;800&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
@@ -13,46 +13,59 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.js"></script>
 <script src="assets/db.js"></script>
 <style>
-/* Startscherm van de app: groot, rustig en met één duim te bedienen */
-.st{padding:88px 18px 2.5rem;font-size:1.125rem;line-height:1.5;color:#2E1A08;}
-.st-wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:1rem;}
-.st-hallo{margin-top:.25rem;}
-.st-hallo small{display:block;font-size:1.05rem;color:#6E5641;}
-.st-hallo h1{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;line-height:1.1;color:var(--espresso);}
-.kaart{background:#fff;border:2px solid rgba(61,32,7,.12);border-radius:22px;padding:1.1rem 1.15rem;box-shadow:0 6px 24px rgba(61,32,7,.06);}
-.kop{font-size:.88rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6E5641;margin-bottom:.35rem;}
-.les-wanneer{font-size:1.35rem;font-weight:800;}
-.les-wat{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.35rem;}
-.pil{background:#EBF2E5;color:#2F5226;font-weight:800;border-radius:50px;padding:.2rem .8rem;font-size:1rem;}
-.rij-knoppen{display:flex;gap:.6rem;margin-top:.85rem;}
-.knop-rand{flex:1;min-height:50px;border-radius:14px;border:2px solid rgba(61,32,7,.3);background:#fff;color:#2E1A08;display:flex;align-items:center;justify-content:center;gap:.4rem;font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;text-decoration:none;cursor:pointer;}
-.groot{display:flex;align-items:center;gap:1rem;min-height:78px;padding:0 1.2rem;border-radius:20px;text-decoration:none;}
-.groot svg{width:32px;height:32px;flex-shrink:0;}
-.groot b{display:block;font-size:1.25rem;}
-.groot span span{font-size:1rem;}
-.groot.groen{background:#3F6B34;color:#fff;box-shadow:0 8px 20px rgba(63,107,52,.28);}
-.groot.groen span span{opacity:.92;}
-.groot.wit{background:#fff;color:#2E1A08;border:2px solid rgba(61,32,7,.15);}
-.groot.wit svg{color:#A85F5F;}
-.groot.wit span span{color:#6E5641;}
-.groot:focus-visible,.knop-rand:focus-visible,.knop-groot:focus-visible{outline:3px solid #1D4ED8;outline-offset:3px;}
-.knop-groot{display:flex;align-items:center;justify-content:center;width:100%;min-height:58px;margin-top:.7rem;border-radius:16px;border:none;font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:800;text-decoration:none;cursor:pointer;}
-.knop-groot.groen{background:#3F6B34;color:#fff;}
-.knop-groot.wit{background:#fff;color:#2E1A08;border:2px solid rgba(61,32,7,.35);}
-.saldo{display:flex;align-items:center;gap:.9rem;}
-.saldo-getal{width:60px;height:60px;border-radius:50%;background:#EBF2E5;color:#3F6B34;border:3px solid #3F6B34;display:flex;align-items:center;justify-content:center;font-size:1.7rem;font-weight:800;flex-shrink:0;}
-.saldo.nul .saldo-getal{background:#FBF0EE;color:#9E3B3B;border-color:#9E3B3B;}
-.st-titel{font-size:1.15rem;font-weight:800;margin-top:.5rem;}
-.lijn{display:flex;justify-content:space-between;align-items:center;gap:.75rem;text-decoration:none;color:inherit;}
-.lijn .pijl{font-size:1.4rem;color:#6E5641;}
-.status{display:inline-block;font-weight:800;font-size:.9rem;padding:.15rem .7rem;border-radius:50px;margin-bottom:.3rem;}
-.status.bevestigd{background:#EBF2E5;color:#2F5226;}
-.status.aangevraagd{background:#FFF6E0;color:#8A5A12;}
-.contact{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;}
-.contact a{min-height:74px;border-radius:16px;background:#fff;border:2px solid rgba(61,32,7,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.25rem;text-decoration:none;color:#2E1A08;font-weight:800;font-size:.95rem;}
-.contact svg{width:26px;height:26px;color:#3F6B34;}
-.leeg{color:var(--espresso2);text-align:center;padding:1rem 0;}
+/* Startscherm van de app (kleuren en onderdelen: assets/app.css) */
+.st{padding:calc(86px + env(safe-area-inset-top)) 18px 32px;}
+.st-wrap{max-width:560px;margin:0 auto;}
+.st-kop{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:2px 0 20px;}
+.st-hallo small{display:block;font-size:14px;color:var(--a-ink-3);font-weight:500;}
+.st-hallo h1{font-family:var(--a-display);font-size:30px;font-weight:700;line-height:1.1;letter-spacing:-.01em;}
+.st-av{width:44px;height:44px;border-radius:50%;background:var(--a-accent-soft);color:var(--a-accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;text-decoration:none;flex-shrink:0;}
+/* volgende les: donkere kaart */
+.st-les{position:relative;overflow:hidden;background:linear-gradient(150deg,#2A1B10 0%,#3C2615 100%);color:#FBF6EF;border-radius:var(--a-radius-lg);padding:20px;box-shadow:var(--a-shadow-lg);}
+.st-les::after{content:'';position:absolute;right:-40px;top:-40px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(214,128,120,.35),transparent 70%);}
+.st-les .kop{font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#E9B3AC;}
+.st-les .wanneer{font-family:var(--a-display);font-size:26px;font-weight:700;margin-top:6px;line-height:1.15;}
+.st-les .wat{margin-top:4px;color:rgba(251,246,239,.78);font-size:14.5px;}
+.st-les .knoppen{display:flex;gap:8px;margin-top:16px;position:relative;z-index:1;}
+.st-les .knoppen a{flex:1;min-height:42px;border-radius:12px;border:1px solid rgba(251,246,239,.22);background:rgba(251,246,239,.08);color:#FBF6EF;display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;font-weight:600;text-decoration:none;}
+.st-les .knoppen svg{width:17px;height:17px;}
+.st-geen{border:1px dashed var(--a-line-2);border-radius:var(--a-radius-lg);padding:18px;color:var(--a-ink-2);font-size:14.5px;}
+.st-geen b{display:block;color:var(--a-ink);font-size:15.5px;margin-bottom:2px;}
+/* cijfers */
+.st-cijfers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;}
+.st-cijfer{background:var(--a-surface);border:1px solid var(--a-line);border-radius:var(--a-radius);padding:14px 16px;text-decoration:none;color:inherit;box-shadow:var(--a-shadow);}
+.st-cijfer b{display:block;font-family:var(--a-display);font-size:28px;line-height:1;}
+.st-cijfer span{display:block;margin-top:6px;font-size:13px;color:var(--a-ink-3);font-weight:500;}
+.st-cijfer.nul b{color:var(--a-danger);}
+/* lijst met acties */
+.st-lijst{background:var(--a-surface);border:1px solid var(--a-line);border-radius:var(--a-radius-lg);box-shadow:var(--a-shadow);overflow:hidden;}
+.st-rij{display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;color:inherit;}
+.st-rij+.st-rij{border-top:1px solid var(--a-line);}
+.st-rij:active{background:var(--a-surface-2);}
+.st-ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--a-surface-2);color:var(--a-ink);}
+.st-ic.roos{background:var(--a-accent-soft);color:var(--a-accent);}
+.st-ic.ok{background:var(--a-ok-soft);color:var(--a-ok);}
+.st-ic svg{width:21px;height:21px;}
+.st-rij .t{flex:1;min-width:0;}
+.st-rij .t b{display:block;font-size:15.5px;font-weight:600;}
+.st-rij .t span{display:block;font-size:13.5px;color:var(--a-ink-3);margin-top:1px;}
+.st-rij .pijl{color:var(--a-ink-3);}
+.st-rij .pijl svg{width:18px;height:18px;}
+/* niet aangemeld */
+.st-welkom{padding:22px;}
+.st-welkom p{color:var(--a-ink-2);margin-bottom:16px;}
+.st-welkom .a-knop+.a-knop{margin-top:10px;}
+/* contact */
+.st-contact{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.st-contact a{min-height:64px;border-radius:var(--a-radius);background:var(--a-surface);border:1px solid var(--a-line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-decoration:none;color:var(--a-ink);font-size:13px;font-weight:600;}
+.st-contact svg{width:20px;height:20px;color:var(--a-accent);}
+#meldVraag:not(:empty){margin-top:12px;}
+.leeg{color:var(--a-ink-3);text-align:center;padding:2rem 0;}
+html.app-modus .st{padding-top:calc(20px + env(safe-area-inset-top))!important;}
 </style>
+<script src="assets/splash.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+<link rel="stylesheet" href="assets/app.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -62,7 +75,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script src="assets/app.js" defer></script>
 </head>
-<body data-rustig>
+<body class="a" data-rustig>
 <script src="assets/site.js"></script>
 
 <main class="st">
@@ -76,7 +89,10 @@ var IC={
   agenda:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   route:'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
   bel:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
-  wa:'<path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 10c.5 2 2 3.5 4 4l1.2-1.2 1.8.8-.5 1.6c-3 .3-6.6-3.3-6.3-6.3l1.6-.5.8 1.8z"/>'
+  wa:'<path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 10c.5 2 2 3.5 4 4l1.2-1.2 1.8.8-.5 1.6c-3 .3-6.6-3.3-6.3-6.3l1.6-.5.8 1.8z"/>',
+  kaart:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>',
+  instel:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  pijl:'<path d="M9 6l6 6-6 6"/>'
 };
 function svg(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[n]+'</svg>';}
 var ADRES='Hoogstraat 40, 9308 Aalst';
@@ -100,49 +116,62 @@ function agendaLink(b){
   return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);
 }
 
+function rij(href,ic,klas,titel,sub,extra){
+  return '<a class="st-rij" href="'+href+'"'+(extra||'')+'><span class="st-ic '+(klas||'')+'">'+svg(ic)+'</span><span class="t"><b>'+titel+'</b><span>'+sub+'</span></span><span class="pijl">'+svg('pijl')+'</span></a>';
+}
 function teken(u,info){
-  var h='<div class="st-hallo"><small>'+groet()+(u?',':'')+'</small><h1>'+(u?esc(voornaam(u.naam)||'welkom'):'Welkom bij La Vie en Rose')+'</h1></div>';
+  var h='<div class="st-kop"><div class="st-hallo"><small>'+groet()+(u?',':'')+'</small><h1>'+(u?esc(voornaam(u.naam)||'welkom'):'Welkom')+'</h1></div>'+
+    (u?'<a class="st-av" href="account.html" aria-label="Mijn account">'+esc(initialen(u.naam||u.email))+'</a>':'')+'</div>';
   if(!u){
-    h+='<div class="kaart"><p>Meld je één keer aan. Daarna blijf je aangemeld en reserveer je met één tik.</p>'+
-      '<a class="knop-groot groen" href="login.html?next=app.html">Aanmelden</a><a class="knop-groot wit" href="login.html?tab=registreer&amp;next=app.html">Nieuw? Maak een account</a></div>';
+    h+='<div class="a-kaart st-welkom"><p>Reserveer je yogales met je beurtenkaart, volg je aanvragen en krijg een seintje voor je les.</p>'+
+      '<a class="a-knop primair blok" href="login.html?next=app.html">Aanmelden</a><a class="a-knop tweede blok" href="login.html?tab=registreer&amp;next=app.html">Nieuw? Maak een account</a></div>';
   }else{
     var b=info.volgende;
     if(b){
       var s=b.slot;
-      h+='<div class="kaart"><div class="kop">Je volgende les</div><div class="les-wanneer">'+dagLabel(s.datum)+' · '+s.tijd+' – '+boekingEind(b,s)+'</div>'+
-        '<div class="les-wat"><span class="pil">'+esc(slotNaam(s))+'</span><span>met '+esc(voornaam(s.trainer))+'</span></div>'+
-        '<div class="rij-knoppen"><a class="knop-rand" href="'+agendaLink(b)+'" download="yoga.ics">'+svg('agenda').replace('<svg','<svg width="20" height="20"')+'In mijn agenda</a>'+
-        '<a class="knop-rand" href="'+ROUTE+'" target="_blank" rel="noopener">'+svg('route').replace('<svg','<svg width="20" height="20"')+'Route</a></div></div>';
+      h+='<div class="st-les"><div class="kop">Je volgende les</div><div class="wanneer">'+dagLabel(s.datum)+', '+s.tijd+'</div>'+
+        '<div class="wat">'+esc(slotNaam(s))+' · tot '+boekingEind(b,s)+' · met '+esc(voornaam(s.trainer))+'</div>'+
+        '<div class="knoppen"><a href="'+agendaLink(b)+'" download="yoga.ics">'+svg('agenda')+'In mijn agenda</a>'+
+        '<a href="'+ROUTE+'" target="_blank" rel="noopener">'+svg('route')+'Route</a></div></div>';
+    }else if(info.geladen){
+      h+='<div class="st-geen"><b>Nog geen les gepland</b>Kies een les in het rooster en reserveer met je beurtenkaart.</div>';
+    }
+    if(info.geladen){
+      var saldo=info.saldo||0;
+      h+='<div class="st-cijfers"><a class="st-cijfer'+(saldo<1?' nul':'')+'" href="yoga.html"><b>'+saldo+'</b><span>'+(saldo===1?'beurt':'beurten')+' op je kaart</span></a>'+
+        '<a class="st-cijfer" href="account.html"><b>'+info.komend+'</b><span>'+(info.komend===1?'les':'lessen')+' gereserveerd</span></a></div>';
     }
   }
-  var saldo=info.saldo;
-  h+='<a class="groot groen" href="yoga.html">'+svg('yoga')+'<span><b>Yoga reserveren</b><span>'+
-    (u&&saldo!=null?(saldo>0?'Nog '+saldo+(saldo===1?' beurt':' beurten')+' op je kaart':'Je hebt geen beurten meer'):'Met Gwen, in kleine groep')+'</span></span></a>';
-  h+='<a class="groot wit" href="huren.html">'+svg('huren')+'<span><b>Café huren</b><span>Voor je feest of vergadering</span></span></a>';
+  h+='<div class="a-sectie"><h2>Ontdek</h2></div><div class="st-lijst">'+
+    rij('yoga.html','yoga','ok','Yoga reserveren','Lessen met Gwen, deze en volgende week')+
+    rij('huren.html','huren','roos','Café huren','Voor je feest, jubileum of vergadering')+'</div>';
 
   if(u&&info.aanvragen.length){
-    h+='<div class="st-titel">Je feest</div>'+info.aanvragen.map(function(v){var d=new Date(v.start);
-      return '<a class="kaart lijn" href="huren.html"><span><span class="status '+v.status+'">'+(v.status==='bevestigd'?'Bevestigd':'Wacht op antwoord')+'</span><br><b>'+esc(v.soort)+'</b> · '+dagLabel(d).toLowerCase()+' om '+pad(d.getHours())+':'+pad(d.getMinutes())+'</span><span class="pijl" aria-hidden="true">›</span></a>';}).join('');
+    h+='<div class="a-sectie"><h2>Je evenement</h2></div><div class="st-lijst">'+info.aanvragen.map(function(v){var d=new Date(v.start);
+      return rij('huren.html','huren',v.status==='bevestigd'?'ok':'roos',esc(v.soort),(v.status==='bevestigd'?'Bevestigd':'Wacht op antwoord')+' · '+dagLabel(d).toLowerCase()+' om '+pad(d.getHours())+':'+pad(d.getMinutes()));}).join('')+'</div>';
   }
-  if(u&&magBeurtenBeheren(u))h+='<a class="kaart lijn" href="beurten.html"><span><b>Beurtenkaarten</b><br><span style="color:#5C3314">Betalingen bevestigen en zien wie er komt</span></span><span class="pijl" aria-hidden="true">›</span></a>';
-  if(u&&u.isAdmin)h+='<a class="kaart lijn" href="beheer.html?tab=ev"><span><b>Beheer</b><br><span style="color:#5C3314">Reservaties, rooster en aanvragen</span></span><span class="pijl" aria-hidden="true">›</span></a>';
-
-  h+='<div class="st-titel">Contact</div><div class="contact">'+
+  if(u&&(magBeurtenBeheren(u)||u.isAdmin)){
+    h+='<div class="a-sectie"><h2>Werk</h2></div><div class="st-lijst">'+
+      (magBeurtenBeheren(u)?rij('beurten.html','kaart','','Beurtenkaarten','Betalingen bevestigen en deelnemers'):'')+
+      (u.isAdmin?rij('beheer.html?tab=ev','instel','','Beheer','Reservaties, rooster en aanvragen'):'')+'</div>';
+  }
+  if(u)h+='<div id="meldVraag"></div>';
+  h+='<div class="a-sectie"><h2>Contact</h2></div><div class="st-contact">'+
     '<a href="https://wa.me/'+REGELS.whatsapp+'" target="_blank" rel="noopener">'+svg('wa')+'WhatsApp</a>'+
     '<a href="tel:+'+REGELS.whatsapp+'">'+svg('bel')+'Bellen</a>'+
     '<a href="'+ROUTE+'" target="_blank" rel="noopener">'+svg('route')+'Route</a></div>';
-  if(u)h+='<div id="meldVraag"></div>';
   document.getElementById('st').innerHTML=h;
   // meldingen staan uit? vriendelijk voorstellen (tot "Niet nu")
   if(u&&window.Meldingen&&Meldingen.magVragen())Meldingen.toon('meldVraag',{enkelUit:true,nietNu:true});
 }
 
 klaar(function(u){
-  var info={volgende:null,saldo:null,aanvragen:[]};
+  var info={volgende:null,saldo:null,aanvragen:[],komend:0,geladen:false};
   if(!u){teken(null,info);return;}
   teken(u,info);   // meteen iets tonen, daarna aanvullen
   Promise.all([DB.laadMijn().catch(function(){}),DB.beurten.mijn().catch(function(){return null;}),DB.verhuur.mijn().catch(function(){return [];})]).then(function(r){
-    info.volgende=mijnBookings(u).filter(function(b){return b.status!=='intern'&&!isVoorbij(b.slot);})[0]||null;
+    var komend=mijnBookings(u).filter(function(b){return b.status!=='intern'&&!isVoorbij(b.slot);});
+    info.volgende=komend[0]||null;info.komend=komend.length;info.geladen=true;
     info.saldo=r[1]?r[1].saldo||0:null;
     var nu=Date.now();
     info.aanvragen=(r[2]||[]).filter(function(v){return (v.status==='bevestigd'||v.status==='aangevraagd')&&new Date(v.eind).getTime()>nu;}).slice(-2);

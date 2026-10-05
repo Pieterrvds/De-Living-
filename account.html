@@ -59,6 +59,9 @@
 @media(max-width:560px){.kpis{grid-template-columns:1fr 1fr;}.kpis .kpi:last-child{grid-column:span 2;}}
 </style>
 <meta name="theme-color" content="#FDF8EE">
+<script src="assets/splash.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+<link rel="stylesheet" href="assets/app.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -68,7 +71,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script src="assets/app.js" defer></script>
 </head>
-<body>
+<body class="acc">
 <script src="assets/site.js"></script>
 
 <header class="page-hero" style="--ph-img:url('https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1800&q=80');">
@@ -85,6 +88,7 @@
 <div class="morph-divider"><svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path id="wavePath" d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#FDF8EE"/></svg></div>
 
 <main>
+  <div class="acc-appkop"><div class="a-eyebrow">Mijn account</div><h1 class="a-titel" id="accNaam">Mijn</h1></div>
   <section class="sec">
     <div class="blob" style="width:420px;height:420px;top:-60px;right:-160px;background:rgba(232,164,160,.14);"></div>
     <div class="inner" id="inhoud"></div>
@@ -122,8 +126,8 @@ function render(){
       '<div class="fg"><label for="a-nieuw">Nieuw wachtwoord</label><input type="password" id="a-nieuw" required minlength="6" autocomplete="new-password"></div>'+
       '<div class="fg"><label for="a-herhaal">Herhaal nieuw wachtwoord</label><input type="password" id="a-herhaal" required minlength="6" autocomplete="new-password"></div>'+
       '<div class="p-fout" id="pwFout"></div><button class="btn btn-primary btn-block" id="pwKnop">Wachtwoord wijzigen</button></form></details>'+
-    '<div class="p-knoppen">'+(user.isAdmin?'<a class="btn btn-outline" href="beheer.html">⚙️ Beheer</a>':'')+(magBeurtenBeheren(user)?'<a class="btn btn-outline" href="beurten.html">🎟️ Beurtenkaarten</a>':'')+'<button class="btn btn-outline" type="button" data-app-installeer onclick="installeerApp()"'+(window.appKanInstalleren&&appKanInstalleren()?'':' hidden')+'>📲 Installeer de app</button>'+
-      '<a class="btn btn-outline" href="'+(user.isAdmin?'beheer.html?tab=ev':'huren.html')+'">🎉 '+(user.isAdmin?'Evenement-aanvragen':'Café huren / mijn aanvragen')+'</a>'+
+    '<div class="p-knoppen">'+(user.isAdmin?'<a class="btn btn-outline" href="beheer.html">Beheer</a>':'')+(magBeurtenBeheren(user)?'<a class="btn btn-outline" href="beurten.html">Beurtenkaarten</a>':'')+'<button class="btn btn-outline" type="button" data-app-installeer onclick="installeerApp()"'+(window.appKanInstalleren&&appKanInstalleren()?'':' hidden')+'>Installeer de app</button>'+
+      '<a class="btn btn-outline" href="'+(user.isAdmin?'beheer.html?tab=ev':'huren.html')+'">'+(user.isAdmin?'Evenement-aanvragen':'Café huren · mijn aanvragen')+'</a>'+
       '<button class="btn btn-outline" onclick="logout()">Afmelden</button></div>'+
     '<p class="res-regels">E-mailadres wijzigen of je account laten verwijderen? Stuur ons een <a href="https://wa.me/'+REGELS.whatsapp+'" target="_blank" rel="noopener">WhatsApp-bericht</a>.</p>'+
   '</aside>';
@@ -143,12 +147,13 @@ function render(){
     '</div></div>'+
     '<div class="'+(tab==='voorbij'?'res-voorbij':'')+'">'+
     (lijst.length?lijst.map(function(b){return reservatieRij(b,'annuleer');}).join('')
-      :'<div class="leeg-res">'+(tab==='komend'?'Je hebt nog geen komende reservaties.<br><a class="btn btn-primary" href="yoga.html">🧘 Yoga reserveren</a>':'Nog geen voorbije reservaties.')+'</div>')+
+      :'<div class="leeg-res">'+(tab==='komend'?'Je hebt nog geen komende reservaties.<br><a class="btn btn-primary" href="yoga.html">Yoga reserveren</a>':'Nog geen voorbije reservaties.')+'</div>')+
     '</div><div class="res-regels">Zelf annuleren kan tot '+REGELS.annulerenTotUurVooraf+' uur op voorhand, daarna via WhatsApp. Onbetaalde reservaties vervallen na '+REGELS.betaaltermijnMin+' minuten.</div></div>';
 
   document.getElementById('inhoud').innerHTML='<div class="acc-grid">'+profiel+'<div>'+kpis+'<div id="meldKaart" style="margin-bottom:1.5rem;"></div>'+res+'</div></div>'+lesgeverHtml();
   reveal();
   if(window.Meldingen)Meldingen.toon('meldKaart');
+  var kn=document.getElementById('accNaam');if(kn)kn.textContent=String(user.naam||'Mijn account').split(' ')[0];
   if(ed)ed.teken();
 }
 
