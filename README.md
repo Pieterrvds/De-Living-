@@ -102,7 +102,7 @@ ook bij *Mijn account* en onderaan de hoofdpagina.
   Verhoog `VERSIE` als je de lijst met bestanden aanpast.
 - `assets/app.js`: registreert de service worker, toont in de app de **tabbalk onderaan** (Start, Yoga, Huren, Mijn)
   en de installatieknop op de website.
-- `icons/`: app-iconen (192, 512, Apple 180 en favicon 32).
+- `icons/`: app-icoon met de roos van het laadscherm (`roos-512`, `roos-192`, Apple `roos-180`, favicon `roos-32`, en `roos.svg` als bron) en `badge-96` voor de statusbalk.
 
 Een update van de website is meteen ook een update van de app: niets opnieuw installeren.
 

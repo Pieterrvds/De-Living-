@@ -3,10 +3,10 @@
    - Lettertypes, de Supabase-bibliotheek en foto's: uit de cache (ze veranderen niet).
    - De database (Supabase) gaat nooit via de cache: reservaties zijn altijd live.
    Verhoog VERSIE als je de lijst hieronder aanpast. */
-var VERSIE='lvr-v3';
+var VERSIE='lvr-v4';
 var KERN=['app.html','index.html','yoga.html','huren.html','account.html','login.html','offline.html',
   'assets/site.css','assets/site.js','assets/app.js','assets/app.css','assets/splash.js','assets/boeken.js','assets/db.js',
-  'manifest.webmanifest','icons/icon-192.png','icons/badge-96.png','icons/icon-512.png','icons/apple-touch-icon.png'];
+  'manifest.webmanifest','icons/roos-192.png','icons/badge-96.png','icons/roos-512.png','icons/roos-180.png'];
 var VASTE_BRONNEN=/^https:\/\/(fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net|images\.unsplash\.com)\//;
 
 self.addEventListener('install',function(e){
@@ -56,7 +56,7 @@ self.addEventListener('push',function(e){
   try{d=e.data?e.data.json():{};}catch(x){d={tekst:e.data?e.data.text():''};}
   e.waitUntil(self.registration.showNotification(d.titel||'La Vie en Rose',{
     body:d.tekst||'',
-    icon:'icons/icon-192.png',
+    icon:'icons/roos-192.png',
     badge:'icons/badge-96.png',          // klein wit icoontje in de statusbalk (Android)
     tag:'lvr-'+(d.id||Date.now()),
     lang:'nl',

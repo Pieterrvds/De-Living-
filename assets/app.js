@@ -75,7 +75,7 @@
   function toonKaart(){
     if(!magKaart()||document.querySelector('.app-inst'))return;
     var d=document.createElement('div');d.className='app-inst';d.setAttribute('role','dialog');d.setAttribute('aria-label','App installeren');
-    d.innerHTML='<img src="icons/icon-192.png" alt=""><div><b>Zet onze app op je gsm</b><span>Sneller reserveren, met één tik.</span></div>'+
+    d.innerHTML='<img src="icons/roos-192.png" alt=""><div><b>Zet onze app op je gsm</b><span>Sneller reserveren, met één tik.</span></div>'+
       '<button class="ja" type="button">Installeer</button><button class="nee" type="button" aria-label="Nee, bedankt">×</button>';
     d.querySelector('.ja').onclick=function(){installeerApp();};
     d.querySelector('.nee').onclick=function(){bewaar('lvr-app-nee',String(Date.now()));d.remove();};
